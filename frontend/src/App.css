@@ -1,0 +1,57 @@
+/* Quantum AI Trader - Custom Styles */
+.App {
+  text-align: center;
+}
+
+/* تخصيص شريط التمرير */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A1F3A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #8B5CF6, #00D4FF);
+}
+
+/* تأثيرات للشعار */
+.quantum-glow {
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+}
+
+/* إضافة تنسيقات جديدة للقسم */
+#features {
+  background: linear-gradient(135deg, #0A1F3A 0%, #1E293B 50%, #0A1F3A 100%);
+}
+
+.feature-card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.feature-card:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+}
+
+/* تحسينات للاستجابة */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  #features {
+    padding: 3rem 1rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+}

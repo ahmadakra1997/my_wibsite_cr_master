@@ -1,0 +1,158 @@
+/* frontend/src/components/bot/BotDashboard.css */
+/* === Quantum Bot Panel === */
+
+.bot-dashboard-container {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.98),
+    rgba(3, 17, 63, 0.98)
+  );
+  border-radius: 24px;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--qa-border-subtle);
+  box-shadow: var(--qa-shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bot-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bot-subtitle {
+  font-size: 12px;
+  color: var(--qa-text-muted);
+}
+
+.bot-status-pill {
+  border-radius: var(--qa-radius-pill);
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bot-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+/* ألوان الحالات */
+.bot-status-running .bot-status-dot {
+  background: var(--qa-success);
+  box-shadow: 0 0 16px rgba(0, 245, 155, 0.8);
+}
+.bot-status-paused .bot-status-dot {
+  background: var(--qa-warning);
+}
+.bot-status-stopped .bot-status-dot {
+  background: #6b7280;
+}
+.bot-status-error .bot-status-dot {
+  background: var(--qa-danger);
+  box-shadow: 0 0 16px rgba(251, 59, 127, 0.8);
+}
+
+/* شبكة الأقسام الداخلية */
+.bot-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 14px;
+}
+
+/* لوحة التحكم */
+.bot-controls-card,
+.bot-metrics-card {
+  background: radial-gradient(
+      circle at top,
+      rgba(0, 229, 255, 0.16),
+      transparent 65%
+    ),
+    linear-gradient(160deg, #020617, #020617);
+  border-radius: 18px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bot-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--qa-text-soft);
+}
+
+/* أزرار */
+.bot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bot-button {
+  border-radius: var(--qa-radius-pill);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  padding: 6px 14px;
+  font-size: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--qa-text-main);
+  cursor: pointer;
+  transition: background var(--qa-transition-fast),
+    border-color var(--qa-transition-fast), transform var(--qa-transition-fast);
+}
+
+.bot-button-primary {
+  border-color: rgba(0, 229, 255, 0.8);
+  background: linear-gradient(
+    120deg,
+    rgba(0, 229, 255, 0.2),
+    rgba(0, 229, 255, 0.06)
+  );
+}
+
+.bot-button-danger {
+  border-color: rgba(251, 59, 127, 0.8);
+  background: linear-gradient(
+    120deg,
+    rgba(251, 59, 127, 0.2),
+    rgba(251, 59, 127, 0.06)
+  );
+}
+
+.bot-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--qa-primary);
+}
+
+/* استجابة */
+@media (max-width: 960px) {
+  .bot-layout {
+    grid-template-columns: 1fr;
+  }
+}

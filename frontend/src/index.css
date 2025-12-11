@@ -1,0 +1,111 @@
+/* frontend/src/index.css */
+/* Reset بسيط + ثيم Quantum AI Trader */
+
+/* Reset أساسي */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Inter',
+    'SF Pro Text', 'Roboto', sans-serif;
+  background: #020617;
+  color: #e5f4ff;
+}
+
+/* يمكنك إضافة كلاس على body من React:
+   <body class="quantum-theme"> أو في App: <div className="quantum-theme"> */
+
+body.quantum-theme,
+.quantum-theme {
+  --qa-bg: #020617;
+  --qa-bg-elevated: #050b1f;
+  --qa-bg-elevated-soft: #070f2b;
+
+  --qa-primary: #00e5ff;
+  --qa-primary-soft: rgba(0, 229, 255, 0.12);
+  --qa-primary-strong-soft: rgba(0, 229, 255, 0.22);
+
+  --qa-accent-green: #00f59b;
+  --qa-accent-pink: #ff46c4;
+  --qa-accent-orange: #f97316;
+
+  --qa-border-subtle: rgba(255, 255, 255, 0.06);
+  --qa-border-strong: rgba(0, 229, 255, 0.4);
+
+  --qa-text-main: #e5f4ff;
+  --qa-text-muted: #7b8ca8;
+  --qa-text-soft: #6b7280;
+
+  --qa-danger: #fb3b7f;
+  --qa-success: #00f59b;
+  --qa-warning: #facc15;
+
+  --qa-radius-lg: 18px;
+  --qa-radius-xl: 22px;
+  --qa-radius-pill: 999px;
+
+  --qa-shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.55);
+  --qa-shadow-glow: 0 0 32px rgba(0, 229, 255, 0.34);
+
+  --qa-transition-fast: 150ms ease-out;
+  --qa-transition-med: 220ms ease-out;
+
+  background: radial-gradient(circle at top, #020e3b 0, #020617 50%, #000 100%);
+  color: var(--qa-text-main);
+}
+
+/* سكرول بار أنيق على مستوى التطبيق */
+body.quantum-theme::-webkit-scrollbar,
+.quantum-theme::-webkit-scrollbar {
+  width: 8px;
+}
+
+body.quantum-theme::-webkit-scrollbar-track,
+.quantum-theme::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.quantum-theme::-webkit-scrollbar-thumb,
+.quantum-theme::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+}
+
+body.quantum-theme::-webkit-scrollbar-thumb:hover,
+.quantum-theme::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+/* نص عام داخل الثيم */
+body.quantum-theme,
+.quantum-theme * {
+  font-family: inherit;
+}
+
+/* Utilities صغيرة مفيدة في المشروع */
+.chip-pill {
+  border-radius: var(--qa-radius-pill);
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ألوان اتجاه السعر */
+.text-up {
+  color: var(--qa-success);
+}
+
+.text-down {
+  color: var(--qa-danger);
+}

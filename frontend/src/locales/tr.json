@@ -1,0 +1,400 @@
+{
+  "app": {
+    "name": "QA TRADER",
+    "description": "QUANTUM AI TRADING PLATFORM",
+    "version": "Sürüm 2.0",
+    "copyright": "Tüm hakları saklıdır © 2024"
+  },
+  
+  "common": {
+    "loading": "Yükleniyor...",
+    "saving": "Kaydediliyor...",
+    "processing": "İşleniyor...",
+    "success": "Başarılı",
+    "error": "Hata",
+    "warning": "Uyarı",
+    "info": "Bilgi",
+    "confirm": "Onayla",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "view": "Görüntüle",
+    "search": "Ara",
+    "filter": "Filtre",
+    "sort": "Sırala",
+    "refresh": "Yenile",
+    "download": "İndir",
+    "upload": "Yükle",
+    "back": "Geri",
+    "next": "İleri",
+    "previous": "Önceki",
+    "submit": "Gönder",
+    "reset": "Sıfırla",
+    "close": "Kapat",
+    "open": "Aç",
+    "enable": "Etkinleştir",
+    "disable": "Devre Dışı Bırak",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı",
+    "connected": "Bağlı",
+    "disconnected": "Bağlantı Kesildi",
+    "verified": "Doğrulandı",
+    "pending": "Beklemede",
+    "completed": "Tamamlandı",
+    "failed": "Başarısız",
+    "retry": "Yeniden Dene"
+  },
+
+  "hero": {
+    "title": "Kuantum Hızında Hassas Ticaret",
+    "subtitle": "Gelişmiş Kuantum Yapay Zeka teknolojimizle algoritmik ticaretin geleceğini deneyimleyin",
+    "accuracy": "Tahmin Doğruluğu",
+    "speed": "İşlem Hızı",
+    "coverage": "Pazar Kapsamı",
+    "technology": "Yapay Zeka Teknolojisi",
+    "startTrading": "Kuantum Ticarete Başla",
+    "liveDemo": "Canlı Demo",
+    "trustedBy": "Tarafından güvenilen",
+    "traders": "trader",
+    "global": "küresel olarak"
+  },
+
+  "stats": {
+    "accuracyRate": "Doğruluk Oranı",
+    "executionSpeed": "İşlem Hızı",
+    "marketCoverage": "Pazar Kapsamı",
+    "aiTechnology": "Yapay Zeka Teknolojisi",
+    "successRate": "Başarı Oranı",
+    "activeUsers": "Aktif Kullanıcılar",
+    "dailyTrades": "Günlük İşlemler",
+    "totalProfit": "Toplam Kar"
+  },
+
+  "techBadges": {
+    "quantumAI": "Kuantum Yapay Zeka",
+    "machineLearning": "Makine Öğrenimi",
+    "realTimeAnalytics": "Gerçek Zamanlı Analitik",
+    "multiPlatform": "Çoklu Platform",
+    "secureEncryption": "Güvenli Şifreleme",
+    "quantumSpeed": "Kuantum Hızı",
+    "encryptedSecurity": "Şifreli Güvenlik",
+    "autoTrading": "Otomatik Ticaret"
+  },
+
+  "features": {
+    "title": "Gelişmiş Kuantum Özellikler",
+    "subtitle": "Yapay Zeka ve kuantum analitiğini birleştiren devrimci teknoloji ile benzersiz ticaret",
+    "speed": {
+      "title": "Süper Kuantum Hızı",
+      "description": "Gelişmiş algoritmalar kullanarak 0.002 saniyeden daha kısa sürede işlem yapın",
+      "icon": "⚡"
+    },
+    "accuracy": {
+      "title": "Mükemmel Doğruluk",
+      "description": "Yapay Zeka kullanarak pazar analizi ve hareket tahminlerinde %99.7'ye varan doğruluk",
+      "icon": "🎯"
+    },
+    "security": {
+      "title": "Gelişmiş Güvenlik",
+      "description": "Verilerinizi ve yatırımlarınızı korumak için gelişmiş kuantum AES-256 şifreleme",
+      "icon": "🛡️"
+    },
+    "automation": {
+      "title": "Tam Otomasyon",
+      "description": "İnsan müdahalesi olmadan 7/24 çalışan tam otomatik ticaret sistemi",
+      "icon": "🤖"
+    },
+    "analytics": {
+      "title": "Gelişmiş Canlı Analitik",
+      "description": "Detaylı raporlarla gerçek zamanlı ticaret performansı izleme ve analiz",
+      "icon": "📊"
+    },
+    "global": {
+      "title": "Kapsamlı Küresel Erişim",
+      "description": "15'ten fazla küresel ticaret platformuna ve çoklu finansal pazarlara erişim",
+      "icon": "🌍"
+    },
+    "support": {
+      "title": "Entegre Teknik Destek",
+      "description": "Her türlü soru ve teknik sorun için 7/24 teknik destek ekibi",
+      "icon": "🎧"
+    }
+  },
+
+  "performance": {
+    "title": "Canlı Performans",
+    "subtitle": "Canlı istatistikler ve anlık raporlarla gerçek zamanlı ticaret performansı izleme",
+    "chartTitle": "İnteraktif Performans Grafiği",
+    "liveStats": "Anlık İstatistikler",
+    "activeTrades": "Aktif İşlemler",
+    "dailyProfit": "Günlük Kar",
+    "successRate": "Başarı Oranı",
+    "volume": "İşlem Hacmi",
+    "liveAlerts": "Canlı Bildirimler",
+    "alert1": "✅ BTC/USDT işlemi %3.2 kar ile tamamlandı",
+    "alert2": "ℹ️ ETH/USDT için yeni alım sinyali - %92 güven",
+    "alert3": "✅ XRP/USDT işlemi %1.8 kar ile kapandı",
+    "alert4": "🚀 ADA/USDT için yeni ticaret sinyali - %88 güven",
+    "alert5": "📈 Portföy performansı bugün %5.3 arttı",
+    "performanceMetrics": "Performans Metrikleri",
+    "totalReturn": "Toplam Getiri",
+    "sharpeRatio": "Sharpe Oranı",
+    "maxDrawdown": "Maksimum Çekilme",
+    "volatility": "Oynaklık"
+  },
+
+  "dashboard": {
+    "title": "Entegre Akıllı Kontrol Paneli",
+    "subtitle": "Otomatik ticaret performansını tek bir yerden tam kontrol ile yönetin ve izleyin",
+    "welcome": "Tekrar Hoş Geldiniz!",
+    "botStatus": "Yapay Zeka Bot Durumu",
+    "statusActive": "Bot aktif ve mükemmel çalışıyor",
+    "statusInactive": "Bot şu anda durduruldu",
+    "startBot": "Yapay Zeka Botu Başlat",
+    "stopBot": "Yapay Zeka Botu Durdur",
+    "performance": "Kapsamlı Ticaret Performansı",
+    "currentProfit": "Mevcut Kar",
+    "activeTrades": "Aktif İşlemler",
+    "successRate": "Başarı Oranı",
+    "dailyGain": "Günlük Kazanç",
+    "weeklyGain": "Haftalık Kazanç",
+    "monthlyGain": "Aylık Kazanç",
+    "liveAlerts": "Anlık Canlı Bildirimler",
+    "noSignals": "Şu anda ticaret sinyali yok",
+    "performanceChart": "İnteraktif Performans Grafiği",
+    "chartPlaceholder": "Gerçek zamanlı verilerle gelişmiş interaktif performans grafiği burada görünecek",
+    "portfolioValue": "Portföy Değeri",
+    "todayProfit": "Bugünün Karı",
+    "openPositions": "Açık Pozisyonlar",
+    "winRate": "Kazanma Oranı",
+    "totalBalance": "Toplam Bakiye",
+    "availableBalance": "Kullanılabilir Bakiye",
+    "lockedBalance": "Kilitli Bakiye",
+    "recentActivity": "Son Aktivite",
+    "tradeHistory": "İşlem Geçmişi",
+    "settings": "Ayarlar",
+    "apiManagement": "API Yönetimi",
+    "riskManagement": "Risk Yönetimi",
+    "notifications": "Bildirimler"
+  },
+
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Hesap Oluştur",
+    "logout": "Çıkış Yap",
+    "email": "E-posta",
+    "phone": "Telefon Numarası",
+    "password": "Şifre",
+    "confirmPassword": "Şifreyi Onayla",
+    "forgotPassword": "Şifremi Unuttum?",
+    "resetPassword": "Şifreyi Sıfırla",
+    "loginSuccess": "Giriş başarılı",
+    "registerSuccess": "Hesap başarıyla oluşturuldu",
+    "logoutSuccess": "Çıkış başarılı",
+    "apiKeys": "API Anahtarları",
+    "encryptionNote": "Tüm veriler AES-256 ile güvenli şekilde şifrelenmiştir",
+    "twoFactorAuth": "İki Faktörlü Kimlik Doğrulama",
+    "rememberMe": "Beni Hatırla",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "alreadyHaveAccount": "Zaten hesabınız var mı?",
+    "agreeToTerms": "Kullanım Koşullarını kabul ediyorum",
+    "privacyPolicy": "Gizlilik Politikası",
+    "termsOfService": "Hizmet Şartları",
+    "processing": "İşleniyor...",
+    "createAccount": "Hesap Oluştur",
+    "referralCode": "Yönlendirme Kodu",
+    "safePermissions": {
+      "title": "Güvenli İzinler",
+      "trade": "Ticaret",
+      "read": "Okuma",
+      "balance": "Bakiye",
+      "withdraw": "Para Çekme",
+      "transfer": "Transfer"
+    },
+    "errors": {
+      "invalidEmail": "Geçersiz e-posta adresi",
+      "invalidPhone": "Geçersiz telefon numarası",
+      "weakPassword": "Zayıf şifre",
+      "passwordsMismatch": "Şifreler eşleşmiyor",
+      "passwordTooShort": "Şifre çok kısa",
+      "passwordWeak": "Şifre zayıf",
+      "required": "Bu alan gerekli",
+      "networkError": "Ağ bağlantı hatası"
+    },
+    "passwordStrength": {
+      "veryWeak": "Çok Zayıf",
+      "weak": "Zayıf",
+      "medium": "Orta",
+      "strong": "Güçlü",
+      "veryStrong": "Çok Güçlü",
+      "excellent": "Mükemmel"
+    },
+    "securityWarning": {
+      "title": "Önemli Güvenlik Uyarısı",
+      "dontShare": "API anahtarlarınızı kimseyle paylaşmayın",
+      "onlyTradePermissions": "Sadece ticaret izinlerini kullanın (para çekme yok)",
+      "noWithdraw": "Asla para çekme izinlerini kullanmayın",
+      "encrypted": "API anahtarlarınız güvenli şekilde şifrelenecek"
+    }
+  },
+
+  "payment": {
+    "title": "Entegre Güvenli Ödeme Sistemi",
+    "subtitle": "Birden fazla güvenli seçenek arasından tercih ettiğiniz ödeme yöntemini seçin",
+    "amount": "Gerekli Tutar",
+    "chooseMethod": "Tercih Edilen Ödeme Yöntemini Seçin",
+    "usdtWarning": "Önemli USDT Ödeme Uyarısı",
+    "networkMatch": "Ağın gönderdiğiniz cüzdanla tam olarak eşleştiğinden emin olun",
+    "doubleCheck": "Göndermeden önce adresi ve ağı iki kez kontrol edin",
+    "irreversible": "İşlemler geri alınamaz ve iptal edilemez",
+    "selectNetwork": "Uygun Transfer Ağını Seçin",
+    "walletInfo": "Güvenli Cüzdan Bilgileri",
+    "walletAddress": "Özel Cüzdan Adresi",
+    "network": "Kullanılan Ağ",
+    "amountToSend": "Gönderilecek Tam Tutar",
+    "shamBankInfo": "Sham Bankası Bilgileri",
+    "merchantAccount": "Onaylı Tüccar Hesabı",
+    "beneficiary": "Resmi Alıcı Adı",
+    "transferInstructions": "Detaylı Transfer Talimatları",
+    "instruction1": "Telefonunuzdaki Sham Bank uygulamasını açın",
+    "instruction2": "Seçeneklerden tüccar hesabına transferi seçin",
+    "instruction3": "Yukarıda belirtilen tüccar hesap numarasını girin",
+    "instruction4": "Gerekli tutarı tam olarak girip transferi gönderin",
+    "referenceNumber": "Referans Numaranız",
+    "saveReference": "Takip ve muhasebe için bu numarayı kaydedin",
+    "confirmUSDT": "Başarılı USDT Transferini Onayla",
+    "confirmBank": "Tamamlanan Banka Transferini Onayla",
+    "supportMessage": "Uzman soruları ve teknik destek için bizimle iletişime geçin:",
+    "paymentSuccess": "Ödeme başarıyla işlendi",
+    "paymentPending": "Ödeme inceleniyor",
+    "paymentFailed": "Ödeme işlemi başarısız",
+    "transactionId": "İşlem Kimliği",
+    "paymentHistory": "Ödeme Geçmişi",
+    "subscriptionPlan": "Abonelik Planı",
+    "renewSubscription": "Aboneliği Yenile",
+    "upgradePlan": "Planı Yükselt",
+    "methods": {
+      "usdt": {
+        "name": "USDT",
+        "description": "En hızlı ve güvenli küresel ödeme yöntemi"
+      },
+      "sham_bank": {
+        "name": "Sham Bankası",
+        "description": "Tüccar hesabı üzerinden güvenli transfer"
+      },
+      "dev_test": {
+        "name": "Test Ödemesi",
+        "description": "Ödeme olmadan anında aktivasyon"
+      }
+    }
+  },
+
+  "navigation": {
+    "home": "Ana Sayfa",
+    "dashboard": "Kontrol Paneli",
+    "trading": "Ticaret",
+    "portfolio": "Portföy",
+    "analytics": "Analitik",
+    "history": "Geçmiş",
+    "settings": "Ayarlar",
+    "support": "Destek",
+    "documentation": "Dokümantasyon",
+    "profile": "Profil",
+    "security": "Güvenlik",
+    "notifications": "Bildirimler",
+    "help": "Yardım"
+  },
+
+  "errors": {
+    "networkError": "Ağ bağlantı hatası",
+    "serverError": "Sunucu hatası",
+    "timeout": "İstek zaman aşımı",
+    "unauthorized": "Yetkisiz erişim",
+    "forbidden": "Erişim engellendi",
+    "notFound": "Bulunamadı",
+    "validationError": "Doğrulama hatası",
+    "invalidEmail": "Geçersiz e-posta adresi",
+    "invalidPhone": "Geçersiz telefon numarası",
+    "weakPassword": "Zayıf şifre",
+    "passwordsMismatch": "Şifreler eşleşmiyor",
+    "emailExists": "E-posta zaten kayıtlı",
+    "phoneExists": "Telefon numarası zaten kayıtlı",
+    "invalidCredentials": "Geçersiz giriş bilgileri",
+    "accountLocked": "Hesap geçici olarak kilitlendi",
+    "insufficientFunds": "Yetersiz bakiye",
+    "transactionFailed": "İşlem başarısız",
+    "unknownError": "Bilinmeyen hata"
+  },
+
+  "success": {
+    "profileUpdated": "Profil başarıyla güncellendi",
+    "passwordChanged": "Şifre başarıyla değiştirildi",
+    "tradeExecuted": "İşlem başarıyla gerçekleştirildi",
+    "paymentProcessed": "Ödeme başarıyla işlendi",
+    "subscriptionActivated": "Abonelik başarıyla etkinleştirildi",
+    "settingsSaved": "Ayarlar başarıyla kaydedildi",
+    "apiConnected": "API başarıyla bağlandı",
+    "notificationSent": "Bildirim başarıyla gönderildi"
+  },
+
+  "notifications": {
+    "newTrade": "Yeni İşlem",
+    "tradeClosed": "İşlem Kapandı",
+    "priceAlert": "Fiyat Uyarısı",
+    "systemUpdate": "Sistem Güncellemesi",
+    "maintenance": "Planlı Bakım",
+    "securityAlert": "Güvenlik Uyarısı",
+    "walletActivity": "Cüzdan Aktivitesi",
+    "subscriptionReminder": "Abonelik Hatırlatması"
+  },
+
+  "currencies": {
+    "usd": "ABD Doları",
+    "eur": "Euro",
+    "gbp": "İngiliz Sterlini",
+    "jpy": "Japon Yeni",
+    "aed": "BAE Dirhemi",
+    "sar": "Suudi Arabistan Riyali",
+    "usdt": "Tether",
+    "btc": "Bitcoin",
+    "eth": "Ethereum",
+    "bnb": "Binance Coin"
+  },
+
+  "languages": {
+    "arabic": "Arapça",
+    "english": "İngilizce",
+    "turkish": "Türkçe",
+    "french": "Fransızca",
+    "spanish": "İspanyolca",
+    "german": "Almanca",
+    "chinese": "Çince",
+    "russian": "Rusça"
+  },
+
+  "language": {
+    "switcher": "Dil Değiştirici",
+    "select": "Dil Seçin",
+    "current": "Mevcut",
+    "realtime": "Gerçek Zamanlı Çeviri",
+    "switching": "Dil Değiştiriliyor..."
+  },
+
+  "time": {
+    "seconds": "saniye",
+    "minutes": "dakika",
+    "hours": "saat",
+    "days": "gün",
+    "weeks": "hafta",
+    "months": "ay",
+    "years": "yıl",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "thisWeek": "Bu Hafta",
+    "thisMonth": "Bu Ay",
+    "thisYear": "Bu Yıl"
+  }
+}

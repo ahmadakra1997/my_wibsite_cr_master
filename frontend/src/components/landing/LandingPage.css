@@ -1,0 +1,307 @@
+/* frontend/src/components/landing/LandingPage.css */
+/* === Quantum Landing Page === */
+
+.landing-root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding: 32px 22px 40px;
+}
+
+/* Hero */
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 26px;
+  align-items: center;
+}
+
+.landing-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--qa-radius-pill);
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--qa-primary);
+}
+
+.landing-title {
+  font-size: clamp(28px, 4.2vw, 38px);
+  line-height: 1.15;
+  margin: 0;
+  color: #f9fafb;
+}
+.landing-title span {
+  color: var(--qa-primary);
+}
+
+.landing-subtitle {
+  font-size: 14px;
+  color: var(--qa-text-muted);
+  max-width: 520px;
+}
+
+.landing-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.landing-btn {
+  border-radius: var(--qa-radius-pill);
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--qa-transition-fast),
+    box-shadow var(--qa-transition-fast), background var(--qa-transition-fast),
+    border-color var(--qa-transition-fast);
+}
+
+.landing-btn-primary {
+  background: linear-gradient(
+    130deg,
+    rgba(0, 229, 255, 0.9),
+    rgba(0, 245, 155, 0.9)
+  );
+  color: #020617;
+  box-shadow: 0 12px 30px rgba(0, 229, 255, 0.45);
+  border: 1px solid transparent;
+}
+
+.landing-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(0, 229, 255, 0.6);
+}
+
+.landing-btn-ghost {
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--qa-text-main);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+.landing-btn-ghost:hover {
+  transform: translateY(-1px);
+  border-color: var(--qa-primary);
+}
+
+.landing-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.landing-meta-item {
+  min-width: 90px;
+}
+
+.landing-meta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--qa-text-soft);
+}
+.landing-meta-value {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Hero Visual */
+.landing-hero-visual {
+  display: flex;
+  justify-content: center;
+}
+
+.landing-screen {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 24px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  background: radial-gradient(
+      circle at top,
+      rgba(0, 229, 255, 0.18),
+      transparent 50%
+    ),
+    linear-gradient(150deg, #020617, #020617);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9),
+    0 0 32px rgba(0, 229, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.landing-screen-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #e5f4ff;
+}
+
+.landing-screen-status {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(0, 245, 155, 0.16);
+  color: var(--qa-success);
+  border: 1px solid rgba(0, 245, 155, 0.7);
+}
+
+/* رسم بسيط وهمي للشارت */
+.landing-screen-chart {
+  margin-top: 8px;
+  border-radius: 16px;
+  padding: 10px 10px 8px;
+  background: radial-gradient(
+      circle at bottom,
+      rgba(15, 23, 42, 1),
+      rgba(15, 23, 42, 0.98)
+    ),
+    linear-gradient(160deg, #020617, #020617);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-chart-lines {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(15, 23, 42, 0.9) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.9) 1px,
+      transparent 1px
+    );
+  background-size: 0 0, 0 0;
+  opacity: 0.1;
+}
+
+.landing-chart-bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 170px;
+}
+
+.landing-chart-bar {
+  width: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 229, 255, 0.9),
+    rgba(0, 245, 155, 0.3)
+  );
+}
+
+/* Footer داخل الشاشة */
+.landing-screen-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.landing-screen-label {
+  display: block;
+  color: var(--qa-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 9px;
+}
+.landing-screen-value {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Features */
+.landing-features {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.landing-section-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.landing-section-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--qa-text-muted);
+}
+
+.landing-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.landing-feature-card {
+  background: radial-gradient(
+      circle at top,
+      rgba(0, 229, 255, 0.12),
+      transparent 60%
+    ),
+    linear-gradient(150deg, #020617, #020617);
+  border-radius: 18px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.85);
+}
+
+.landing-feature-card h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.landing-feature-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--qa-text-muted);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .landing-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-root {
+    padding-inline: 16px;
+  }
+
+  .landing-features-grid {
+    grid-template-columns: 1fr;
+  }
+}

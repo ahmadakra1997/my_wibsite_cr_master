@@ -1,0 +1,158 @@
+/* === Trade History Panel === */
+
+.trade-history-container {
+  background: radial-gradient(
+      circle at top left,
+      rgba(0, 229, 255, 0.12),
+      transparent 60%
+    ),
+    linear-gradient(145deg, #020617, #020617);
+  border-radius: var(--qa-radius-xl);
+  padding: 14px 14px 10px;
+  border: 1px solid var(--qa-border-subtle);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.th-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.th-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #e5f4ff;
+}
+
+/* حالة عامة */
+.th-state {
+  border-radius: 14px;
+  padding: 18px 10px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  font-size: 12px;
+}
+.th-state-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--qa-text-muted);
+}
+.th-state-error {
+  border-color: rgba(251, 59, 127, 0.7);
+  color: var(--qa-danger);
+}
+.th-state-loading {
+  border-color: rgba(0, 229, 255, 0.7);
+}
+.th-state-empty {
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+/* رأس الجدول */
+.th-table-header {
+  display: grid;
+  grid-template-columns: 1.1fr 0.8fr 1.2fr 1.1fr;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--qa-text-soft);
+  padding: 4px 4px 2px;
+}
+
+/* جسم الجدول */
+.th-table-body {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* صف واحد */
+.th-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.8fr 1.2fr 1.1fr;
+  font-size: 11px;
+  padding: 4px 4px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.th-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* شراء / بيع */
+.th-row-buy::before {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 245, 155, 0.2),
+    transparent 75%
+  );
+}
+.th-row-sell::before {
+  background: linear-gradient(
+    90deg,
+    rgba(251, 59, 127, 0.2),
+    transparent 75%
+  );
+}
+
+.th-row span {
+  position: relative;
+  z-index: 1;
+}
+
+.th-time {
+  color: var(--qa-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.th-side {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.th-side-buy {
+  color: var(--qa-success);
+}
+.th-side-sell {
+  color: var(--qa-danger);
+}
+.th-side-unknown {
+  color: var(--qa-text-muted);
+}
+
+.th-price,
+.th-qty {
+  font-variant-numeric: tabular-nums;
+}
+
+.th-price {
+  color: #e5f4ff;
+}
+.th-qty {
+  text-align: right;
+  color: var(--qa-text-main);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .th-table-header,
+  .th-row {
+    grid-template-columns: 1.1fr 0.9fr 1.1fr 1fr;
+  }
+}

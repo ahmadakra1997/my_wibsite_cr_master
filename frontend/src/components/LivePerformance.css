@@ -1,0 +1,939 @@
+/* LivePerformance.css */
+
+.performance-section {
+  position: relative;
+  background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 100%);
+  padding: 5rem 0;
+  overflow: hidden;
+}
+
+.performance-background {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 100%);
+  overflow: hidden;
+}
+
+.quantum-particles-performance {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(0, 163, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(0, 255, 136, 0.08) 0%, transparent 50%);
+  animation: float-performance 20s ease-in-out infinite;
+}
+
+.neon-grid-performance {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 163, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 163, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+}
+
+.performance-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 163, 255, 0.05) 0%, transparent 70%);
+  opacity: 0.5;
+}
+
+@keyframes float-performance {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-30px, -20px) rotate(1deg); }
+  50% { transform: translate(20px, -30px) rotate(-1deg); }
+  75% { transform: translate(-20px, 30px) rotate(0.5deg); }
+}
+
+.performance-container {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  z-index: 2;
+}
+
+/* العنوان الرئيسي */
+.performance-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 163, 255, 0.2), rgba(0, 255, 136, 0.1));
+  border: 1px solid rgba(0, 163, 255, 0.3);
+  border-radius: 50px;
+  padding: 0.5rem 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.badge-icon {
+  font-size: 1.1rem;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+  60% { transform: translateY(-3px); }
+}
+
+.performance-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+
+.title-highlight {
+  background: linear-gradient(135deg, #00a3ff 0%, #00ff88 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.performance-subtitle {
+  font-size: 1.25rem;
+  color: #94a3b8;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* عناصر التحكم بالوقت */
+.timeframe-controls {
+  background: rgba(42, 52, 71, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.controls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.controls-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #00a3ff;
+  margin: 0;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #00ff88;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: #00ff88;
+  border-radius: 50%;
+  animation: live-pulse 2s infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7);
+  }
+  50% { 
+    opacity: 0.7; 
+    box-shadow: 0 0 0 10px rgba(0, 255, 136, 0);
+  }
+}
+
+.timeframe-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.timeframe-btn {
+  padding: 0.6rem 1.2rem;
+  background: rgba(13, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.timeframe-btn:hover {
+  border-color: rgba(0, 163, 255, 0.4);
+  color: #00a3ff;
+}
+
+.timeframe-active {
+  background: linear-gradient(135deg, #00a3ff, #00ff88);
+  color: #0f172a !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 15px rgba(0, 163, 255, 0.3);
+}
+
+/* الشبكة الرئيسية */
+.performance-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.performance-card {
+  background: rgba(42, 52, 71, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.performance-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transition: left 0.6s;
+}
+
+.performance-card:hover::before {
+  left: 100%;
+}
+
+.performance-card:hover {
+  border-color: rgba(0, 163, 255, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 163, 255, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #00a3ff;
+  margin: 0;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+}
+
+/* بطاقة المخطط */
+.chart-card {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.profit-color {
+  background: linear-gradient(135deg, #00a3ff, #00ff88);
+}
+
+.volume-color {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+}
+
+.chart-container {
+  height: 300px;
+  position: relative;
+}
+
+.live-chart {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-area {
+  flex: 1;
+  position: relative;
+  background: rgba(13, 23, 42, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.chart-point {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #00a3ff;
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  transition: all 0.3s ease;
+}
+
+.chart-point:hover {
+  width: 12px;
+  height: 12px;
+  background: #00ff88;
+  z-index: 10;
+}
+
+.chart-point:hover .point-tooltip {
+  opacity: 1;
+  transform: translate(-50%, -100%);
+}
+
+.point-tooltip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(42, 52, 71, 0.9);
+  border: 1px solid rgba(0, 163, 255, 0.3);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #00ff88;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.chart-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00a3ff, transparent);
+  animation: chart-line-glow 2s ease-in-out infinite;
+}
+
+@keyframes chart-line-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.chart-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #00ff88;
+}
+
+/* بطاقة الإحصائيات */
+.stats-card {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.stats-update {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(13, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-item:hover {
+  border-color: rgba(0, 163, 255, 0.4);
+  transform: translateX(5px);
+}
+
+.stat-item.primary {
+  background: linear-gradient(135deg, rgba(0, 163, 255, 0.2), rgba(0, 255, 136, 0.1));
+  border-color: rgba(0, 163, 255, 0.3);
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #00ff88;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stat-trend {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.stat-trend.positive {
+  color: #00ff88;
+}
+
+.stat-trend.negative {
+  color: #ff3b5c;
+}
+
+.stat-trend.stable {
+  color: #94a3b8;
+}
+
+.stat-badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.stat-badge.excellent {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+.stat-badge.good {
+  background: rgba(0, 163, 255, 0.2);
+  color: #00a3ff;
+}
+
+/* بطاقة أزواج التداول */
+.pairs-card {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.pairs-count .count-badge {
+  background: #00a3ff;
+  color: #0f172a;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pairs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pair-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(13, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.pair-item:hover {
+  border-color: rgba(0, 163, 255, 0.4);
+  transform: translateX(5px);
+}
+
+.pair-symbol {
+  font-weight: 700;
+  color: #00a3ff;
+  min-width: 80px;
+}
+
+.pair-price {
+  font-weight: 600;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.pair-change {
+  font-weight: 700;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.pair-change.positive {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+.pair-change.negative {
+  background: rgba(255, 59, 92, 0.2);
+  color: #ff3b5c;
+}
+
+.pair-volume {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* بطاقة الإشعارات */
+.alerts-card {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.alerts-badge {
+  background: #ff3b5c;
+  color: white;
+  border-radius: 12px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.5rem;
+}
+
+.alerts-clear {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.alerts-clear:hover {
+  background: rgba(255, 59, 92, 0.2);
+  color: #ff3b5c;
+  border-color: #ff3b5c;
+}
+
+.alerts-container {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.alert-item:hover {
+  transform: translateX(5px);
+}
+
+.alert-success {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.alert-info {
+  background: rgba(0, 163, 255, 0.1);
+  border-color: rgba(0, 163, 255, 0.3);
+}
+
+.alert-warning {
+  background: rgba(255, 159, 28, 0.1);
+  border-color: rgba(255, 159, 28, 0.3);
+}
+
+.alert-error {
+  background: rgba(255, 59, 92, 0.1);
+  border-color: rgba(255, 59, 92, 0.3);
+}
+
+.alert-default {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.alert-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.alert-details {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.alert-pair {
+  font-weight: 600;
+}
+
+.alert-profit {
+  font-weight: 700;
+  color: #00ff88;
+}
+
+.alert-time {
+  margin-left: auto;
+}
+
+.alert-actions {
+  flex-shrink: 0;
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  background: rgba(0, 163, 255, 0.2);
+  border-color: #00a3ff;
+}
+
+.no-alerts {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.no-alerts-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+/* التحليلات المتقدمة */
+.advanced-analytics {
+  background: rgba(42, 52, 71, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.analytics-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.analytics-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #00a3ff;
+  margin-bottom: 0.5rem;
+}
+
+.analytics-subtitle {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.analytics-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(13, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+  border-color: rgba(0, 163, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 163, 255, 0.2);
+}
+
+.analytics-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.analytics-content {
+  flex: 1;
+}
+
+.analytics-content h4 {
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.analytics-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #00ff88;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.analytics-progress {
+  margin-top: 0.5rem;
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00a3ff, #00ff88);
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+
+.analytics-trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.analytics-trend.positive {
+  color: #00ff88;
+}
+
+.analytics-description {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.analytics-uptime {
+  font-size: 0.8rem;
+  color: #00ff88;
+  font-weight: 600;
+}
+
+/* التجاوب مع الشاشات */
+@media (max-width: 1024px) {
+  .performance-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  
+  .chart-card,
+  .stats-card,
+  .pairs-card,
+  .alerts-card {
+    grid-column: 1;
+  }
+  
+  .stats-card {
+    grid-row: 2;
+  }
+  
+  .pairs-card {
+    grid-row: 3;
+  }
+  
+  .alerts-card {
+    grid-row: 4;
+  }
+}
+
+@media (max-width: 768px) {
+  .performance-section {
+    padding: 3rem 0;
+  }
+  
+  .performance-title {
+    font-size: 2.5rem;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pair-item {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .alert-details {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .performance-container {
+    padding: 0 1rem;
+  }
+  
+  .performance-title {
+    font-size: 2rem;
+  }
+  
+  .timeframe-buttons {
+    justify-content: center;
+  }
+  
+  .timeframe-btn {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+  
+  .analytics-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* شريط التمرير */
+.alerts-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.alerts-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.alerts-container::-webkit-scrollbar-thumb {
+  background: linea r-gradient(135deg, #00a3ff 0%, #00ff88 100%);
+  border-radius: 3px;
+}
+
+.alerts-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0088cc 0%, #00cc77 100%);
+}

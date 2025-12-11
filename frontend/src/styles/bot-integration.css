@@ -1,0 +1,191 @@
+/* 🆕 أنماط نظام البوت المتكامل */
+
+.bot-management-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 30px;
+  margin: 30px auto;
+  max-width: 1400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.bot-management-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.bot-management-section .section-header h2 {
+  color: white;
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.bot-system-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-weight: 500;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.active {
+  background: #4ade80;
+}
+
+.bot-components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.bot-component-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bot-component-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bot-loading-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: white;
+  text-align: center;
+}
+
+.bot-quick-actions {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 25px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bot-quick-actions h4 {
+  color: white;
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.quick-action-btn {
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+.quick-action-btn.primary {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: white;
+}
+
+.quick-action-btn.info {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  color: white;
+}
+
+.quick-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.quick-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 🆕 لوحة تحكم البوت المتكاملة */
+.bot-integrated-dashboard {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.bot-integrated-dashboard h1 {
+  text-align: center;
+  color: #2d3748;
+  margin-bottom: 40px;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.bot-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+}
+
+/* تحسينات التجاوب */
+@media (max-width: 768px) {
+  .bot-management-section {
+    padding: 20px;
+    margin: 15px;
+  }
+  
+  .bot-management-section .section-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .bot-components-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .bot-integrated-dashboard {
+    padding: 15px;
+  }
+  
+  .bot-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

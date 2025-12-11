@@ -1,0 +1,324 @@
+/* === Order Book Card === */
+
+.order-book-container {
+  background: radial-gradient(
+      circle at top,
+      rgba(15, 118, 255, 0.12),
+      transparent 55%
+    ),
+    linear-gradient(145deg, #020617, #020617);
+  border-radius: var(--qa-radius-xl);
+  padding: 16px 16px 14px;
+  border: 1px solid var(--qa-border-subtle);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--qa-text-main);
+}
+
+/* رأس الكرت */
+.ob-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ob-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ob-title-main {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e5f4ff;
+}
+
+.ob-updated-at {
+  font-size: 11px;
+  color: var(--qa-text-muted);
+}
+
+.ob-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--qa-radius-pill);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.ob-connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+/* ربط مع نفس منطق الألوان */
+.ob-connection-connecting {
+  background-color: var(--qa-warning);
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.7);
+}
+.ob-connection-open {
+  background-color: var(--qa-success);
+  box-shadow: 0 0 16px rgba(0, 245, 155, 0.7);
+}
+.ob-connection-closed,
+.ob-connection-disconnected {
+  background-color: #6b7280;
+}
+.ob-connection-error {
+  background-color: var(--qa-danger);
+  box-shadow: 0 0 16px rgba(251, 59, 127, 0.8);
+}
+
+.ob-connection-text {
+  font-size: 11px;
+  color: var(--qa-text-muted);
+}
+
+/* ملخص أعلى الكرت */
+.ob-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 12px;
+  padding: 10px 10px 8px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.85)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.ob-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ob-summary-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--qa-text-soft);
+}
+
+.ob-summary-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ob-bid {
+  color: var(--qa-success);
+}
+
+.ob-ask {
+  color: var(--qa-danger);
+}
+
+/* Imbalance حالات */
+.ob-imbalance-strong-bullish {
+  color: var(--qa-success);
+}
+.ob-imbalance-bullish {
+  color: rgba(0, 245, 155, 0.9);
+}
+.ob-imbalance-neutral {
+  color: var(--qa-text-muted);
+}
+.ob-imbalance-bearish {
+  color: rgba(251, 59, 127, 0.9);
+}
+.ob-imbalance-strong-bearish {
+  color: var(--qa-danger);
+}
+
+/* Walls */
+.ob-summary-large-orders {
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.ob-summary-walls-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ob-wall {
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.ob-wall-bid {
+  border-color: rgba(0, 245, 155, 0.6);
+  color: var(--qa-success);
+}
+.ob-wall-ask {
+  border-color: rgba(251, 59, 127, 0.6);
+  color: var(--qa-danger);
+}
+
+/* الجسم: bid / ask */
+.ob-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.ob-side {
+  border-radius: 16px;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: radial-gradient(
+      circle at top,
+      rgba(15, 23, 42, 0.9),
+      rgba(15, 23, 42, 0.95)
+    ),
+    linear-gradient(145deg, #020617, #020617);
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* تمييز اللون العام */
+.ob-side-asks {
+  box-shadow: inset 0 0 0 1px rgba(251, 59, 127, 0.08);
+}
+.ob-side-bids {
+  box-shadow: inset 0 0 0 1px rgba(0, 245, 155, 0.08);
+}
+
+.ob-table-header {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--qa-text-soft);
+  margin-bottom: 6px;
+}
+
+.ob-table-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse; /* لتظهر الأسعار الأقرب في الأسفل مثل منصات حقيقية */
+  gap: 2px;
+}
+
+/* صف */
+.ob-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  font-size: 11px;
+  padding: 3px 4px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* خلفية حجم (يمكِن لاحقًا تحويلها إلى width نسبة للكمية) */
+.ob-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  pointer-events: none;
+  transform-origin: left center;
+}
+
+.ob-side-asks .ob-row::before {
+  background: linear-gradient(
+    90deg,
+    rgba(251, 59, 127, 0.18),
+    transparent 80%
+  );
+}
+.ob-side-bids .ob-row::before {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 245, 155, 0.18),
+    transparent 80%
+  );
+}
+
+.ob-row span {
+  position: relative;
+  z-index: 1;
+}
+
+.ob-price {
+  font-variant-numeric: tabular-nums;
+}
+.ob-price-ask {
+  color: rgba(251, 59, 127, 0.9);
+}
+.ob-price-bid {
+  color: rgba(0, 245, 155, 0.95);
+}
+
+.ob-qty {
+  text-align: right;
+  color: var(--qa-text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+/* حالات عامة */
+.ob-state {
+  border-radius: 14px;
+  padding: 22px 12px;
+  text-align: center;
+  font-size: 12px;
+  background: radial-gradient(
+    circle at top,
+    rgba(15, 23, 42, 0.9),
+    rgba(15, 23, 42, 0.98)
+  );
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+}
+
+.ob-state-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--qa-text-muted);
+}
+
+.ob-state-error {
+  border-color: rgba(251, 59, 127, 0.7);
+  color: var(--qa-danger);
+}
+.ob-state-loading {
+  border-style: solid;
+  border-color: rgba(0, 229, 255, 0.7);
+}
+.ob-state-empty {
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* استجابة */
+@media (max-width: 768px) {
+  .ob-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ob-body {
+    grid-template-columns: 1fr;
+  }
+}

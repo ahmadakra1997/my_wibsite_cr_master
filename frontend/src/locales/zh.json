@@ -1,0 +1,400 @@
+{
+  "app": {
+    "name": "QA TRADER",
+    "description": "QUANTUM AI TRADING PLATFORM",
+    "version": "版本 2.0",
+    "copyright": "版权所有 © 2024"
+  },
+  
+  "common": {
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "processing": "处理中...",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "info": "信息",
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "view": "查看",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "refresh": "刷新",
+    "download": "下载",
+    "upload": "上传",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "提交",
+    "reset": "重置",
+    "close": "关闭",
+    "open": "打开",
+    "enable": "启用",
+    "disable": "禁用",
+    "active": "活跃",
+    "inactive": "非活跃",
+    "online": "在线",
+    "offline": "离线",
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "verified": "已验证",
+    "pending": "待处理",
+    "completed": "已完成",
+    "failed": "失败",
+    "retry": "重试"
+  },
+
+  "hero": {
+    "title": "量子速度的精准交易",
+    "subtitle": "体验我们先进的量子AI技术带来的算法交易未来",
+    "accuracy": "预测准确率",
+    "speed": "执行速度",
+    "coverage": "市场覆盖",
+    "technology": "AI技术",
+    "startTrading": "开始量子交易",
+    "liveDemo": "实时演示",
+    "trustedBy": "获得超过",
+    "traders": "交易者的信任",
+    "global": "全球范围"
+  },
+
+  "stats": {
+    "accuracyRate": "准确率",
+    "executionSpeed": "执行速度",
+    "marketCoverage": "市场覆盖",
+    "aiTechnology": "AI技术",
+    "successRate": "成功率",
+    "activeUsers": "活跃用户",
+    "dailyTrades": "每日交易",
+    "totalProfit": "总利润"
+  },
+
+  "techBadges": {
+    "quantumAI": "量子AI",
+    "machineLearning": "机器学习",
+    "realTimeAnalytics": "实时分析",
+    "multiPlatform": "多平台",
+    "secureEncryption": "安全加密",
+    "quantumSpeed": "量子速度",
+    "encryptedSecurity": "加密安全",
+    "autoTrading": "自动交易"
+  },
+
+  "features": {
+    "title": "先进量子功能",
+    "subtitle": "结合AI和量子分析的革命性技术，实现前所未有的交易体验",
+    "speed": {
+      "title": "超量子速度",
+      "description": "使用先进算法在0.002秒内执行交易",
+      "icon": "⚡"
+    },
+    "accuracy": {
+      "title": "极致准确率",
+      "description": "使用AI实现市场分析和运动预测高达99.7%的准确率",
+      "icon": "🎯"
+    },
+    "security": {
+      "title": "高级安全",
+      "description": "先进的量子AES-256加密保护您的数据和投资",
+      "icon": "🛡️"
+    },
+    "automation": {
+      "title": "全自动化",
+      "description": "完全自动化的交易系统，7x24小时运行无需人工干预",
+      "icon": "🤖"
+    },
+    "analytics": {
+      "title": "高级实时分析",
+      "description": "实时监控和分析交易表现，提供详细报告",
+      "icon": "📊"
+    },
+    "global": {
+      "title": "全面全球覆盖",
+      "description": "访问超过15个全球交易平台和多个金融市场",
+      "icon": "🌍"
+    },
+    "support": {
+      "title": "集成技术支持",
+      "description": "7x24小时技术支持团队为您解答任何问题",
+      "icon": "🎧"
+    }
+  },
+
+  "performance": {
+    "title": "实时性能",
+    "subtitle": "通过实时统计和即时报告监控交易表现",
+    "chartTitle": "交互式性能图表",
+    "liveStats": "即时统计",
+    "activeTrades": "活跃交易",
+    "dailyProfit": "每日利润",
+    "successRate": "成功率",
+    "volume": "交易量",
+    "liveAlerts": "实时提醒",
+    "alert1": "✅ BTC/USDT交易实现+3.2%利润",
+    "alert2": "ℹ️ ETH/USDT新买入信号 - 92%置信度",
+    "alert3": "✅ XRP/USDT交易以+1.8%利润结束",
+    "alert4": "🚀 ADA/USDT新交易信号 - 88%置信度",
+    "alert5": "📈 投资组合表现今日增长+5.3%",
+    "performanceMetrics": "性能指标",
+    "totalReturn": "总回报",
+    "sharpeRatio": "夏普比率",
+    "maxDrawdown": "最大回撤",
+    "volatility": "波动率"
+  },
+
+  "dashboard": {
+    "title": "集成智能仪表板",
+    "subtitle": "在一个地方全面控制和管理自动化交易表现",
+    "welcome": "欢迎回来！",
+    "botStatus": "AI机器人状态",
+    "statusActive": "机器人活跃且运行完美",
+    "statusInactive": "机器人当前已停止",
+    "startBot": "启动AI机器人",
+    "stopBot": "停止AI机器人",
+    "performance": "综合交易表现",
+    "currentProfit": "当前利润",
+    "activeTrades": "活跃交易",
+    "successRate": "成功率",
+    "dailyGain": "每日收益",
+    "weeklyGain": "每周收益",
+    "monthlyGain": "每月收益",
+    "liveAlerts": "即时实时提醒",
+    "noSignals": "当前无交易信号",
+    "performanceChart": "交互式性能图表",
+    "chartPlaceholder": "此处将显示带有实时数据的高级交互式性能图表",
+    "portfolioValue": "投资组合价值",
+    "todayProfit": "今日利润",
+    "openPositions": "未平仓头寸",
+    "winRate": "胜率",
+    "totalBalance": "总余额",
+    "availableBalance": "可用余额",
+    "lockedBalance": "锁定余额",
+    "recentActivity": "最近活动",
+    "tradeHistory": "交易历史",
+    "settings": "设置",
+    "apiManagement": "API管理",
+    "riskManagement": "风险管理",
+    "notifications": "通知"
+  },
+
+  "auth": {
+    "login": "登录",
+    "register": "创建账户",
+    "logout": "退出登录",
+    "email": "电子邮件",
+    "phone": "电话号码",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "resetPassword": "重置密码",
+    "loginSuccess": "登录成功",
+    "registerSuccess": "账户创建成功",
+    "logoutSuccess": "退出登录成功",
+    "apiKeys": "API密钥",
+    "encryptionNote": "所有数据均使用AES-256安全加密",
+    "twoFactorAuth": "双重认证",
+    "rememberMe": "记住我",
+    "dontHaveAccount": "没有账户？",
+    "alreadyHaveAccount": "已有账户？",
+    "agreeToTerms": "我同意条款和条件",
+    "privacyPolicy": "隐私政策",
+    "termsOfService": "服务条款",
+    "processing": "处理中...",
+    "createAccount": "创建账户",
+    "referralCode": "推荐代码",
+    "safePermissions": {
+      "title": "安全权限",
+      "trade": "交易",
+      "read": "读取",
+      "balance": "余额",
+      "withdraw": "提现",
+      "transfer": "转账"
+    },
+    "errors": {
+      "invalidEmail": "无效的电子邮件地址",
+      "invalidPhone": "无效的电话号码",
+      "weakPassword": "弱密码",
+      "passwordsMismatch": "密码不匹配",
+      "passwordTooShort": "密码太短",
+      "passwordWeak": "密码弱",
+      "required": "此字段为必填项",
+      "networkError": "网络连接错误"
+    },
+    "passwordStrength": {
+      "veryWeak": "非常弱",
+      "weak": "弱",
+      "medium": "中等",
+      "strong": "强",
+      "veryStrong": "非常强",
+      "excellent": "优秀"
+    },
+    "securityWarning": {
+      "title": "重要安全警告",
+      "dontShare": "不要与任何人共享API密钥",
+      "onlyTradePermissions": "仅使用交易权限（无提现）",
+      "noWithdraw": "绝不使用提现权限",
+      "encrypted": "您的API密钥将被安全加密"
+    }
+  },
+
+  "payment": {
+    "title": "集成安全支付系统",
+    "subtitle": "从多个安全选项中选择您偏好的支付方式",
+    "amount": "所需金额",
+    "chooseMethod": "选择首选支付方式",
+    "usdtWarning": "重要USDT支付警告",
+    "networkMatch": "确保网络与发送钱包完全匹配",
+    "doubleCheck": "发送前仔细检查地址和网络",
+    "irreversible": "交易不可逆转且无法取消",
+    "selectNetwork": "选择合适的转账网络",
+    "walletInfo": "安全钱包信息",
+    "walletAddress": "私有钱包地址",
+    "network": "使用网络",
+    "amountToSend": "确切发送金额",
+    "shamBankInfo": "Sham银行信息",
+    "merchantAccount": "认证商户账户",
+    "beneficiary": "官方收款人名称",
+    "transferInstructions": "详细转账说明",
+    "instruction1": "打开手机上的Sham银行应用",
+    "instruction2": "从选项中选择向商户账户转账",
+    "instruction3": "输入上面指定的商户账号",
+    "instruction4": "精确输入所需金额并发送转账",
+    "referenceNumber": "您的参考号码",
+    "saveReference": "保存此号码用于跟进和会计",
+    "confirmUSDT": "确认成功的USDT转账",
+    "confirmBank": "确认完成的银行转账",
+    "supportMessage": "如有专业问题和技术支持，请联系我们：",
+    "paymentSuccess": "支付处理成功",
+    "paymentPending": "支付审核中",
+    "paymentFailed": "支付处理失败",
+    "transactionId": "交易ID",
+    "paymentHistory": "支付历史",
+    "subscriptionPlan": "订阅计划",
+    "renewSubscription": "续订订阅",
+    "upgradePlan": "升级计划",
+    "methods": {
+      "usdt": {
+        "name": "USDT",
+        "description": "最快最安全的全球支付方式"
+      },
+      "sham_bank": {
+        "name": "Sham银行",
+        "description": "通过商户账户安全转账"
+      },
+      "dev_test": {
+        "name": "测试支付",
+        "description": "无需支付即时激活"
+      }
+    }
+  },
+
+  "navigation": {
+    "home": "首页",
+    "dashboard": "仪表板",
+    "trading": "交易",
+    "portfolio": "投资组合",
+    "analytics": "分析",
+    "history": "历史",
+    "settings": "设置",
+    "support": "支持",
+    "documentation": "文档",
+    "profile": "个人资料",
+    "security": "安全",
+    "notifications": "通知",
+    "help": "帮助"
+  },
+
+  "errors": {
+    "networkError": "网络连接错误",
+    "serverError": "服务器错误",
+    "timeout": "请求超时",
+    "unauthorized": "未经授权的访问",
+    "forbidden": "访问被禁止",
+    "notFound": "未找到",
+    "validationError": "验证错误",
+    "invalidEmail": "无效的电子邮件地址",
+    "invalidPhone": "无效的电话号码",
+    "weakPassword": "弱密码",
+    "passwordsMismatch": "密码不匹配",
+    "emailExists": "电子邮件已注册",
+    "phoneExists": "电话号码已注册",
+    "invalidCredentials": "无效的登录凭据",
+    "accountLocked": "账户暂时被锁定",
+    "insufficientFunds": "余额不足",
+    "transactionFailed": "交易失败",
+    "unknownError": "未知错误"
+  },
+
+  "success": {
+    "profileUpdated": "个人资料更新成功",
+    "passwordChanged": "密码修改成功",
+    "tradeExecuted": "交易执行成功",
+    "paymentProcessed": "支付处理成功",
+    "subscriptionActivated": "订阅激活成功",
+    "settingsSaved": "设置保存成功",
+    "apiConnected": "API连接成功",
+    "notificationSent": "通知发送成功"
+  },
+
+  "notifications": {
+    "newTrade": "新交易",
+    "tradeClosed": "交易关闭",
+    "priceAlert": "价格提醒",
+    "systemUpdate": "系统更新",
+    "maintenance": "计划维护",
+    "securityAlert": "安全提醒",
+    "walletActivity": "钱包活动",
+    "subscriptionReminder": "订阅提醒"
+  },
+
+  "currencies": {
+    "usd": "美元",
+    "eur": "欧元",
+    "gbp": "英镑",
+    "jpy": "日元",
+    "aed": "阿联酋迪拉姆",
+    "sar": "沙特里亚尔",
+    "usdt": "泰达币",
+    "btc": "比特币",
+    "eth": "以太坊",
+    "bnb": "币安币"
+  },
+
+  "languages": {
+    "arabic": "阿拉伯语",
+    "english": "英语",
+    "turkish": "土耳其语",
+    "french": "法语",
+    "spanish": "西班牙语",
+    "german": "德语",
+    "chinese": "中文",
+    "russian": "俄语"
+  },
+
+  "language": {
+    "switcher": "语言切换器",
+    "select": "选择语言",
+    "current": "当前",
+    "realtime": "实时翻译",
+    "switching": "切换语言中..."
+  },
+
+  "time": {
+    "seconds": "秒",
+    "minutes": "分钟",
+    "hours": "小时",
+    "days": "天",
+    "weeks": "周",
+    "months": "月",
+    "years": "年",
+    "today": "今天",
+    "yesterday": "昨天",
+    "thisWeek": "本周",
+    "thisMonth": "本月",
+    "thisYear": "今年"
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "app": {
+    "name": "QA TRADER",
+    "description": "QUANTUM AI TRADING PLATFORM",
+    "version": "Version 2.0",
+    "copyright": "All rights reserved © 2024"
+  },
+  
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "processing": "Processing...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "download": "Download",
+    "upload": "Upload",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "close": "Close",
+    "open": "Open",
+    "enable": "Enable",
+    "disable": "Disable",
+    "active": "Active",
+    "inactive": "Inactive",
+    "online": "Online",
+    "offline": "Offline",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "verified": "Verified",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "retry": "Retry"
+  },
+
+  "hero": {
+    "title": "Precision Trading at Quantum Speed",
+    "subtitle": "Experience the future of algorithmic trading with our advanced Quantum AI technology",
+    "accuracy": "Prediction Accuracy",
+    "speed": "Execution Speed",
+    "coverage": "Market Coverage",
+    "technology": "AI Technology",
+    "startTrading": "Start Quantum Trading",
+    "liveDemo": "Live Demo",
+    "trustedBy": "Trusted by over",
+    "traders": "traders",
+    "global": "globally"
+  },
+
+  "stats": {
+    "accuracyRate": "Accuracy Rate",
+    "executionSpeed": "Execution Speed",
+    "marketCoverage": "Market Coverage",
+    "aiTechnology": "AI Technology",
+    "successRate": "Success Rate",
+    "activeUsers": "Active Users",
+    "dailyTrades": "Daily Trades",
+    "totalProfit": "Total Profit"
+  },
+
+  "techBadges": {
+    "quantumAI": "Quantum AI",
+    "machineLearning": "Machine Learning",
+    "realTimeAnalytics": "Real-time Analytics",
+    "multiPlatform": "Multi-Platform",
+    "secureEncryption": "Secure Encryption",
+    "quantumSpeed": "Quantum Speed",
+    "encryptedSecurity": "Encrypted Security",
+    "autoTrading": "Auto Trading"
+  },
+
+  "features": {
+    "title": "Advanced Quantum Features",
+    "subtitle": "Revolutionary technology combining AI and quantum analytics for unprecedented trading",
+    "speed": {
+      "title": "Ultra Quantum Speed",
+      "description": "Execute trades in less than 0.002 seconds using advanced light-speed algorithms",
+      "icon": "⚡"
+    },
+    "accuracy": {
+      "title": "Ultimate Accuracy",
+      "description": "Up to 99.7% accuracy rate in market analysis and movement predictions using AI",
+      "icon": "🎯"
+    },
+    "security": {
+      "title": "Advanced Security",
+      "description": "Advanced quantum AES-256 encryption to protect your data and investments from cyber threats",
+      "icon": "🛡️"
+    },
+    "automation": {
+      "title": "Full Automation",
+      "description": "Fully automated trading system operating 24/7 without human intervention with continuous monitoring",
+      "icon": "🤖"
+    },
+    "analytics": {
+      "title": "Advanced Live Analytics",
+      "description": "Real-time monitoring and analysis of trading performance with detailed reports and interactive charts",
+      "icon": "📊"
+    },
+    "global": {
+      "title": "Comprehensive Global Coverage",
+      "description": "Access to over 15 global trading platforms and multiple financial markets and cryptocurrencies",
+      "icon": "🌍"
+    },
+    "support": {
+      "title": "Integrated Technical Support",
+      "description": "24/7 technical support team available to assist you with any inquiries or technical issues",
+      "icon": "🎧"
+    }
+  },
+
+  "performance": {
+    "title": "Live Real-time Performance",
+    "subtitle": "Monitor trading performance in real-time with live statistics, instant reports and advanced analytics",
+    "chartTitle": "Interactive Live Performance Chart",
+    "liveStats": "Instant Live Statistics",
+    "activeTrades": "Active Trades",
+    "dailyProfit": "Daily Profit",
+    "successRate": "Success Rate",
+    "volume": "Trading Volume",
+    "liveAlerts": "Instant Live Alerts",
+    "alert1": "✅ BTC/USDT trade achieved +3.2% profit successfully",
+    "alert2": "ℹ️ New buy signal for ETH/USDT - 92% confidence available",
+    "alert3": "✅ XRP/USDT trade closed with amazing +1.8% profit",
+    "alert4": "🚀 New trading signal for ADA/USDT - 88% confidence",
+    "alert5": "📈 Portfolio performance increased by +5.3% today",
+    "performanceMetrics": "Performance Metrics",
+    "totalReturn": "Total Return",
+    "sharpeRatio": "Sharpe Ratio",
+    "maxDrawdown": "Maximum Drawdown",
+    "volatility": "Volatility"
+  },
+
+  "dashboard": {
+    "title": "Integrated Smart Dashboard",
+    "subtitle": "Manage and track automated trading performance in one place with full control and detailed statistics",
+    "welcome": "Welcome Back!",
+    "botStatus": "AI Bot Status",
+    "statusActive": "Bot is active and working perfectly",
+    "statusInactive": "Bot is currently stopped",
+    "startBot": "Start AI Bot",
+    "stopBot": "Stop AI Bot",
+    "performance": "Comprehensive Trading Performance",
+    "currentProfit": "Current Profit",
+    "activeTrades": "Active Trades",
+    "successRate": "Success Rate",
+    "dailyGain": "Daily Gain",
+    "weeklyGain": "Weekly Gain",
+    "monthlyGain": "Monthly Gain",
+    "liveAlerts": "Instant Live Alerts",
+    "noSignals": "No trading signals currently",
+    "performanceChart": "Interactive Performance Chart",
+    "chartPlaceholder": "Advanced interactive performance chart will appear here with real-time data",
+    "portfolioValue": "Portfolio Value",
+    "todayProfit": "Today's Profit",
+    "openPositions": "Open Positions",
+    "winRate": "Win Rate",
+    "totalBalance": "Total Balance",
+    "availableBalance": "Available Balance",
+    "lockedBalance": "Locked Balance",
+    "recentActivity": "Recent Activity",
+    "tradeHistory": "Trade History",
+    "settings": "Settings",
+    "apiManagement": "API Management",
+    "riskManagement": "Risk Management",
+    "notifications": "Notifications"
+  },
+
+  "auth": {
+    "login": "Login",
+    "register": "Create New Account",
+    "logout": "Logout",
+    "email": "Email",
+    "phone": "Phone Number",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "loginSuccess": "Login successful",
+    "registerSuccess": "Account created successfully",
+    "logoutSuccess": "Logout successful",
+    "apiKeys": "API Keys",
+    "encryptionNote": "All data encrypted with AES-256 securely",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "rememberMe": "Remember Me",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "agreeToTerms": "I agree to the Terms and Conditions",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "processing": "Processing...",
+    "createAccount": "Create New Account",
+    "referralCode": "Referral Code",
+    "safePermissions": {
+      "title": "Safe Permissions",
+      "trade": "Trade",
+      "read": "Read",
+      "balance": "Balance",
+      "withdraw": "Withdraw",
+      "transfer": "Transfer"
+    },
+    "errors": {
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "weakPassword": "Weak password",
+      "passwordsMismatch": "Passwords do not match",
+      "passwordTooShort": "Password is too short",
+      "passwordWeak": "Password is weak",
+      "required": "This field is required",
+      "networkError": "Network connection error"
+    },
+    "passwordStrength": {
+      "veryWeak": "Very Weak",
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "veryStrong": "Very Strong",
+      "excellent": "Excellent"
+    },
+    "securityWarning": {
+      "title": "Important Security Warning",
+      "dontShare": "Don't share API keys with anyone",
+      "onlyTradePermissions": "Use only trading permissions (no withdrawal)",
+      "noWithdraw": "Never use withdrawal permissions",
+      "encrypted": "Your API keys will be securely encrypted"
+    }
+  },
+
+  "payment": {
+    "title": "Integrated Secure Payment System",
+    "subtitle": "Choose your preferred payment method from multiple secure options",
+    "amount": "Required Amount",
+    "chooseMethod": "Choose Preferred Payment Method",
+    "usdtWarning": "Important USDT Payment Warning",
+    "networkMatch": "Ensure the network exactly matches your sending wallet",
+    "doubleCheck": "Double-check address and network before sending to confirm",
+    "irreversible": "Transactions are irreversible and cannot be canceled",
+    "selectNetwork": "Select Appropriate Transfer Network",
+    "walletInfo": "Secure Wallet Information",
+    "walletAddress": "Private Wallet Address",
+    "network": "Network Used",
+    "amountToSend": "Exact Amount to Send",
+    "shamBankInfo": "Sham Bank Information",
+    "merchantAccount": "Approved Merchant Account",
+    "beneficiary": "Official Beneficiary Name",
+    "transferInstructions": "Detailed Transfer Instructions",
+    "instruction1": "Go to Sham Bank app on your phone",
+    "instruction2": "Choose transfer to merchant account from options",
+    "instruction3": "Enter the specified merchant account number above",
+    "instruction4": "Enter the required amount precisely and send transfer",
+    "referenceNumber": "Your Reference Number",
+    "saveReference": "Save this number for follow-up and accounting",
+    "confirmUSDT": "Confirm Successful USDT Transfer",
+    "confirmBank": "Confirm Completed Bank Transfer",
+    "supportMessage": "For specialized questions and technical support, contact us at:",
+    "paymentSuccess": "Payment processed successfully",
+    "paymentPending": "Payment under review",
+    "paymentFailed": "Payment processing failed",
+    "transactionId": "Transaction ID",
+    "paymentHistory": "Payment History",
+    "subscriptionPlan": "Subscription Plan",
+    "renewSubscription": "Renew Subscription",
+    "upgradePlan": "Upgrade Plan",
+    "methods": {
+      "usdt": {
+        "name": "USDT",
+        "description": "Fastest and most secure global payment method"
+      },
+      "sham_bank": {
+        "name": "Sham Bank",
+        "description": "Secure transfer via merchant account"
+      },
+      "dev_test": {
+        "name": "Test Payment",
+        "description": "Instant activation without payment"
+      }
+    }
+  },
+
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "trading": "Trading",
+    "portfolio": "Portfolio",
+    "analytics": "Analytics",
+    "history": "History",
+    "settings": "Settings",
+    "support": "Support",
+    "documentation": "Documentation",
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "help": "Help"
+  },
+
+  "errors": {
+    "networkError": "Network connection error",
+    "serverError": "Server error",
+    "timeout": "Request timeout",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "notFound": "Not found",
+    "validationError": "Validation error",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "weakPassword": "Weak password",
+    "passwordsMismatch": "Passwords do not match",
+    "emailExists": "Email already registered",
+    "phoneExists": "Phone number already registered",
+    "invalidCredentials": "Invalid login credentials",
+    "accountLocked": "Account temporarily locked",
+    "insufficientFunds": "Insufficient funds",
+    "transactionFailed": "Transaction failed",
+    "unknownError": "Unknown error"
+  },
+
+  "success": {
+    "profileUpdated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully",
+    "tradeExecuted": "Trade executed successfully",
+    "paymentProcessed": "Payment processed successfully",
+    "subscriptionActivated": "Subscription activated successfully",
+    "settingsSaved": "Settings saved successfully",
+    "apiConnected": "API connected successfully",
+    "notificationSent": "Notification sent successfully"
+  },
+
+  "notifications": {
+    "newTrade": "New Trade",
+    "tradeClosed": "Trade Closed",
+    "priceAlert": "Price Alert",
+    "systemUpdate": "System Update",
+    "maintenance": "Scheduled Maintenance",
+    "securityAlert": "Security Alert",
+    "walletActivity": "Wallet Activity",
+    "subscriptionReminder": "Subscription Reminder"
+  },
+
+  "currencies": {
+    "usd": "US Dollar",
+    "eur": "Euro",
+    "gbp": "British Pound",
+    "jpy": "Japanese Yen",
+    "aed": "UAE Dirham",
+    "sar": "Saudi Riyal",
+    "usdt": "Tether",
+    "btc": "Bitcoin",
+    "eth": "Ethereum",
+    "bnb": "Binance Coin"
+  },
+
+  "languages": {
+    "arabic": "Arabic",
+    "english": "English",
+    "turkish": "Turkish",
+    "french": "French",
+    "spanish": "Spanish",
+    "german": "German",
+    "chinese": "Chinese",
+    "russian": "Russian"
+  },
+
+  "language": {
+    "switcher": "Language Switcher",
+    "select": "Select Language",
+    "current": "Current",
+    "realtime": "Real-time Translation",
+    "switching": "Switching Language..."
+  },
+
+  "time": {
+    "seconds": "seconds",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "thisYear": "This Year"
+  }
+}

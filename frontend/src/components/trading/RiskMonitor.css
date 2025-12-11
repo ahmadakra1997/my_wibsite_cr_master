@@ -1,0 +1,121 @@
+/* frontend/src/components/trading/RiskMonitor.css */
+/* === Risk Monitor === */
+
+.risk-monitor-container {
+  background: linear-gradient(
+    150deg,
+    rgba(15, 23, 42, 0.98),
+    rgba(2, 6, 23, 0.98)
+  );
+  border-radius: 22px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--qa-border-subtle);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.risk-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.risk-subtitle {
+  font-size: 11px;
+  color: var(--qa-text-muted);
+}
+
+/* ثلاثة مؤشرات رئيسية */
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.risk-card {
+  border-radius: 16px;
+  padding: 10px 9px 8px;
+  background: radial-gradient(
+      circle at top,
+      rgba(0, 229, 255, 0.16),
+      transparent 70%
+    ),
+    linear-gradient(145deg, #020617, #020617);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.risk-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--qa-text-soft);
+}
+
+.risk-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.risk-tag {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* ألوان حالات */
+.risk-ok {
+  color: var(--qa-success);
+}
+.risk-warning {
+  color: var(--qa-warning);
+}
+.risk-danger {
+  color: var(--qa-danger);
+}
+
+/* شريط مستوى المخاطرة */
+.risk-meter {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+  position: relative;
+}
+
+.risk-meter-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    var(--qa-success),
+    var(--qa-warning),
+    var(--qa-danger)
+  );
+}
+
+/* استجابة */
+@media (max-width: 960px) {
+  .risk-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .risk-grid {
+    grid-template-columns: 1fr;
+  }
+}

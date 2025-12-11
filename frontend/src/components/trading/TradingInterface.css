@@ -1,0 +1,130 @@
+/* === Trading Interface Layout === */
+
+.trading-interface {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 10, 40, 0.97),
+    rgba(3, 18, 66, 0.98)
+  );
+  border-radius: 26px;
+  padding: 22px 22px 20px;
+  border: 1px solid var(--qa-border-subtle);
+  box-shadow: var(--qa-shadow-soft), var(--qa-shadow-glow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* توهج ناعم بالخلفية */
+.trading-interface::before {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(
+    circle at top right,
+    rgba(0, 229, 255, 0.18),
+    transparent 60%
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.trading-interface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.trading-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trading-title h2 {
+  margin: 0;
+  font-size: clamp(20px, 2.3vw, 24px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f9fafb;
+}
+
+.trading-subtitle {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--qa-text-muted);
+}
+
+/* حالة الاتصال في الأعلى */
+.trading-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--qa-radius-pill);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: radial-gradient(
+    circle at top left,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.7)
+  );
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.trading-connection-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(148, 163, 184, 0.6);
+}
+
+/* ألوان الحالات */
+.trading-connection-open {
+  background-color: var(--qa-success);
+  box-shadow: 0 0 18px rgba(0, 245, 155, 0.75);
+}
+.trading-connection-connecting {
+  background-color: var(--qa-warning);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.7);
+}
+.trading-connection-disconnected,
+.trading-connection-closed {
+  background-color: #6b7280;
+}
+.trading-connection-error {
+  background-color: var(--qa-danger);
+  box-shadow: 0 0 18px rgba(251, 59, 127, 0.8);
+}
+
+.trading-connection-text {
+  color: var(--qa-text-muted);
+  font-weight: 500;
+}
+
+/* شبكة المحتوى */
+.trading-main-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.trading-main-left,
+.trading-main-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* استجابة */
+@media (max-width: 1024px) {
+  .trading-main-grid {
+    grid-template-columns: 1fr;
+  }
+}

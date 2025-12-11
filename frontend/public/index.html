@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="quantum">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="theme-color" content="#0A1F3A" />
+    <meta name="msapplication-TileColor" content="#0A1F3A">
+    
+    <!-- SEO Meta Tags -->
+    <title>QA TRADER - منصة التداول الكمي بالذكاء الاصطناعي | Quantum AI Trading</title>
+    <meta name="description" content="منصة تداول كمي متقدمة تعمل بالذكاء الاصطناعي - دقة تصل إلى 99.7%، تنفيذ في أقل من 0.002 ثانية، وأتمتة كاملة 24/7" />
+    <meta name="keywords" content="تداول كمي, ذكاء اصطناعي, تداول آلي, منصات تداول, cryptocurrency, quantum trading, AI trading" />
+    <meta name="author" content="QUANTUM AI TRADING PLATFORM" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="QA TRADER - منصة التداول الكمي بالذكاء الاصطناعي" />
+    <meta property="og:description" content="تجربة مستقبل التداول الآلي بتقنية الذكاء الاصطناعي الكمي - دقة وسرعة غير مسبوقة" />
+    <meta property="og:image" content="/assets/og-image.jpg" />
+    <meta property="og:url" content="https://quantum-trader.com" />
+    <meta property="og:site_name" content="QA TRADER" />
+    <meta property="og:locale" content="ar_SA" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="QA TRADER - منصة التداول الكمي بالذكاء الاصطناعي" />
+    <meta name="twitter:description" content="منصة تداول كمي متقدمة تعمل بالذكاء الاصطناعي - دقة وسرعة غير مسبوقة" />
+    <meta name="twitter:image" content="/assets/twitter-image.jpg" />
+    <meta name="twitter:site" content="@quantumtrader" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FinancialService",
+      "name": "QA TRADER",
+      "alternateName": "Quantum AI Trader",
+      "description": "منصة تداول كمي متقدمة تعمل بالذكاء الاصطناعي",
+      "url": "https://quantum-trader.com",
+      "logo": "https://quantum-trader.com/assets/logo.png",
+      "sameAs": [
+        "https://twitter.com/quantumtrader",
+        "https://linkedin.com/company/quantumtrader"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+963-XXX-XXXX",
+        "contactType": "customer service",
+        "availableLanguage": ["ar", "en"]
+      },
+      "areaServed": "Worldwide",
+      "serviceType": "Algorithmic Trading Platform"
+    }
+    </script>
+
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
+    <link rel="shortcut icon" href="/assets/icons/favicon.ico">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QA TRADER">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+
+    <!-- Tailwind CSS مع تحسينات مخصصة -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'quantum': {
+                '50': '#f0f9ff',
+                '100': '#e0f2fe',
+                '200': '#bae6fd',
+                '300': '#7dd3fc',
+                '400': '#38bdf8',
+                '500': '#0ea5e9',
+                '600': '#0284c7',
+                '700': '#0369a1',
+                '800': '#075985',
+                '900': '#0c4a6e',
+                'dark': '#0A1F3A'
+              },
+              'neon': {
+                'blue': '#00D4FF',
+                'green': '#00FF88',
+                'purple': '#8B5CF6',
+                'pink': '#EC4899'
+              },
+              'energy': {
+                'purple': '#8B5CF6',
+                'blue': '#3B82F6',
+                'cyan': '#06B6D4'
+              }
+            },
+            fontFamily: {
+              'inter': ['Inter', 'system-ui', 'sans-serif'],
+              'arabic': ['IBM Plex Sans Arabic', 'Tahoma', 'sans-serif'],
+              'english': ['Inter', 'system-ui', 'sans-serif']
+            },
+            animation: {
+              'quantum-pulse': 'quantum-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'glow': 'glow 2s ease-in-out infinite alternate',
+              'shimmer': 'shimmer 2.5s ease-in-out infinite',
+            },
+            keyframes: {
+              'quantum-pulse': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.7 }
+              },
+              'float': {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-20px)' }
+              },
+              'glow': {
+                '0%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.3)' },
+                '100%': { boxShadow: '0 0 30px rgba(0, 212, 255, 0.6)' }
+              },
+              'shimmer': {
+                '0%': { backgroundPosition: '-500px 0' },
+                '100%': { backgroundPosition: '500px 0' }
+              }
+            },
+            backgroundImage: {
+              'quantum-gradient': 'linear-gradient(135deg, #0A1F3A 0%, #1E3A8A 50%, #00D4FF 100%)',
+              'energy-gradient': 'linear-gradient(135deg, #8B5CF6 0%, #00D4FF 100%)',
+              'neon-grid': 'linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px)',
+              'shimmer-gradient': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)'
+            }
+          }
+        },
+        plugins: [
+          function({ addUtilities }) {
+            const newUtilities = {
+              '.text-shadow': {
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
+              },
+              '.text-shadow-lg': {
+                textShadow: '0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)'
+              },
+              '.backdrop-blur-glass': {
+                backdropFilter: 'blur(16px) saturate(180%)',
+                backgroundColor: 'rgba(10, 31, 58, 0.7)'
+              }
+            }
+            addUtilities(newUtilities)
+          }
+        ]
+      }
+    </script>
+
+    <!-- الأنماط المخصصة المحسنة -->
+    <style>
+      /* تحميل الخطوط بشكل غير متزامن */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+      
+      /* تحسينات الأداء */
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      body {
+        background-color: #0A1F3A;
+        color: #FFFFFF;
+        font-family: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        line-height: 1.6;
+        text-rendering: optimizeSpeed;
+      }
+
+      /* تحسينات للغة العربية */
+      [lang="ar"] {
+        font-family: 'IBM Plex Sans Arabic', 'Tahoma', sans-serif;
+        letter-spacing: 0;
+      }
+
+      /* تحسينات للغة الإنجليزية */
+      [lang="en"] {
+        font-family: 'Inter', 'system-ui', sans-serif;
+      }
+
+      /* تأثيرات الجسيمات المتقدمة */
+      .quantum-particle {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.6;
+        animation: particle-float 15s infinite linear;
+      }
+
+      @keyframes particle-float {
+        0% { 
+          transform: translateY(100vh) translateX(0) rotate(0deg) scale(0.5);
+          opacity: 0;
+        }
+        10% { opacity: 0.6; }
+        90% { opacity: 0.6; }
+        100% { 
+          transform: translateY(-100vh) translateX(100px) rotate(360deg) scale(1.2);
+          opacity: 0;
+        }
+      }
+
+      /* تحسينات التدرج والظلال */
+      .quantum-card {
+        background: linear-gradient(135deg, rgba(10, 31, 58, 0.9) 0%, rgba(30, 58, 138, 0.7) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 16px;
+      }
+
+      /* تأثيرات النيون */
+      .neon-border {
+        border: 1px solid #00D4FF;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.5),
+                   inset 0 0 10px rgba(0, 212, 255, 0.2);
+      }
+
+      /* تحسينات إمكانية الوصول */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* تحسينات للشاشات الصغيرة */
+      @media (max-width: 768px) {
+        body {
+          font-size: 14px;
+        }
+      }
+
+      /* تحسينات التحميل */
+      .loading-skeleton {
+        background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+      }
+
+      /* تحسينات الطباعة */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+      }
+
+      /* تحسينات التركيز لإمكانية الوصول */
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid #00D4FF;
+        outline-offset: 2px;
+      }
+
+      /* تحسينات التحديث الحية */
+      .live-indicator {
+        animation: live-pulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes live-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+    </style>
+
+    <!-- تحميل البرامج النصية بشكل غير متزامن -->
+    <script>
+      // تحميل التطبيق بشكل تقدمي
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+
+      // إدارة السمة (الوضع المظلم/الفاتح)
+      function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+      }
+
+      // التحميل الأولي للسمة
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'quantum';
+        setTheme(savedTheme);
+      })();
+    </script>
+  </head>
+
+  <body class="min-h-screen bg-quantum-dark overflow-x-hidden">
+    <!-- جسيمات الخلفية الديناميكية -->
+    <div id="quantum-particles" class="fixed inset-0 pointer-events-none z-0"></div>
+    
+    <!-- شاشة التحميل -->
+    <div id="loading-screen" class="fixed inset-0 bg-quantum-dark flex items-center justify-center z-50 transition-opacity duration-500">
+      <div class="text-center">
+        <div class="w-16 h-16 border-4 border-neon-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-neon-blue text-lg font-semibold" data-i18n="loading">جاري التحميل...</p>
+      </div>
+    </div>
+
+    <!-- تطبيق React الرئيسي -->
+    <div id="root" class="relative z-10 min-h-screen"></div>
+
+    <!-- البرامج النصية للتحسين -->
+    <script>
+      // إخفاء شاشة التحميل عند اكتمال تحميل الصفحة
+      window.addEventListener('load', function() {
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => loadingScreen.remove(), 500);
+          }
+        }, 1000);
+      });
+
+      // إنشاء جسيمات ديناميكية
+      function createParticles() {
+        const container = document.getElementById('quantum-particles');
+        if (!container) return;
+
+        const particles = 50;
+        const symbols = ['●', '◆', '■', '▲', '★', '✦'];
+        
+        for (let i = 0; i < particles; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'quantum-particle text-neon-blue';
+          particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+          particle.style.left = Math.random() * 100 + 'vw';
+          particle.style.fontSize = (Math.random() * 12 + 8) + 'px';
+          particle.style.animationDelay = Math.random() * 15 + 's';
+          particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+          container.appendChild(particle);
+        }
+      }
+
+      // تهيئة الجسيمات بعد تحميل الصفحة
+      window.addEventListener('load', createParticles);
+
+      // إدارة الخطأ العام
+      window.addEventListener('error', function(e) {
+        console.error('Application Error:', e.error);
+        // يمكن إضافة تقارير الأخطاء إلى خدمة مثل Sentry هنا
+      });
+
+      // تحسينات الأداء
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+
+      // تحسينات إمكانية الوصول
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          document.body.classList.add('keyboard-navigation');
+        }
+      });
+
+      document.addEventListener('mousedown', function() {
+        document.body.classList.remove('keyboard-navigation');
+      });
+    </script>
+
+    <!-- تحليلات Google (اختياري) -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+    -->
+  </body>
+</html>

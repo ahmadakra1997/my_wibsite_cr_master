@@ -1,0 +1,459 @@
+.bot-performance-container {
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e8ed;
+  margin: 20px 0;
+}
+
+.performance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.performance-header h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.time-range-select {
+  padding: 10px 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #4a5568;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.time-range-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.refresh-btn {
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* بطاقات المقاييس */
+.metrics-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  padding: 25px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card.primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.metric-card.success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.metric-card.info {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.metric-card.warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.metric-icon {
+  font-size: 2.5rem;
+  margin-right: 15px;
+  opacity: 0.9;
+}
+
+.metric-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.metric-value.success {
+  color: #10b981;
+}
+
+.metric-value.danger {
+  color: #ef4444;
+}
+
+.metric-value.efficiency-excellent {
+  color: #10b981;
+}
+
+.metric-value.efficiency-good {
+  color: #3b82f6;
+}
+
+.metric-value.efficiency-average {
+  color: #f59e0b;
+}
+
+.metric-value.efficiency-poor {
+  color: #ef4444;
+}
+
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.trend-indicator {
+  font-size: 1rem;
+}
+
+/* التحليلات المتقدمة */
+.advanced-analytics {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+.analytics-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 15px;
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: #718096;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.tab-btn:hover {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.tab-btn.active {
+  background: #667eea;
+  color: white;
+}
+
+.analytics-content {
+  min-height: 300px;
+}
+
+/* تحليل الربحية */
+.profit-stats, .risk-metrics, .trades-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.profit-stat, .risk-metric, .trades-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.profit-stat .label, .risk-metric .label, .trades-metric .label {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.profit-stat .value, .risk-metric .value, .trades-metric .value {
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.value.success {
+  color: #10b981;
+}
+
+.value.danger {
+  color: #ef4444;
+}
+
+/* الرسوم البيانية المبسطة */
+.chart-placeholder {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.chart-header {
+  margin-bottom: 15px;
+}
+
+.chart-header h5 {
+  margin: 0;
+  color: #2d3748;
+}
+
+.chart-content {
+  text-align: center;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 10px;
+  height: 150px;
+  margin-top: 20px;
+}
+
+.chart-bar {
+  width: 30px;
+  background: linear-gradient(to top, #667eea, #764ba2);
+  border-radius: 5px 5px 0 0;
+  transition: all 0.3s ease;
+}
+
+.chart-bar:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+/* تقييم المخاطرة */
+.risk-assessment {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.risk-level {
+  margin-top: 15px;
+}
+
+.risk-bar {
+  width: 100%;
+  height: 20px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.risk-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.risk-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+/* توزيع الصفقات */
+.distribution-chart {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.distribution-bars {
+  display: flex;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 15px;
+}
+
+.dist-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.dist-bar.success {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.dist-bar.danger {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+/* التوصيات */
+.performance-recommendations {
+  background: #f0f9ff;
+  border-radius: 15px;
+  padding: 25px;
+  border-left: 4px solid #3b82f6;
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.recommendation {
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.recommendation.warning {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+}
+
+.recommendation.danger {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.recommendation.info {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.recommendation.success {
+  background: #f0fdf4;
+  border-left-color: #10b981;
+}
+
+.recommendation strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #1f2937;
+}
+
+/* التحميل */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+/* التصميم المتجاوب */
+@media (max-width: 768px) {
+  .bot-performance-container {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .performance-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .header-controls {
+    justify-content: space-between;
+  }
+  
+  .metrics-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .analytics-tabs {
+    flex-direction: column;
+  }
+  
+  .profit-stats, .risk-metrics, .trades-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-bars {
+    height: 100px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
