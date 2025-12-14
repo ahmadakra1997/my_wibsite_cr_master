@@ -21,13 +21,13 @@ const ChartLegend = ({ crosshairData, currentSymbol, theme = 'dark' }) => {
     if (!crosshairData || !crosshairData.price) return null;
 
     const { time, price } = crosshairData;
-
     let open = null;
     let high = null;
     let low = null;
     let close = null;
 
     if (typeof price === 'number') {
+      // لو جاي من الـ crosshair كقيمة واحدة فقط
       close = price;
     } else if (typeof price === 'object') {
       open = price.open ?? price.o ?? null;
@@ -38,7 +38,8 @@ const ChartLegend = ({ crosshairData, currentSymbol, theme = 'dark' }) => {
 
     const formatTime = (tVal) => {
       if (!tVal) return '--';
-      // لو كان timestamp بالثواني
+
+      // timestamp بالثواني
       if (typeof tVal === 'number') {
         try {
           const d = new Date(tVal * 1000);
@@ -47,7 +48,8 @@ const ChartLegend = ({ crosshairData, currentSymbol, theme = 'dark' }) => {
           return String(tVal);
         }
       }
-      // BusinessDay من lightweight-charts (كائن { year, month, day })
+
+      // BusinessDay من lightweight-charts ({ year, month, day })
       if (typeof tVal === 'object') {
         const y = tVal.year || tVal.y;
         const m = tVal.month || tVal.m;
@@ -58,6 +60,7 @@ const ChartLegend = ({ crosshairData, currentSymbol, theme = 'dark' }) => {
           return `${y}-${mm}-${dd}`;
         }
       }
+
       return String(tVal);
     };
 
@@ -70,64 +73,136 @@ const ChartLegend = ({ crosshairData, currentSymbol, theme = 'dark' }) => {
     };
   }, [crosshairData]);
 
-  const bg =
-    theme === 'light'
-      ? 'bg-slate-50 border-slate-200'
-      : 'bg-slate-900/90 border-slate-700/80';
+  const isLight = theme === 'light';
+
+  const containerStyle = {
+    borderRadius: 16,
+    padding: '6px 9px',
+    border: isLight
+      ? '1px solid rgba(148,163,184,0.45)'
+      : '1px solid rgba(30,64,175,0.8)',
+    background: isLight
+      ? 'linear-gradient(135deg, #f9fafb, #e0f2fe)'
+      : 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(8,47,73,0.96))',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+  };
+
+  const headerStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 8,
+    alignItems: 'center',
+  };
 
   return (
-    <div
-      className={`mt-2 rounded-xl border px-3 py-2.5 text-[0.78rem] ${bg}`}
-      data-testid="chart-legend"
-    >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="flex flex-col">
-          <span className="text-xs font-semibold text-slate-100">
+    <section className="chart-legend" style={containerStyle}>
+      {/* العنوان والوقت */}
+      <div style={headerStyle}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
+            alignItems: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: isLight ? '#0f172a' : '#e5e7eb',
+            }}
+          >
             {currentSymbol}{' '}
-            <span className="text-[0.7rem] text-slate-400">
-              {t('charts.legendTitle', 'بيانات الشمعة الحالية')}
-            </span>
+            ·{' '}
+            {t('charts.legendTitle', 'بيانات الشمعة الحالية')}
           </span>
-          <span className="text-[0.7rem] text-slate-400">
-            {parsed ? parsed.timeLabel : t(
-              'charts.legendHint',
-              'حرّك المؤشر فوق الشموع لعرض التفاصيل.',
-            )}
+
+          <span
+            style={{
+              fontSize: 10,
+              padding: '2px 8px',
+              borderRadius: 999,
+              border: isLight
+                ? '1px solid rgba(59,130,246,0.5)'
+                : '1px solid rgba(56,189,248,0.8)',
+              color: isLight ? '#1f2937' : '#e0f2fe',
+              background: isLight
+                ? 'rgba(219,234,254,0.8)'
+                : 'rgba(15,23,42,0.9)',
+            }}
+          >
+            {parsed
+              ? parsed.timeLabel
+              : t(
+                  'charts.legendHint',
+                  'حرّك المؤشر فوق الشموع لعرض التفاصيل.',
+                )}
           </span>
         </div>
+
+        {parsed && (
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft, #9ca3af)',
+            }}
+          >
+            {t('charts.currentPrice', 'السعر الحالي')}: {' '}
+            <strong
+              style={{
+                color: isLight ? '#111827' : '#e5e7eb',
+              }}
+            >
+              {formatNumber(parsed.close)}
+            </strong>
+          </span>
+        )}
       </div>
 
+      {/* قيم O / H / L / C */}
       {parsed && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 6,
+            marginTop: 4,
+          }}
+        >
           <LegendItem
-            label={t('charts.open', 'الافتتاح')}
+            label="O"
             value={parsed.open}
-            color="text-amber-300"
+            color="#38bdf8"
           />
           <LegendItem
-            label={t('charts.high', 'الأعلى')}
+            label="H"
             value={parsed.high}
-            color="text-emerald-300"
+            color="#4ade80"
           />
           <LegendItem
-            label={t('charts.low', 'الأدنى')}
+            label="L"
             value={parsed.low}
-            color="text-rose-300"
+            color="#f97373"
           />
           <LegendItem
-            label={t('charts.close', 'الإغلاق')}
+            label="C"
             value={parsed.close}
-            color="text-sky-300"
+            color="#e5e7eb"
           />
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
 const LegendItem = ({ label, value, color }) => {
   const num =
-    value != null && Number.isFinite(Number(value)) ? Number(value) : null;
+    value != null && Number.isFinite(Number(value))
+      ? Number(value)
+      : null;
 
   const formatted = (() => {
     if (num == null) return '--';
@@ -137,15 +212,43 @@ const LegendItem = ({ label, value, color }) => {
   })();
 
   return (
-    <div className="flex flex-col">
-      <span className="text-[0.7rem] text-slate-400 mb-0.5">
+    <div
+      style={{
+        borderRadius: 10,
+        padding: '4px 6px',
+        border: '1px solid rgba(30,64,175,0.6)',
+        background:
+          'linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,1))',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        fontSize: 11,
+      }}
+    >
+      <span
+        style={{
+          color: 'var(--qa-text-soft, #9ca3af)',
+        }}
+      >
         {label}
       </span>
-      <span className={`text-xs font-semibold ${color || 'text-slate-100'}`}>
+      <span
+        style={{
+          fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
+          color: color || '#e5e7eb',
+        }}
+      >
         {formatted}
       </span>
     </div>
   );
+};
+
+const formatNumber = (value, digits = 4) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '--';
+  return num.toFixed(digits);
 };
 
 export default ChartLegend;

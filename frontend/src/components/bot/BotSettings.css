@@ -1,139 +1,167 @@
+/* frontend/src/components/bot/BotSettings.css
+   Quantum theme (teal/blue/green) — responsive — no logic changes
+*/
+
 .bot-settings-container {
-  background: #fff;
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e1e8ed;
-  margin: 20px 0;
-  max-width: 1200px;
+  --q-teal: #22d3ee;
+  --q-blue: #38bdf8;
+  --q-green: #4ade80;
+
+  --q-ink: #0b1220;
+  --q-muted: #64748b;
+  --q-border: rgba(148, 163, 184, 0.35);
+
+  width: min(1200px, calc(100% - 32px));
+  margin: 18px auto;
+  padding: 22px;
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--q-border);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f8f9fa;
+  align-items: flex-start;
+  gap: 14px;
+
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .settings-header h2 {
   margin: 0;
-  color: #2d3748;
-  font-size: 1.5rem;
-  font-weight: 700;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .header-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.btn-test, .btn-export, .btn-import {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
+.btn-test,
+.btn-export,
+.btn-import {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.75);
+  color: #0f172a;
+
+  padding: 10px 14px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+
+.btn-test:hover,
+.btn-export:hover,
+.btn-import:hover {
+  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
 }
 
 .btn-test {
-  background: #3b82f6;
-  color: white;
-}
-
-.btn-test:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(56, 189, 248, 0.18));
 }
 
 .btn-export {
-  background: #10b981;
-  color: white;
-}
-
-.btn-export:hover {
-  background: #059669;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(74, 222, 128, 0.16));
 }
 
 .btn-import {
-  background: #f59e0b;
-  color: white;
-  cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
 }
 
-.btn-import:hover {
-  background: #d97706;
-}
-
-/* تبويبات الإعدادات */
 .settings-tabs {
   display: flex;
-  gap: 5px;
-  margin-bottom: 30px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 5px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  margin: 14px 0 18px;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 15px 20px;
-  border: none;
+  min-width: 160px;
+  border: 1px solid transparent;
   background: transparent;
-  color: #64748b;
-  border-radius: 8px;
+  color: #475569;
+
+  padding: 12px 14px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .tab-btn:hover {
-  background: #e2e8f0;
-  color: #475569;
+  background: rgba(34, 211, 238, 0.10);
+  color: #0f172a;
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
-  background: #667eea;
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  color: #05212a;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.30), rgba(56, 189, 248, 0.28), rgba(74, 222, 128, 0.28));
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10);
 }
 
-/* محتوى الإعدادات */
 .settings-content {
-  min-height: 500px;
-  margin-bottom: 30px;
+  min-height: 520px;
+  margin-bottom: 18px;
 }
 
 .tab-panel {
-  animation: fadeIn 0.3s ease;
+  animation: qsFadeUp 0.22s ease;
 }
 
 .settings-group {
-  background: #f8f9fa;
-  border-radius: 15px;
-  padding: 25px;
-  margin-bottom: 20px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
 }
 
 .settings-group h4 {
-  margin: 0 0 20px 0;
-  color: #2d3748;
-  font-size: 1.1rem;
-  border-bottom: 2px solid #e2e8f0;
+  margin: 0 0 14px 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+
   padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-/* أشكال الإدخال */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
 }
 
 .form-group {
@@ -147,33 +175,40 @@
 
 .form-group label {
   margin-bottom: 8px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 800;
+  color: #334155;
   font-size: 0.9rem;
 }
 
-.form-input, .form-select {
-  padding: 12px 15px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  background: white;
+.form-input,
+.form-select {
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+
+  font-size: 0.92rem;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.form-input:focus, .form-select:focus {
+.form-input:focus,
+.form-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.14);
 }
 
-/* المفاتيح الزلقية */
+.form-input:hover,
+.form-select:hover {
+  transform: translateY(-1px);
+}
+
 .switch {
   position: relative;
   display: inline-block;
-  width: 50px;
-  height: 24px;
-  margin-top: 5px;
+  width: 52px;
+  height: 26px;
+  margin-top: 6px;
 }
 
 .switch input {
@@ -184,40 +219,39 @@
 
 .slider {
   position: absolute;
+  inset: 0;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
+  border-radius: 999px;
+
+  background: rgba(148, 163, 184, 0.55);
+  transition: background 0.18s ease;
 }
 
 .slider:before {
-  position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
+  position: absolute;
+  height: 18px;
+  width: 18px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
-  transition: .4s;
+
+  background: #fff;
   border-radius: 50%;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  transition: transform 0.18s ease;
 }
 
 input:checked + .slider {
-  background-color: #10b981;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.95), rgba(74, 222, 128, 0.95));
 }
 
 input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* شبكة الاختيارات */
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
@@ -225,15 +259,21 @@ input:checked + .slider:before {
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  transition: background 0.3s ease;
+
+  background: rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .checkbox-label:hover {
-  background: #e5e7eb;
+  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
 }
 
 .checkbox-label input {
@@ -243,265 +283,229 @@ input:checked + .slider:before {
 .checkmark {
   width: 18px;
   height: 18px;
-  border: 2px solid #d1d5db;
-  border-radius: 4px;
-  position: relative;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(255, 255, 255, 0.8);
+  display: grid;
+  place-items: center;
 }
 
 .checkbox-label input:checked + .checkmark {
-  background: #667eea;
-  border-color: #667eea;
+  border-color: rgba(34, 211, 238, 0.55);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.9), rgba(56, 189, 248, 0.9), rgba(74, 222, 128, 0.9));
+  color: #05212a;
 }
 
 .checkbox-label input:checked + .checkmark:after {
   content: "✓";
-  color: white;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 900;
+  color: #05212a;
 }
 
-/* إشعارات */
 .notifications-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
 }
 
 .notification-category {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  padding: 16px;
 }
 
 .notification-category h5 {
-  margin: 0 0 15px 0;
-  color: #374151;
-  font-size: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 8px;
+  margin: 0 0 10px;
+  font-weight: 900;
+  color: #0f172a;
 }
 
 .notification-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+
   padding: 10px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .notification-item:last-child {
   border-bottom: none;
 }
 
-.notification-item label {
-  margin: 0;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-/* نتائج الاختبار */
 .test-results {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-left: 4px solid;
+  margin-top: 14px;
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.03);
 }
 
 .test-results.success {
-  border-left-color: #10b981;
-  background: #f0fdf4;
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(74, 222, 128, 0.10);
 }
 
 .test-results.error {
-  border-left-color: #ef4444;
-  background: #fef2f2;
-}
-
-.test-results h4 {
-  margin: 0 0 15px 0;
-  color: #374151;
+  border-color: rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.10);
 }
 
 .test-results pre {
-  background: white;
-  padding: 15px;
-  border-radius: 6px;
-  overflow-x: auto;
-  font-size: 0.8rem;
-  color: #374151;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 12px;
+  overflow: auto;
+  font-size: 0.86rem;
+  color: #0f172a;
 }
 
-/* الرسائل */
 .message {
-  padding: 15px 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-weight: 500;
-  animation: slideIn 0.3s ease;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 800;
 }
 
 .message.success {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-color: rgba(74, 222, 128, 0.45);
+  background: rgba(74, 222, 128, 0.12);
   color: #065f46;
 }
 
 .message.error {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-color: rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.12);
   color: #991b1b;
 }
 
-/* أزرار التحكم */
 .settings-actions {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 25px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  flex-wrap: wrap;
 }
 
-.btn-save, .btn-reset {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 10px;
+.btn-save,
+.btn-reset {
+  min-width: 180px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
   cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  min-width: 160px;
-}
-
-.btn-save:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.95), rgba(56, 189, 248, 0.95), rgba(74, 222, 128, 0.95));
+  color: #05212a;
 }
 
 .btn-reset {
-  background: #6b7280;
-  color: white;
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
 }
 
+.btn-save:hover:not(:disabled),
 .btn-reset:hover:not(:disabled) {
-  background: #4b5563;
   transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.14);
 }
 
-.btn-save:disabled, .btn-reset:disabled {
+.btn-save:disabled,
+.btn-reset:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* تذييل الإعدادات */
 .settings-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  gap: 10px;
+
+  padding-top: 14px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+
+  color: var(--q-muted);
+  font-weight: 700;
   font-size: 0.9rem;
-  color: #6b7280;
 }
 
-/* التحميل */
 .loading-container {
   display: flex;
-  flex-direction: column;
+  gap: 12px;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #718096;
+
+  padding: 40px 12px;
+  color: #475569;
+  font-weight: 800;
 }
 
 .spinner-large {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e2e8f0;
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 3px solid rgba(148, 163, 184, 0.35);
+  border-top-color: rgba(34, 211, 238, 0.9);
+  animation: qsSpin 1s linear infinite;
 }
 
 .spinner {
   width: 16px;
   height: 16px;
+  border-radius: 999px;
   border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  border-top-color: currentColor;
+  animation: qsSpin 1s linear infinite;
 }
 
-/* الرسوم المتحركة */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-/* التصميم المتجاوب */
 @media (max-width: 768px) {
   .bot-settings-container {
-    padding: 20px;
-    margin: 10px;
+    padding: 16px;
+    width: calc(100% - 20px);
   }
-  
+
   .settings-header {
     flex-direction: column;
-    gap: 15px;
     align-items: stretch;
   }
-  
+
   .header-actions {
-    justify-content: center;
+    justify-content: flex-start;
   }
-  
-  .settings-tabs {
-    flex-direction: column;
+
+  .tab-btn {
+    min-width: 130px;
   }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .notifications-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .settings-actions {
-    flex-direction: column;
-  }
-  
+
   .settings-footer {
     flex-direction: column;
-    gap: 10px;
-    text-align: center;
+    align-items: flex-start;
   }
+}
+
+@keyframes qsSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes qsFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

@@ -27,7 +27,6 @@ const ChartControls = ({
 
   const normalizedSymbols = useMemo(() => {
     if (!Array.isArray(symbols) || symbols.length === 0) return [];
-
     return symbols.map((item) => {
       if (typeof item === 'string') {
         return { value: item, label: item };
@@ -44,7 +43,10 @@ const ChartControls = ({
             '',
         };
       }
-      return { value: String(item), label: String(item) };
+      return {
+        value: String(item),
+        label: String(item),
+      };
     });
   }, [symbols]);
 
@@ -60,15 +62,44 @@ const ChartControls = ({
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 mb-2"
-      data-testid="chart-controls"
+      className="chart-controls"
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 12,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+      }}
     >
-      {/* اختيار الرمز */}
-      <div className="flex flex-wrap items-center gap-2 text-[0.78rem]">
-        <span className="text-slate-400">
+      {/* Symbol picker */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          minWidth: 0,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 11,
+            opacity: 0.8,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#cbd5f5',
+          }}
+        >
           {t('charts.symbol', 'الرمز')}
         </span>
-        <div className="inline-flex items-center gap-1 bg-slate-900/90 border border-slate-700/80 rounded-full px-1 py-0.5">
+
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
+          }}
+        >
           {normalizedSymbols.map((sym) => {
             const active = sym.value === currentSymbol;
             return (
@@ -76,11 +107,21 @@ const ChartControls = ({
                 key={sym.value}
                 type="button"
                 onClick={() => handleSymbolClick(sym.value)}
-                className={`px-2.5 py-1 rounded-full text-[0.75rem] font-medium transition ${
-                  active
-                    ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 shadow'
-                    : 'text-slate-200 hover:bg-slate-800/80'
-                }`}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  border: active
+                    ? '1px solid rgba(56,189,248,0.95)'
+                    : '1px solid rgba(30,64,175,0.7)',
+                  background: active
+                    ? 'linear-gradient(135deg, rgba(34,211,238,0.95), rgba(56,189,248,0.95))'
+                    : 'rgba(15,23,42,0.98)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: active ? '#020617' : '#e5e7eb',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 {sym.label}
               </button>
@@ -89,35 +130,82 @@ const ChartControls = ({
         </div>
       </div>
 
-      {/* تبديل سمة المخطط */}
-      <div className="flex items-center gap-2 text-[0.78rem]">
-        <span className="text-slate-400">
+      {/* Theme toggle */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          alignItems: 'flex-end',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 11,
+            opacity: 0.8,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#cbd5f5',
+          }}
+        >
           {t('charts.theme', 'سمة المخطط')}
         </span>
-        <div className="inline-flex items-center gap-0.5 bg-slate-900/90 border border-slate-700/80 rounded-full px-1 py-0.5">
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 6,
+          }}
+        >
           <button
             type="button"
             onClick={() => handleThemeToggle('dark')}
-            className={`px-2 py-1 rounded-full flex items-center gap-1 text-[0.75rem] ${
-              theme === 'dark'
-                ? 'bg-slate-800 text-slate-100'
-                : 'text-slate-400 hover:bg-slate-800/80'
-            }`}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 999,
+              border:
+                theme === 'dark'
+                  ? '1px solid rgba(30,64,175,0.9)'
+                  : '1px solid rgba(30,64,175,0.7)',
+              background:
+                theme === 'dark'
+                  ? 'rgba(15,23,42,0.98)'
+                  : 'rgba(15,23,42,0.9)',
+              color:
+                theme === 'dark' ? '#e5e7eb' : 'rgba(148,163,184,0.9)',
+              fontSize: 11,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
+            }}
           >
-            <span>🌙</span>
-            <span>{t('charts.themeDark', 'ليلي')}</span>
+            🌙 {t('charts.themeDark', 'ليلي')}
           </button>
+
           <button
             type="button"
             onClick={() => handleThemeToggle('light')}
-            className={`px-2 py-1 rounded-full flex items-center gap-1 text-[0.75rem] ${
-              theme === 'light'
-                ? 'bg-slate-100 text-slate-900'
-                : 'text-slate-400 hover:bg-slate-800/80'
-            }`}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 999,
+              border:
+                theme === 'light'
+                  ? '1px solid rgba(34,197,235,0.95)'
+                  : '1px solid rgba(148,163,184,0.7)',
+              background:
+                theme === 'light'
+                  ? '#f9fafb'
+                  : 'rgba(15,23,42,0.9)',
+              color: theme === 'light' ? '#020617' : '#e5e7eb',
+              fontSize: 11,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
+            }}
           >
-            <span>☀️</span>
-            <span>{t('charts.themeLight', 'نهاري')}</span>
+            ☀️ {t('charts.themeLight', 'نهاري')}
           </button>
         </div>
       </div>

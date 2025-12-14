@@ -1,8 +1,10 @@
 /* frontend/src/components/dashboard/Dashboard.css */
+
 /* === Quantum Dashboard === */
 
 .dashboard-container {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at top left,
       rgba(0, 229, 255, 0.12),
       transparent 60%
@@ -17,6 +19,8 @@
   gap: 14px;
   color: var(--qa-text-main);
 }
+
+/* الهيدر */
 
 .dashboard-header {
   display: flex;
@@ -44,7 +48,74 @@
   color: var(--qa-text-muted);
 }
 
+/* حالة الاتصال */
+
+.dashboard-connection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.dashboard-connection-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.dashboard-connection-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.9);
+}
+
+.dashboard-connection-pill-label {
+  color: var(--qa-text-main);
+}
+
+/* ألوان حالات مختلفة */
+
+.dashboard-connection-pill--live {
+  border-color: rgba(34, 197, 94, 0.75);
+  background: rgba(5, 46, 22, 0.96);
+}
+
+.dashboard-connection-pill--live .dashboard-connection-pill-dot {
+  background: #22c55e;
+}
+
+.dashboard-connection-pill--connecting {
+  border-color: rgba(56, 189, 248, 0.8);
+  background: rgba(8, 47, 73, 0.96);
+}
+
+.dashboard-connection-pill--connecting .dashboard-connection-pill-dot {
+  background: #0ea5e9;
+}
+
+.dashboard-connection-pill--error {
+  border-color: rgba(248, 113, 113, 0.75);
+  background: rgba(54, 20, 34, 0.96);
+}
+
+.dashboard-connection-pill--error .dashboard-connection-pill-dot {
+  background: #fb3b7f;
+}
+
+.dashboard-connection-pill--offline {
+  border-color: rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.98);
+}
+
 /* شبكة الكروت */
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -99,11 +170,13 @@
   font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  z-index: 1;
 }
 
 .dashboard-card-sub {
   font-size: 11px;
   color: var(--qa-text-muted);
+  z-index: 1;
 }
 
 .dashboard-card-footer {
@@ -112,14 +185,17 @@
   align-items: center;
   font-size: 11px;
   color: var(--qa-text-soft);
+  z-index: 1;
 }
 
 /* استجابة */
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
 @media (max-width: 640px) {
   .dashboard-grid {
     grid-template-columns: 1fr;

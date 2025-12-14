@@ -20,19 +20,19 @@ const DepthChart = ({ bids = [], asks = [], theme = 'dark', height = 200 }) => {
   const { bidPoints, askPoints } = useMemo(() => {
     const normalizeSide = (orders, isBid) => {
       if (!Array.isArray(orders) || orders.length === 0) return [];
+
       const normalized = orders
         .map((o) => {
           const price = Number(o.price ?? o[0]);
           const quantity = Number(o.quantity ?? o.qty ?? o[1]);
+
           if (!Number.isFinite(price) || !Number.isFinite(quantity)) return null;
           return { price, quantity };
         })
         .filter(Boolean);
 
-      // ترتيب الأسعار
-      normalized.sort((a, b) =>
-        isBid ? b.price - a.price : a.price - b.price,
-      );
+      // sort by price
+      normalized.sort((a, b) => (isBid ? b.price - a.price : a.price - b.price));
 
       let cumulative = 0;
       return normalized.map((level, index) => {
@@ -61,9 +61,7 @@ const DepthChart = ({ bids = [], asks = [], theme = 'dark', height = 200 }) => {
 
       return levels
         .map((level, idx) => {
-          const x =
-            xStart +
-            (idx / Math.max(levels.length - 1, 1)) * sideWidth;
+          const x = xStart + (idx / Math.max(levels.length - 1, 1)) * sideWidth;
           const y = 100 - (level.cumulative / maxCum) * 100;
           return `${x.toFixed(2)},${y.toFixed(2)}`;
         })
@@ -93,109 +91,120 @@ const DepthChart = ({ bids = [], asks = [], theme = 'dark', height = 200 }) => {
     <div
       className="depth-chart"
       style={{
-        width: '100%',
-        height,
-        borderRadius: '12px',
-        border: '1px solid rgba(30,64,175,0.8)',
+        borderRadius: 18,
+        border: '1px solid rgba(30,64,175,0.55)',
         background: bg,
-        padding: '0.4rem 0.5rem',
-        boxSizing: 'border-box',
-        direction: 'rtl',
+        padding: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
       }}
     >
       <div
+        className="depth-chart-header"
         style={{
-          fontSize: '0.78rem',
-          color:
-            theme === 'light'
-              ? 'rgba(71,85,105,0.95)'
-              : 'rgba(148,163,184,0.96)',
-          marginBottom: '0.25rem',
           display: 'flex',
           justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: 12,
         }}
       >
-        <span>{t('orderBook.depthChart', 'مخطط العمق')}</span>
         <span
           style={{
-            display: 'inline-flex',
-            gap: '0.6rem',
-            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: theme === 'light' ? '#0f172a' : '#e5e7eb',
+          }}
+        >
+          {t('orderBook.depthChart', 'مخطط العمق')}
+        </span>
+
+        <div
+          className="depth-chart-legend"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            fontSize: 11,
           }}
         >
           <span
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
+              width: 10,
+              height: 10,
+              borderRadius: '999px',
+              background: bidColor,
+              display: 'inline-block',
             }}
-          >
-            <span
-              style={{
-                width: '0.7rem',
-                height: '0.3rem',
-                borderRadius: '999px',
-                backgroundColor: bidColor,
-              }}
-            />
-            {t('orderBook.bids', 'عروض الشراء')}
-          </span>
+          />
           <span
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
+              color: theme === 'light' ? '#0f172a' : '#cbd5f5',
             }}
           >
-            <span
-              style={{
-                width: '0.7rem',
-                height: '0.3rem',
-                borderRadius: '999px',
-                backgroundColor: askColor,
-              }}
-            />
+            {t('orderBook.bids', 'عروض الشراء')}
+          </span>
+
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '999px',
+              background: askColor,
+              display: 'inline-block',
+            }}
+          />
+          <span
+            style={{
+              color: theme === 'light' ? '#0f172a' : '#cbd5f5',
+            }}
+          >
             {t('orderBook.asks', 'طلبات البيع')}
           </span>
-        </span>
+        </div>
       </div>
 
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
-        style={{ width: '100%', height: 'calc(100% - 1.1rem)' }}
+        style={{
+          width: '100%',
+          height,
+          borderRadius: 12,
+          background: theme === 'light' ? '#f9fafb' : '#020617',
+        }}
       >
-        {/* خطوط الشبكة */}
+        {/* Grid lines */}
         {[25, 50, 75].map((y) => (
           <line
+            // eslint-disable-next-line react/no-array-index-key
             key={y}
             x1="0"
-            y1={y}
+            y1={`${y}%`}
             x2="100"
-            y2={y}
+            y2={`${y}%`}
             stroke={gridColor}
-            strokeWidth="0.3"
-            strokeDasharray="1,3"
+            strokeWidth="0.4"
           />
         ))}
 
-        {/* منحنى العروض */}
+        {/* Bid depth curve */}
         {bidPoints && (
           <polyline
             points={bidPoints}
             fill="none"
             stroke={bidColor}
-            strokeWidth="1.2"
+            strokeWidth="1.4"
           />
         )}
 
-        {/* منحنى الطلبات */}
+        {/* Ask depth curve */}
         {askPoints && (
           <polyline
             points={askPoints}
             fill="none"
             stroke={askColor}
-            strokeWidth="1.2"
+            strokeWidth="1.4"
           />
         )}
       </svg>

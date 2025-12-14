@@ -1,16 +1,14 @@
 // frontend/src/components/trading/PositionActions.jsx
-
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
  * PositionActions
  * لوحة إجراءات للمركز المحدد أسفل قائمة المراكز:
- * - تعديل مستويات وقف الخسارة / جني الأرباح (اختياري)
- * - زر إغلاق المركز الآن
- * - زر العودة لقائمة المراكز
+ * - تعديل SL / TP
+ * - إغلاق المركز الآن بسعر السوق
+ * - العودة لقائمة المراكز
  *
- * لا تغيّر منطق التداول في PositionManager، فقط تستدعي:
  * onClose(positionId, closeData?)
  * onModify(positionId, modificationData?)
  * onDeselect()
@@ -23,11 +21,12 @@ const PositionActions = ({
   theme = 'dark',
 }) => {
   const { t } = useTranslation();
-
   const [stopLoss, setStopLoss] = useState('');
   const [takeProfit, setTakeProfit] = useState('');
 
-  const hasActions = typeof onClose === 'function' || typeof onModify === 'function';
+  const hasActions =
+    typeof onClose === 'function' ||
+    typeof onModify === 'function';
 
   if (!position || !hasActions) return null;
 
@@ -44,22 +43,34 @@ const PositionActions = ({
   } = position;
 
   const isClosed = status === 'closed';
+  const isLong = side === 'long';
 
   const currentPrice = useMemo(() => {
-    if (calculatedFields?.currentPrice != null) return calculatedFields.currentPrice;
-    if (typeof position.marketPrice === 'number') return position.marketPrice;
+    if (calculatedFields?.currentPrice != null) {
+      return calculatedFields.currentPrice;
+    }
+    if (typeof position.marketPrice === 'number') {
+      return position.marketPrice;
+    }
     return Number(entryPrice) || 0;
   }, [calculatedFields, position.marketPrice, entryPrice]);
 
-  const unrealizedPnl = calculatedFields?.unrealizedPnl ?? 0;
-  const pnlPercentage = calculatedFields?.pnlPercentage ?? 0;
+  const unrealizedPnl =
+    calculatedFields?.unrealizedPnl ?? 0;
+  const pnlPercentage =
+    calculatedFields?.pnlPercentage ?? 0;
 
-  const isLong = side === 'long';
+  const pnlPositive = unrealizedPnl > 0;
 
-  const containerClasses =
+  const containerBg =
     theme === 'dark'
-      ? 'bg-slate-900/90 border border-slate-700 shadow-2xl'
-      : 'bg-slate-50 border border-slate-200 shadow-lg';
+      ? 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(8,47,73,0.98))'
+      : 'linear-gradient(135deg, #f9fafb, #e0f2fe)';
+
+  const containerBorder =
+    theme === 'dark'
+      ? '1px solid rgba(30,64,175,0.7)'
+      : '1px solid rgba(148,163,184,0.6)';
 
   const handleCloseNow = () => {
     if (!onClose || !id || isClosed) return;
@@ -70,10 +81,8 @@ const PositionActions = ({
         'هل أنت متأكد من إغلاق هذا المركز فوراً بسعر السوق الحالي؟',
       ),
     );
-
     if (!confirmed) return;
 
-    // نرسل نوع الإغلاق على شكل بيانات اختيارية
     onClose(id, { type: 'market' });
   };
 
@@ -86,7 +95,10 @@ const PositionActions = ({
       modificationData.stopLoss = Number(stopLoss);
     }
 
-    if (takeProfit && !Number.isNaN(Number(takeProfit))) {
+    if (
+      takeProfit &&
+      !Number.isNaN(Number(takeProfit))
+    ) {
       modificationData.takeProfit = Number(takeProfit);
     }
 
@@ -105,81 +117,152 @@ const PositionActions = ({
   };
 
   return (
-    <div
-      className={`rounded-2xl px-3.5 py-3 mt-3 ${containerClasses}`}
-      data-testid="position-actions"
+    <section
+      className="position-actions-panel"
+      style={{
+        borderRadius: 20,
+        padding: 10,
+        border: containerBorder,
+        background: containerBg,
+        boxShadow:
+          '0 18px 35px rgba(15,23,42,0.88)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
     >
-      {/* رأس اللوحة: معلومات سريعة عن المركز */}
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-100">
-              {symbol}
-            </span>
-            <span
-              className={`text-[0.7rem] px-2 py-0.5 rounded-full border ${
-                isLong
-                  ? 'border-emerald-400/60 text-emerald-300 bg-emerald-900/40'
-                  : 'border-rose-400/60 text-rose-300 bg-rose-900/40'
-              }`}
-            >
-              {isLong
-                ? t('positions.long', 'شراء (Long)')
-                : t('positions.short', 'بيع (Short)')}
-            </span>
-            {leverage && (
-              <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-600 text-slate-300">
-                {leverage}x
-              </span>
-            )}
+      {/* رأس اللوحة */}
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#e5e7eb',
+            }}
+          >
+            {t('positions.actionsTitle', 'إجراءات المركز')}
           </div>
-
-          <div className="text-[0.7rem] text-slate-400">
-            {t('positions.size', 'الحجم')}:{' '}
-            <span className="text-slate-200">
-              {formatNumber(size || quantity, 4)} {symbol}
-            </span>
-          </div>
-
-          <div className="text-[0.7rem] text-slate-400">
-            {t('positions.entryPrice', 'سعر الدخول')}:{' '}
-            <span className="text-slate-200">
-              {formatNumber(entryPrice, 4)}
-            </span>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft)',
+            }}
+          >
+            {symbol}{' '}
+            ·{' '}
+            {isLong
+              ? t('positions.long', 'شراء (Long)')
+              : t('positions.short', 'بيع (Short)')}{' '}
+            {leverage && `· ${leverage}x`}
           </div>
         </div>
 
-        <div className="text-right space-y-1 text-[0.7rem]">
-          <div className="text-slate-400">
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--qa-text-soft)',
+            textAlign: 'end',
+          }}
+        >
+          <div>
+            {t('positions.size', 'الحجم')}:{' '}
+            <strong style={{ color: '#e5e7eb' }}>
+              {formatNumber(size || quantity, 4)} {symbol}
+            </strong>
+          </div>
+          <div>
+            {t('positions.entryPrice', 'سعر الدخول')}:{' '}
+            <strong style={{ color: '#e5e7eb' }}>
+              {formatNumber(entryPrice, 4)}
+            </strong>
+          </div>
+          <div>
             {t('positions.currentPrice', 'السعر الحالي')}:{' '}
-            <span className="text-slate-200">
+            <strong style={{ color: '#e5e7eb' }}>
               {formatNumber(currentPrice, 4)}
-            </span>
+            </strong>
           </div>
-          <div className="text-slate-400">
-            {t('positions.unrealizedPnl', 'الربح/الخسارة الحالية')}:{' '}
-            <span
-              className={`font-semibold ${
-                unrealizedPnl > 0
-                  ? 'text-emerald-300'
-                  : unrealizedPnl < 0
-                    ? 'text-rose-300'
-                    : 'text-slate-200'
-              }`}
-            >
-              {formatNumber(unrealizedPnl, 2)} USDT
-              <span className="ml-1">
-                ({formatNumber(pnlPercentage, 2)}%)
-              </span>
-            </span>
-          </div>
+        </div>
+      </header>
+
+      {/* PnL الحالي */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 4,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--qa-text-soft)',
+          }}
+        >
+          {t(
+            'positions.unrealizedPnl',
+            'الربح/الخسارة الحالية',
+          )}
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
+            color: pnlPositive ? '#4ade80' : '#fca5a5',
+          }}
+        >
+          {formatNumber(unrealizedPnl, 2)} USDT{' '}
+          <span
+            style={{
+              fontSize: 11,
+              opacity: 0.8,
+            }}
+          >
+            ({formatNumber(pnlPercentage, 2)}%)
+          </span>
         </div>
       </div>
 
       {/* نموذج SL / TP */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 text-[0.75rem]">
-        <div>
-          <label className="block mb-1 text-slate-300">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(170px, 1fr))',
+          gap: 8,
+          marginTop: 6,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <label
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft)',
+            }}
+          >
             {t('positions.stopLoss', 'وقف الخسارة')}
           </label>
           <input
@@ -190,12 +273,32 @@ const PositionActions = ({
               'positions.stopLossPlaceholder',
               'مثال: 24850.5',
             )}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950/80 px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+            style={{
+              width: '100%',
+              borderRadius: 8,
+              border: '1px solid rgba(51,65,85,0.9)',
+              background: 'rgba(15,23,42,0.95)',
+              padding: '6px 9px',
+              fontSize: 11,
+              color: '#e5e7eb',
+              outline: 'none',
+            }}
           />
         </div>
 
-        <div>
-          <label className="block mb-1 text-slate-300">
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <label
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft)',
+            }}
+          >
             {t('positions.takeProfit', 'جني الأرباح')}
           </label>
           <input
@@ -206,56 +309,127 @@ const PositionActions = ({
               'positions.takeProfitPlaceholder',
               'مثال: 27600.0',
             )}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950/80 px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-400/70"
+            style={{
+              width: '100%',
+              borderRadius: 8,
+              border: '1px solid rgba(51,65,85,0.9)',
+              background: 'rgba(15,23,42,0.95)',
+              padding: '6px 9px',
+              fontSize: 11,
+              color: '#e5e7eb',
+              outline: 'none',
+            }}
           />
         </div>
       </div>
 
       {/* الأزرار */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[0.72rem]">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleApplyChanges}
-            disabled={isClosed}
-            className={`px-3 py-1.5 rounded-full text-[0.72rem] font-semibold text-slate-950 shadow-lg bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 transition ${
-              isClosed ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            💾 {t('positions.applyChanges', 'حفظ التعديلات')}
-          </button>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
+          marginTop: 10,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
+          }}
+        >
+          {onModify && !isClosed && (
+            <button
+              type="button"
+              onClick={handleApplyChanges}
+              style={{
+                fontSize: 11,
+                padding: '5px 11px',
+                borderRadius: 999,
+                border:
+                  '1px solid rgba(56,189,248,0.95)',
+                background:
+                  'linear-gradient(135deg, rgba(8,47,73,0.95), rgba(30,64,175,0.98))',
+                color: '#e0f2fe',
+                cursor: 'pointer',
+              }}
+            >
+              {t('positions.applyChanges', 'حفظ التعديلات')}
+            </button>
+          )}
 
           <button
             type="button"
             onClick={handleReset}
-            className="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 hover:bg-slate-800/80 transition"
+            style={{
+              fontSize: 11,
+              padding: '5px 11px',
+              borderRadius: 999,
+              border: '1px solid rgba(148,163,184,0.7)',
+              background: 'rgba(15,23,42,0.98)',
+              color: '#e5e7eb',
+              cursor: 'pointer',
+            }}
           >
             ♻ {t('positions.reset', 'إعادة التعيين')}
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleCloseNow}
-            disabled={isClosed}
-            className={`px-3 py-1.5 rounded-full text-[0.72rem] font-semibold text-slate-50 bg-rose-600/90 hover:bg-rose-500 shadow-lg transition ${
-              isClosed ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-          >
-            ✖ {t('positions.closeNow', 'إغلاق المركز الآن')}
-          </button>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
+          }}
+        >
+          {onClose && !isClosed && (
+            <button
+              type="button"
+              onClick={handleCloseNow}
+              style={{
+                fontSize: 11,
+                padding: '5px 11px',
+                borderRadius: 999,
+                border:
+                  '1px solid rgba(248,113,113,0.95)',
+                background:
+                  'linear-gradient(135deg, rgba(127,29,29,0.95), rgba(153,27,27,0.98))',
+                color: '#fee2e2',
+                cursor: 'pointer',
+              }}
+            >
+              ✖{' '}
+              {t(
+                'positions.closeNow',
+                'إغلاق المركز الآن',
+              )}
+            </button>
+          )}
 
           <button
             type="button"
             onClick={handleDeselectClick}
-            className="px-3 py-1.5 rounded-full text-[0.72rem] border border-slate-600 text-slate-300 hover:bg-slate-800/80 transition"
+            style={{
+              fontSize: 11,
+              padding: '5px 11px',
+              borderRadius: 999,
+              border: '1px solid rgba(148,163,184,0.7)',
+              background: 'rgba(15,23,42,0.98)',
+              color: '#e5e7eb',
+              cursor: 'pointer',
+            }}
           >
-            ⬅ {t('positions.backToList', 'العودة لقائمة المراكز')}
+            ⬅{' '}
+            {t(
+              'positions.backToList',
+              'العودة لقائمة المراكز',
+            )}
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

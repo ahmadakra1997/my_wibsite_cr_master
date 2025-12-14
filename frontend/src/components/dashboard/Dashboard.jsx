@@ -2,9 +2,9 @@
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+
 import './Dashboard.css';
 import OrderBookAnalyzer from '../../services/OrderBookAnalyzer';
-
 
 /**
  * Dashboard
@@ -58,6 +58,7 @@ const Dashboard = () => {
     trades.forEach((t) => {
       const qty = Number(t.quantity ?? 0);
       totalQty += qty;
+
       const side = (t.side || '').toLowerCase();
       if (side === 'buy') buys += 1;
       if (side === 'sell') sells += 1;
@@ -81,6 +82,7 @@ const Dashboard = () => {
 
     if (orderBook?.bids && orderBook?.asks) {
       const analysis = analyzer.analyzeOrderBook(orderBook);
+
       if (analysis && analysis.depthMetrics) {
         depthStats = {
           bidDepthNear: analysis.depthMetrics.bidDepthNear,
@@ -93,6 +95,7 @@ const Dashboard = () => {
     return { priceStats, tradeStats, depthStats };
   }, [ticker, trades, orderBook, analyzer]);
 
+  // نفس المنطق القديم للون بحسب الانحياز في دفتر الأوامر
   const imbalanceClass =
     depthStats.imbalanceLabel === 'strong-bullish' ||
     depthStats.imbalanceLabel === 'bullish'
@@ -102,30 +105,61 @@ const Dashboard = () => {
       ? 'text-down'
       : '';
 
+  // تحويل حالة الاتصال لعرض بصري فقط
+  const connectionMeta = useMemo(() => {
+    const status = (connectionStatus || '').toLowerCase();
+
+    if (status === 'open') {
+      return { label: 'LIVE', tone: 'live' };
+    }
+    if (status === 'connecting') {
+      return { label: 'CONNECTING', tone: 'connecting' };
+    }
+    if (status === 'error') {
+      return { label: 'ERROR', tone: 'error' };
+    }
+    if (status === 'closed' || status === 'disconnected') {
+      return { label: 'DISCONNECTED', tone: 'offline' };
+    }
+
+    return {
+      label: (connectionStatus || 'UNKNOWN').toUpperCase(),
+      tone: 'offline',
+    };
+  }, [connectionStatus]);
+
+  const hasDepth =
+    typeof depthStats.bidDepthNear === 'number' &&
+    typeof depthStats.askDepthNear === 'number' &&
+    (depthStats.bidDepthNear !== 0 ||
+      depthStats.askDepthNear !== 0);
+
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
+    <section className="dashboard-container">
+      <header className="dashboard-header">
         <div className="dashboard-title-block">
-          <h1 className="dashboard-title">Quantum AI Overview</h1>
+          <h2 className="dashboard-title">Quantum AI Overview</h2>
           <p className="dashboard-subtitle">
-            High-level cockpit for your trading system — prices, trades and
-            liquidity at a glance.
+            High-level cockpit for your trading system — prices,
+            trades and liquidity at a glance.
           </p>
         </div>
 
-        <div className="trading-connection">
+        <div className="dashboard-connection">
           <span
-            className={`trading-connection-dot trading-connection-${connectionStatus}`}
-          />
-          <span className="trading-connection-text">
-            {connectionStatus.toUpperCase()}
+            className={`dashboard-connection-pill dashboard-connection-pill--${connectionMeta.tone}`}
+          >
+            <span className="dashboard-connection-pill-dot" />
+            <span className="dashboard-connection-pill-label">
+              {connectionMeta.label}
+            </span>
           </span>
         </div>
-      </div>
+      </header>
 
       <div className="dashboard-grid">
-        {/* Price / Market card */}
-        <div className="dashboard-card">
+        {/* بطاقة السوق / الأسعار */}
+        <article className="dashboard-card">
           <div className="dashboard-card-header">
             <div>
               <div className="dashboard-card-title">Market</div>
@@ -134,15 +168,18 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
           <div className="dashboard-card-value">
             {priceStats.lastPrice}
           </div>
+
           <div className="dashboard-card-sub">
             24h Volume:{' '}
             {priceStats.volume24h
-              ? `${priceStats.volume24h}`
+              ? priceStats.volume24h
               : '—'}
           </div>
+
           <div className="dashboard-card-footer">
             <span>24h Change</span>
             <span
@@ -159,10 +196,10 @@ const Dashboard = () => {
                 : '—'}
             </span>
           </div>
-        </div>
+        </article>
 
-        {/* Trades card */}
-        <div className="dashboard-card">
+        {/* بطاقة نشاط التداول */}
+        <article className="dashboard-card">
           <div className="dashboard-card-header">
             <div>
               <div className="dashboard-card-title">Trades</div>
@@ -171,23 +208,25 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
           <div className="dashboard-card-value">
             {tradeStats.count}
           </div>
+
           <div className="dashboard-card-sub">
             Avg size: {tradeStats.avgSize}
           </div>
+
           <div className="dashboard-card-footer">
             <span>Buys / Sells</span>
             <span>
-              <span className="text-up">{tradeStats.buys}</span> /{' '}
-              <span className="text-down">{tradeStats.sells}</span>
+              {tradeStats.buys} / {tradeStats.sells}
             </span>
           </div>
-        </div>
+        </article>
 
-        {/* Liquidity / Depth card */}
-        <div className="dashboard-card">
+        {/* بطاقة سيولة دفتر الأوامر */}
+        <article className={`dashboard-card ${imbalanceClass}`}>
           <div className="dashboard-card-header">
             <div>
               <div className="dashboard-card-title">
@@ -198,16 +237,19 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
           <div className="dashboard-card-value">
-            {depthStats.bidDepthNear || depthStats.askDepthNear
+            {hasDepth
               ? `${depthStats.bidDepthNear.toFixed(
                   2,
                 )} / ${depthStats.askDepthNear.toFixed(2)}`
               : '—'}
           </div>
+
           <div className="dashboard-card-sub">
             Bid / Ask depth (near mid)
           </div>
+
           <div className="dashboard-card-footer">
             <span>Imbalance</span>
             <span className={imbalanceClass}>
@@ -216,9 +258,9 @@ const Dashboard = () => {
                 .toUpperCase()}
             </span>
           </div>
-        </div>
+        </article>
       </div>
-    </div>
+    </section>
   );
 };
 

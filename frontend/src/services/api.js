@@ -1,49 +1,46 @@
-// src/services/api.js
-// طبقة HTTP موحّدة لكل استدعاءات الـ backend
-// تستخدم axios + REACT_APP_API_BASE_URL
-
+// frontend/src/services/api.js
 import axios from 'axios';
 
-// 👈 استخدم متغير البيئة لو موجود، وإلا localhost
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+/**
+ * هدفنا:
+ * - لو REACT_APP_API_BASE_URL = http://localhost:5000  => نخلي baseURL = http://localhost:5000/api
+ * - لو REACT_APP_API_BASE_URL = http://localhost:5000/api => نخلي baseURL = http://localhost:5000/api (بدون تكرار)
+ */
+function resolveApiBaseURL() {
+  const raw = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000').trim();
+  const cleaned = raw.endsWith('/') ? raw.slice(0, -1) : raw;
+  if (cleaned.endsWith('/api')) return cleaned;
+  return `${cleaned}/api`;
+}
 
-// ⭐ axios instance موحد
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: resolveApiBaseURL(),
   withCredentials: true,
   timeout: 30000,
 });
 
-// ✅ Interceptors للطلبات (إضافة توكن مثلاً)
+// ✅ Interceptors للطلبات (توكن)
 api.interceptors.request.use(
   (config) => {
-    // مثال: لو تخزن التوكن في localStorage:
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// ✅ Interceptors للردود (تجهيز لرسائل الخطأ / التوست)
+// ✅ Interceptors للردود (تجهيز لرسائل الخطأ)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // هنا نقدر نضيف تكامل مع Toast/ErrorBoundary
-    console.error('[API ERROR]', error?.response || error?.message);
+    console.error('[API ERROR]', error?.response?.data || error?.message);
     return Promise.reject(error);
   },
 );
 
 // ==========================
-//   دوال خاصة بالـ Bot
+// دوال خاصة بالـ Bot (Settings / Status / Performance / History)
 // ==========================
-
-// ⚙️ إعدادات البوت
 export async function getBotSettings(params = {}) {
   const res = await api.get('/bot/settings', { params });
   return res.data;
@@ -64,7 +61,6 @@ export async function testBotConnection() {
   return res.data;
 }
 
-// 📈 بيانات استراتيجيات وأزواج التداول
 export async function getTradingPairs() {
   const res = await api.get('/bot/trading-pairs');
   return res.data;
@@ -75,7 +71,6 @@ export async function getTradingStrategies() {
   return res.data;
 }
 
-// 🧠 حالة الأداء والهستوري
 export async function getBotStatus() {
   const res = await api.get('/bot/status');
   return res.data;
@@ -92,43 +87,24 @@ export async function getTradingHistory(params = {}) {
 }
 
 // ==========================
-//   Export افتراضي للـ instance
-//   يستخدمه botService: `import api from './api'`
+// تحكم البوت (بدون تكرار /api)
 // ==========================
-export default api;
-// =====================================================
-// 🧠 دوال تحكم البوت (تكميلية للمنظومة الحالية)
-// =====================================================
-
-/**
- * تفعيل البوت التداولي من الواجهة الأمامية
- * يعتمد على مسار /api/bot/activate في الباكيند
- */
-export async function activateTradingBot() {
-  const response = await api.post('/api/bot/activate', {
-    action: 'start', // لو الباكيند يستخدم payload مختلف، عدّله هنا
-  });
-  return response.data;
+export async function controlBot(action, payload = {}) {
+  const res = await api.post('/bot/activate', { action, ...payload });
+  return res.data;
 }
 
-/**
- * إيقاف البوت التداولي
- * يعتمد على نفس المسار مع action مختلف
- */
-export async function deactivateTradingBot() {
-  const response = await api.post('/api/bot/activate', {
-    action: 'stop', // لو الباكيند يستخدم /api/bot/deactivate غيره هنا
-  });
-  return response.data;
+export async function activateTradingBot(payload = {}) {
+  return controlBot('start', payload);
 }
 
-/**
- * جلب تحليلات التداول المتقدمة (للرسوم والتحليلات في BotPerformance)
- * إذا كان عندك مسار مختلف في الباكيند، عدّل الـ URL أدناه فقط.
- */
+export async function deactivateTradingBot(payload = {}) {
+  return controlBot('stop', payload);
+}
+
 export async function getTradingAnalytics(timeRange = '24h') {
-  const response = await api.get('/api/bot/performance/analytics', {
-    params: { range: timeRange },
-  });
-  return response.data;
+  const res = await api.get('/bot/performance/analytics', { params: { range: timeRange } });
+  return res.data;
 }
+
+export default api;

@@ -1,4 +1,6 @@
-// frontend/src/services/botService.js - النسخة المتكاملة والمحدثة
+// frontend/src/services/botService.js - نسخة مصححة (بدون كسر)
+// ✅ نفس endpoints والدوال الموجودة، فقط إصلاح Syntax وتحسين handleError
+
 import api from './api';
 
 class BotService {
@@ -6,7 +8,7 @@ class BotService {
     this.baseURL = '/api/bot';
   }
 
-  // 🎯 خدمات البوت الأساسية
+  // خدمات البوت الأساسية
   async activateBot() {
     try {
       const response = await api.post(`${this.baseURL}/activate`);
@@ -43,7 +45,7 @@ class BotService {
     }
   }
 
-  // 📊 خدمات حالة البوت وأدائه
+  // خدمات حالة البوت وأدائه
   async getBotStatus() {
     try {
       const response = await api.get(`${this.baseURL}/status`);
@@ -55,7 +57,8 @@ class BotService {
 
   async getPerformanceMetrics(timeframe = '24h') {
     try {
-      const response = await api.get(`${this.baseURL}/performance?timeframe=${timeframe}`);
+      const tf = encodeURIComponent(timeframe);
+      const response = await api.get(`${this.baseURL}/performance?timeframe=${tf}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -64,7 +67,8 @@ class BotService {
 
   async getTradingAnalytics(timeframe = '24h') {
     try {
-      const response = await api.get(`${this.baseURL}/analytics?timeframe=${timeframe}`);
+      const tf = encodeURIComponent(timeframe);
+      const response = await api.get(`${this.baseURL}/analytics?timeframe=${tf}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -80,10 +84,12 @@ class BotService {
     }
   }
 
-  // 📋 خدمات السجل والتاريخ
+  // خدمات السجل والتاريخ
   async getTradingHistory(limit = 50, offset = 0) {
     try {
-      const response = await api.get(`${this.baseURL}/history?limit=${limit}&offset=${offset}`);
+      const response = await api.get(
+        `${this.baseURL}/history?limit=${Number(limit)}&offset=${Number(offset)}`
+      );
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -92,7 +98,8 @@ class BotService {
 
   async getBotLogs(limit = 100, level = 'info') {
     try {
-      const response = await api.get(`${this.baseURL}/logs?limit=${limit}&level=${level}`);
+      const lv = encodeURIComponent(level);
+      const response = await api.get(`${this.baseURL}/logs?limit=${Number(limit)}&level=${lv}`);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -136,7 +143,7 @@ class BotService {
     }
   }
 
-  // 🔗 خدمات الاتصال والاختبار
+  // خدمات الاتصال والاختبار
   async testExchangeConnection() {
     try {
       const response = await api.post(`${this.baseURL}/test-connection`);
@@ -164,7 +171,7 @@ class BotService {
     }
   }
 
-  // 📈 خدمات البيانات الإضافية
+  // خدمات البيانات الإضافية
   async getTradingPairs() {
     try {
       const response = await api.get(`${this.baseURL}/pairs`);
@@ -192,7 +199,7 @@ class BotService {
     }
   }
 
-  // 💾 خدمات النسخ الاحتياطي
+  // خدمات النسخ الاحتياطي
   async backupBotConfig() {
     try {
       const response = await api.post(`${this.baseURL}/backup`);
@@ -211,7 +218,7 @@ class BotService {
     }
   }
 
-  // 🔧 خدمات النظام
+  // خدمات النظام
   async getBotVersion() {
     try {
       const response = await api.get(`${this.baseURL}/version`);
@@ -230,55 +237,53 @@ class BotService {
     }
   }
 
-  // 🛡️ معالج الأخطاء المحسن
+  // ✅ معالج أخطاء مصحح (كان عندك مكسور بسبب newline داخل نص بين quotes) 
   handleError(error) {
     console.error('BotService Error:', error);
 
-    if (error.response?.data) {
+    if (error?.response?.data) {
       const serverError = error.response.data;
-      return new Error(
-        serverError.message || 
-        serverError.error || 
-        'حدث خطأ في الخادم'
-      );
+      return new Error(serverError.message || serverError.error || 'حدث خطأ في الخادم');
     }
 
-    if (error.request) {
-      return new Error('فشل في الاتصال بالخادم. يرجى التحقق من اتصال الشبكة.');
+    if (error?.request) {
+      return new Error('فشل في الاتصال بالخادم.\nيرجى التحقق من اتصال الشبكة.');
     }
 
-    return new Error('حدث خطأ غير متوقع');
+    return new Error(error?.message || 'حدث خطأ غير متوقع');
   }
 
-  // 🎯 دوال مساعدة للاستخدام السهل
+  // دوال مساعدة (كما هي)
   getStatusColor(status) {
     const statusColors = {
       active: 'success',
       inactive: 'secondary',
       paused: 'warning',
       error: 'danger',
-      initializing: 'info'
+      initializing: 'info',
     };
     return statusColors[status] || 'secondary';
   }
 
   formatProfitLoss(value) {
-    const absValue = Math.abs(value);
-    const sign = value >= 0 ? '+' : '-';
+    const num = Number(value) || 0;
+    const absValue = Math.abs(num);
+    const sign = num >= 0 ? '+' : '-';
     return `${sign} $${absValue.toFixed(2)}`;
   }
 
   calculateEfficiency(winRate, totalProfit, maxDrawdown) {
-    const winRateScore = winRate * 0.6;
-    const profitScore = Math.min(totalProfit / 1000, 30);
-    const drawdownPenalty = Math.max(0, maxDrawdown * 2);
+    const wr = Number(winRate) || 0;
+    const tp = Number(totalProfit) || 0;
+    const dd = Number(maxDrawdown) || 0;
+
+    const winRateScore = wr * 0.6;
+    const profitScore = Math.min(tp / 1000, 30);
+    const drawdownPenalty = Math.max(0, dd * 2);
     return Math.max(0, winRateScore + profitScore - drawdownPenalty);
   }
 }
 
-// إنشاء نسخة واحدة من الخدمة
 const botService = new BotService();
-
-// تصدير الخدمة والكلاس للاستخدام
 export { BotService };
 export default botService;

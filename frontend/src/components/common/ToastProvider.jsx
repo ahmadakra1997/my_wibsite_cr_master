@@ -1,5 +1,4 @@
 // frontend/src/components/common/ToastProvider.jsx
-
 import React, {
   createContext,
   useContext,
@@ -36,12 +35,15 @@ export const ToastProvider = ({ children }) => {
     [],
   );
 
-  // إزالة تلقائية بعد مدة لكل Toast
+  // إزالة التوست تلقائياً بعد المدة المحدّدة
   useEffect(() => {
     if (!toasts.length) return;
 
     const timers = toasts.map((toast) =>
-      setTimeout(() => removeToast(toast.id), toast.duration || 4000),
+      setTimeout(
+        () => removeToast(toast.id),
+        toast.duration || 4000,
+      ),
     );
 
     return () => {
@@ -49,7 +51,7 @@ export const ToastProvider = ({ children }) => {
     };
   }, [toasts, removeToast]);
 
-  const value = useMemo(
+  const contextValue = useMemo(
     () => ({
       addToast,
       removeToast,
@@ -57,20 +59,76 @@ export const ToastProvider = ({ children }) => {
     [addToast, removeToast],
   );
 
+  const getIconForType = (type) => {
+    switch (type) {
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+      default:
+        return 'ℹ️';
+    }
+  };
+
   return (
-    <ToastContext.Provider value={value}>
+    <ToastContext.Provider value={contextValue}>
       {children}
-      <div className="toast-container">
+
+      <div
+        className="toast-container"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={`toast toast-${toast.type}`}
+            role="alert"
             onClick={() => removeToast(toast.id)}
           >
-            {toast.title && <div className="toast-title">{toast.title}</div>}
-            {toast.description && (
-              <div className="toast-description">{toast.description}</div>
-            )}
+            <div className="toast-accent" />
+
+            <div className="toast-main">
+              <div className="toast-icon">
+                {getIconForType(toast.type)}
+              </div>
+
+              <div className="toast-content">
+                {toast.title && (
+                  <div className="toast-title">
+                    {toast.title}
+                  </div>
+                )}
+
+                {toast.description && (
+                  <div className="toast-description">
+                    {toast.description}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="toast-close"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeToast(toast.id);
+                }}
+                aria-label="إغلاق التنبيه"
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              className="toast-progress"
+              style={{
+                animationDuration: `${toast.duration || 4000}ms`,
+              }}
+            />
           </div>
         ))}
       </div>

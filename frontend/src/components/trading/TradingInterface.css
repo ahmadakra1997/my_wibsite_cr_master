@@ -1,130 +1,187 @@
-/* === Trading Interface Layout === */
+/* frontend/src/components/trading/TradingInterface.css */
 
-.trading-interface {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 10, 40, 0.97),
-    rgba(3, 18, 66, 0.98)
-  );
-  border-radius: 26px;
-  padding: 22px 22px 20px;
-  border: 1px solid var(--qa-border-subtle);
-  box-shadow: var(--qa-shadow-soft), var(--qa-shadow-glow);
+/* الحاوية العامة لواجهة التداول */
+.trading-shell {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  position: relative;
-  overflow: hidden;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 18px;
+  background: radial-gradient(circle at top left, #0b1220 0, #020617 55%, #000 100%);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
 }
 
-/* توهج ناعم بالخلفية */
-.trading-interface::before {
-  content: '';
-  position: absolute;
-  inset: -40%;
-  background: radial-gradient(
-    circle at top right,
-    rgba(0, 229, 255, 0.18),
-    transparent 60%
-  );
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.trading-interface > * {
-  position: relative;
-  z-index: 1;
-}
-
+/* الهيدر العلوي */
 .trading-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 1rem;
 }
 
-.trading-title h2 {
-  margin: 0;
-  font-size: clamp(20px, 2.3vw, 24px);
+.trading-header-main {
+  text-align: left;
+}
+
+.trading-title {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.4rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #f9fafb;
+  letter-spacing: 0.03em;
+  color: #e5f4ff;
 }
 
 .trading-subtitle {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--qa-text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7b8ca8;
 }
 
-/* حالة الاتصال في الأعلى */
-.trading-connection {
+/* شارة حالة الاتصال */
+.trading-header-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.trading-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: var(--qa-radius-pill);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: radial-gradient(
-    circle at top left,
-    rgba(15, 23, 42, 0.95),
-    rgba(15, 23, 42, 0.7)
-  );
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.trading-connection-dot {
-  width: 9px;
-  height: 9px;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
   border-radius: 999px;
-  box-shadow: 0 0 12px rgba(148, 163, 184, 0.6);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.95);
 }
 
-/* ألوان الحالات */
-.trading-connection-open {
-  background-color: var(--qa-success);
-  box-shadow: 0 0 18px rgba(0, 245, 155, 0.75);
-}
-.trading-connection-connecting {
-  background-color: var(--qa-warning);
-  box-shadow: 0 0 18px rgba(250, 204, 21, 0.7);
-}
-.trading-connection-disconnected,
-.trading-connection-closed {
-  background-color: #6b7280;
-}
-.trading-connection-error {
-  background-color: var(--qa-danger);
-  box-shadow: 0 0 18px rgba(251, 59, 127, 0.8);
+.trading-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
 }
 
-.trading-connection-text {
-  color: var(--qa-text-muted);
-  font-weight: 500;
+.trading-status-label {
+  color: #e5f4ff;
 }
 
-/* شبكة المحتوى */
-.trading-main-grid {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 16px;
-  margin-top: 4px;
+/* ألوان مختلفة حسب حالة الاتصال */
+.trading-status-pill--success {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(5, 46, 22, 0.95);
 }
 
-.trading-main-left,
-.trading-main-right {
+.trading-status-pill--success .trading-status-dot {
+  background: #22c55e;
+}
+
+.trading-status-pill--warning {
+  border-color: rgba(234, 179, 8, 0.7);
+  background: rgba(40, 34, 4, 0.96);
+}
+
+.trading-status-pill--warning .trading-status-dot {
+  background: #eab308;
+}
+
+.trading-status-pill--danger {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(54, 20, 34, 0.96);
+}
+
+.trading-status-pill--danger .trading-status-dot {
+  background: #fb3b7f;
+}
+
+.trading-status-pill--muted {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* التخطيط الداخلي */
+.trading-layout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1.1rem;
 }
 
-/* استجابة */
-@media (max-width: 1024px) {
-  .trading-main-grid {
-    grid-template-columns: 1fr;
+/* سطر التيكر */
+.trading-row--ticker {
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  background: radial-gradient(circle at left, rgba(8, 47, 73, 0.85), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+/* السطر الرئيسي (شبكة) */
+.trading-row--main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* الأعمدة */
+.trading-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.trading-col--orderbook {
+  flex: 1.4;
+}
+
+.trading-col--side {
+  flex: 1;
+}
+
+/* البانلز الجانبية */
+.trading-panel {
+  border-radius: 14px;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.trading-panel--risk {
+  min-height: 160px;
+}
+
+.trading-panel--history {
+  min-height: 180px;
+}
+
+/* ديسكتوب: شبكة 2 عمود */
+@media (min-width: 1024px) {
+  .trading-row--main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr);
+    gap: 1.1rem;
+  }
+}
+
+/* تابلت / موبايل */
+@media (max-width: 768px) {
+  .trading-shell {
+    padding: 1.1rem 1.1rem;
+    border-radius: 14px;
+  }
+
+  .trading-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trading-header-status {
+    justify-content: flex-start;
+  }
+
+  .trading-row--ticker {
+    padding-inline: 0.7rem;
   }
 }

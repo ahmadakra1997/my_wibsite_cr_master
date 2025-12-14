@@ -18,6 +18,7 @@
 }
 
 /* حالات خاصة */
+
 .ticker-error,
 .ticker-loading,
 .ticker-empty {
@@ -26,6 +27,7 @@
 }
 
 /* الرمز */
+
 .ticker-symbol span {
   font-size: 13px;
   font-weight: 600;
@@ -35,6 +37,7 @@
 }
 
 /* السعر الرئيسي */
+
 .ticker-main {
   display: flex;
   flex-direction: column;
@@ -55,14 +58,17 @@
 }
 
 /* ألوان الاتجاه */
+
 .ticker-up {
   color: var(--qa-success);
 }
+
 .ticker-down {
   color: var(--qa-danger);
 }
 
 /* معلومات إضافية */
+
 .ticker-extra {
   display: flex;
   align-items: center;
@@ -92,6 +98,7 @@
 }
 
 /* Responsive */
+
 @media (max-width: 768px) {
   .ticker-container {
     flex-direction: column;

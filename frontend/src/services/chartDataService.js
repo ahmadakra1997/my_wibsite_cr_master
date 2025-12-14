@@ -1,5 +1,4 @@
 // frontend/src/services/chartDataService.js
-
 import api from './api';
 
 /**
@@ -9,6 +8,8 @@ import api from './api';
  */
 class ChartDataService {
   constructor(options = {}) {
+    // ملاحظة: غالبًا ما يكون baseURL في api هو '/api/v1'
+    // لذلك المسار النهائي يكون '/api/v1/trading/chart'
     this.basePath = options.basePath || '/trading';
     this.maxCandles = options.maxCandles || 300;
   }
@@ -18,23 +19,40 @@ class ChartDataService {
    * تتوقع LiveCharts كائن فيه:
    * { symbol, timeframe, candles, volume, metadata }
    */
-  async getChartData(symbol, timeframe = '1h') {
+  async getChartData(symbol, timeframe = '1h', options = {}) {
     const safeSymbol = symbol || 'BTCUSDT';
+    const limit = options.limit || this.maxCandles;
 
     try {
       const query = `?symbol=${encodeURIComponent(
-        safeSymbol
-      )}&timeframe=${encodeURIComponent(timeframe)}`;
+        safeSymbol,
+      )}&timeframe=${encodeURIComponent(timeframe)}&limit=${encodeURIComponent(
+        limit,
+      )}`;
 
       const response = await api.get(`${this.basePath}/chart${query}`);
-      const raw = response.data ?? response;
 
-      return this._normalizeResponse(raw, { symbol: safeSymbol, timeframe });
+      // axios يعيد data داخل response.data افتراضيًا
+      const raw = response?.data ?? response;
+
+      // في حال عاد الـ backend بالشكل:
+      // { status: 'ok', result: {...} }
+      const payload =
+        raw && raw.result && !raw.candles && !Array.isArray(raw)
+          ? raw.result
+          : raw;
+
+      return this._normalizeResponse(payload, {
+        symbol: safeSymbol,
+        timeframe,
+      });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.warn(
         '[ChartDataService] فشل جلب بيانات الشارت من الـ API، سيتم استخدام بيانات تجريبية:',
-        error
+        error,
       );
+
       return this._generateMockData(safeSymbol, timeframe);
     }
   }
@@ -126,14 +144,19 @@ class ChartDataService {
 
   _toUnix(value) {
     if (!value) return Math.floor(Date.now() / 1000);
+
     if (typeof value === 'number') {
       // لو كان أقل من 10^12 نفترض أنه بالثواني
-      return value > 1e12 ? Math.floor(value / 1000) : Math.floor(value);
+      return value > 1e12
+        ? Math.floor(value / 1000)
+        : Math.floor(value);
     }
+
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
       return Math.floor(Date.now() / 1000);
     }
+
     return Math.floor(date.getTime() / 1000);
   }
 
@@ -145,7 +168,7 @@ class ChartDataService {
     const candles = [];
     let basePrice = 30000;
 
-    for (let i = this.maxCandles - 1; i >= 0; i--) {
+    for (let i = this.maxCandles - 1; i >= 0; i -= 1) {
       const step =
         timeframe === '1m'
           ? 60
@@ -156,8 +179,8 @@ class ChartDataService {
           : 86400;
 
       const time = now - i * step;
-
       const drift = (Math.random() - 0.5) * 80;
+
       basePrice = Math.max(100, basePrice + drift);
 
       const open = basePrice + (Math.random() - 0.5) * 30;

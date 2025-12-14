@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBot } from '../../context/BotContext';
+import './BotHistory.css';
 
 /**
  * BotHistory
@@ -19,18 +20,10 @@ import { useBot } from '../../context/BotContext';
 const BotHistory = () => {
   const { t } = useTranslation();
 
-  const {
-    botHistory = [],
-    loadBotHistory,
-    loading,
-    error,
-  } = useBot() || {};
+  const { botHistory = [], loadBotHistory, loading, error } = useBot() || {};
 
-  // جلب السجل عند فتح لوحة البوت
   useEffect(() => {
-    if (typeof loadBotHistory === 'function') {
-      loadBotHistory();
-    }
+    if (typeof loadBotHistory === 'function') loadBotHistory();
   }, [loadBotHistory]);
 
   const entries = Array.isArray(botHistory) ? botHistory : [];
@@ -44,15 +37,14 @@ const BotHistory = () => {
   const isLoading = Boolean(loading) && entries.length === 0;
 
   return (
-    <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-4 shadow-xl space-y-4">
-      {/* العنوان والإحصاءات العامة */}
-      <div className="flex items-center justify-between gap-4 mb-1">
+    <section className="bot-history">
+      {/* Header */}
+      <header className="bot-history__header">
         <div>
-          <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <span className="text-lg">📜</span>
+          <h2 className="bot-history__title">
             {t('bot.history.title', 'سجل البوتات السابقة')}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="bot-history__subtitle">
             {t(
               'bot.history.subtitle',
               'تابع أداء وأعمار البوتات السابقة، وراقب أسباب إيقافها لتحسين استراتيجيتك.',
@@ -60,150 +52,145 @@ const BotHistory = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          <span className="px-3 py-1.5 rounded-full bg-slate-900/80 border border-slate-700 text-slate-200">
-            {t('bot.history.totalBots', 'إجمالي البوتات')}: {totalBots}
-          </span>
-          <span className="px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-600/70 text-emerald-200">
-            {t('bot.history.activeBots', 'البوتات النشطة سابقاً')}: {activeBots}
-          </span>
+        <div className="bot-history__stats">
+          <StatChip
+            label={t('bot.history.totalBots', 'إجمالي البوتات')}
+            value={totalBots}
+            tone="info"
+          />
+          <StatChip
+            label={t('bot.history.activeBots', 'البوتات النشطة سابقاً')}
+            value={activeBots}
+            tone="success"
+          />
         </div>
-      </div>
+      </header>
 
-      {/* حالة التحميل */}
+      {/* Loading */}
       {isLoading && (
-        <div className="flex items-center justify-center py-8 text-slate-300 text-sm">
-          <span className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin ml-2" />
-          {t('bot.history.loading', 'جاري تحميل سجل البوت...')}
+        <div className="bot-history__state">
+          <span className="bot-history__spinner" />
+          <span>{t('bot.history.loading', 'جاري تحميل سجل البوت...')}</span>
         </div>
       )}
 
-      {/* لا توجد بيانات */}
-      {!isLoading && entries.length === 0 && !error && (
-        <div className="py-6 text-center text-xs text-slate-400">
-          {t(
-            'bot.history.empty',
-            'لا يوجد سجل بعد – سيتم إنشاء سجل جديد عند تشغيل أول بوت تداول.',
-          )}
+      {/* Error */}
+      {!isLoading && error && (
+        <div className="bot-history__error">
+          <strong>{t('bot.history.errorTitle', 'تعذر تحميل السجل:')}</strong>
+          <span>{String(error)}</span>
         </div>
       )}
 
-      {/* رسالة الخطأ */}
-      {error && (
-        <div className="text-xs text-rose-300 bg-rose-950/40 border border-rose-700/60 rounded-lg px-3 py-2">
-          <strong className="mr-1">
-            {t('bot.history.errorTitle', 'تعذر تحميل السجل:')}
-          </strong>
-          {String(error)}
+      {/* Empty */}
+      {!isLoading && !error && entries.length === 0 && (
+        <div className="bot-history__empty">
+          <div className="bot-history__emptyIcon">🗂️</div>
+          <div className="bot-history__emptyTitle">
+            {t('bot.history.emptyTitle', 'لا يوجد سجل بعد')}
+          </div>
+          <div className="bot-history__emptyText">
+            {t(
+              'bot.history.empty',
+              'سيتم إنشاء سجل جديد عند تشغيل أول بوت تداول.',
+            )}
+          </div>
         </div>
       )}
 
-      {/* جدول السجل */}
-      {entries.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-slate-800">
-          <table className="min-w-full text-xs text-slate-200">
-            <thead className="bg-slate-900/90">
-              <tr className="text-slate-400">
+      {/* Table */}
+      {!isLoading && !error && entries.length > 0 && (
+        <div className="bot-history__tableWrap">
+          <table className="bot-history__table">
+            <thead>
+              <tr>
                 <Th>{t('bot.history.botName', 'اسم البوت')}</Th>
                 <Th>{t('bot.history.status', 'الحالة')}</Th>
-                <Th>{t('bot.history.totalProfit', 'الربح الكلي')}</Th>
-                <Th>{t('bot.history.totalTrades', 'عدد الصفقات')}</Th>
+                <Th align="right">{t('bot.history.totalProfit', 'الربح الكلي')}</Th>
+                <Th align="right">{t('bot.history.totalTrades', 'عدد الصفقات')}</Th>
                 <Th>{t('bot.history.runtime', 'مدة التشغيل')}</Th>
                 <Th>{t('bot.history.createdAt', 'تاريخ الإنشاء')}</Th>
                 <Th>{t('bot.history.reason', 'سبب الإيقاف')}</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {entries.map((entry) => (
-                <HistoryRow
-                  key={entry.botId || entry.created || Math.random()}
-                  entry={entry}
-                />
+
+            <tbody>
+              {entries.map((entry, idx) => (
+                <HistoryRow key={entry?.botId || entry?._id || idx} entry={entry} />
               ))}
             </tbody>
           </table>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
-const Th = ({ children }) => (
-  <th className="px-3 py-2 text-right font-medium whitespace-nowrap">
-    {children}
-  </th>
+const StatChip = ({ label, value, tone }) => (
+  <div className={`bot-history__chip ${tone ? `is-${tone}` : ''}`}>
+    <div className="bot-history__chipLabel">{label}</div>
+    <div className="bot-history__chipValue">{value}</div>
+  </div>
+);
+
+const Th = ({ children, align }) => (
+  <th style={{ textAlign: align || 'left' }}>{children}</th>
 );
 
 const HistoryRow = ({ entry }) => {
   const {
     botId,
+    _id,
+    id,
     botName,
     status,
     totalProfit,
     totalTrades,
     totalRuntime,
     created,
+    createdAt,
     deactivated,
     reason,
   } = entry || {};
 
+  const resolvedId = botId || _id || id || null;
+
   const statusConfig = getStatusConfig(status);
   const profitNumber = formatNumber(totalProfit, 2);
   const runtimeLabel = formatRuntime(totalRuntime);
-  const createdLabel = formatDate(created);
+  const createdLabel = formatDate(created || createdAt);
   const reasonText = reason || (deactivated ? 'تم الإيقاف' : '—');
 
+  const profitTone =
+    profitNumber > 0 ? 'is-profit' : profitNumber < 0 ? 'is-loss' : '';
+
   return (
-    <tr className="hover:bg-slate-900/70 transition-colors">
-      <td className="px-3 py-2 whitespace-nowrap">
-        <div className="flex flex-col">
-          <span className="font-semibold text-slate-100">
-            {botName || botId || '—'}
-          </span>
-          {botId && (
-            <span className="text-[0.65rem] text-slate-500 mt-0.5">
-              ID: {botId}
-            </span>
-          )}
+    <tr className="bot-history__row">
+      <td>
+        <div className="bot-history__name">
+          <div className="bot-history__nameMain">{botName || '—'}</div>
+          {resolvedId && <div className="bot-history__nameSub">ID: {resolvedId}</div>}
         </div>
       </td>
 
-      <td className="px-3 py-2 whitespace-nowrap">
-        <span
-          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[0.7rem] font-semibold ${statusConfig.bg} ${statusConfig.text}`}
-        >
-          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current" />
+      <td>
+        <span className={`bot-history__badge ${statusConfig.className}`}>
+          <span className="bot-history__badgeDot" />
           {statusConfig.label}
         </span>
       </td>
 
-      <td className="px-3 py-2 whitespace-nowrap">
-        <span
-          className={
-            profitNumber > 0
-              ? 'text-emerald-300'
-              : profitNumber < 0
-                ? 'text-rose-300'
-                : 'text-slate-200'
-          }
-        >
-          {profitNumber.toFixed(2)} USDT
-        </span>
+      <td className={`bot-history__mono ${profitTone}`} style={{ textAlign: 'right' }}>
+        {profitNumber.toFixed(2)} USDT
       </td>
 
-      <td className="px-3 py-2 whitespace-nowrap">
+      <td className="bot-history__mono" style={{ textAlign: 'right' }}>
         {Number.isFinite(Number(totalTrades)) ? totalTrades : '—'}
       </td>
 
-      <td className="px-3 py-2 whitespace-nowrap">{runtimeLabel}</td>
-
-      <td className="px-3 py-2 whitespace-nowrap">{createdLabel}</td>
-
-      <td className="px-3 py-2 max-w-xs">
-        <span className="text-[0.72rem] text-slate-300">
-          {reasonText}
-        </span>
-      </td>
+      <td>{runtimeLabel}</td>
+      <td>{createdLabel}</td>
+      <td className="bot-history__reason">{reasonText}</td>
     </tr>
   );
 };
@@ -211,30 +198,18 @@ const HistoryRow = ({ entry }) => {
 const getStatusConfig = (status) => {
   switch (status) {
     case 'active':
-      return {
-        label: 'نشط',
-        bg: 'bg-emerald-900/60',
-        text: 'text-emerald-300',
-      };
+      return { label: 'نشط', className: 'is-active' };
+    case 'running':
+      return { label: 'يعمل', className: 'is-active' };
+    case 'paused':
+      return { label: 'متوقف مؤقتًا', className: 'is-paused' };
     case 'stopped':
     case 'deactivated':
-      return {
-        label: 'متوقف',
-        bg: 'bg-slate-900/60',
-        text: 'text-slate-300',
-      };
+      return { label: 'متوقف', className: 'is-stopped' };
     case 'error':
-      return {
-        label: 'خطأ',
-        bg: 'bg-rose-900/60',
-        text: 'text-rose-300',
-      };
+      return { label: 'خطأ', className: 'is-error' };
     default:
-      return {
-        label: 'غير معروف',
-        bg: 'bg-slate-900/60',
-        text: 'text-slate-300',
-      };
+      return { label: 'غير معروف', className: 'is-unknown' };
   }
 };
 
@@ -264,7 +239,7 @@ const formatDate = (value) => {
   if (!value) return '—';
   try {
     const d = new Date(value);
-    return `${d.toLocaleDateString()} · ${d.toLocaleTimeString([], {
+    return `${d.toLocaleDateString('ar-SA')} · ${d.toLocaleTimeString('ar-SA', {
       hour: '2-digit',
       minute: '2-digit',
     })}`;

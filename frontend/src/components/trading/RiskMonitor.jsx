@@ -8,13 +8,10 @@ import './RiskMonitor.css';
  * RiskMonitor
  *
  * يعرض:
- * - إجمالي الـ exposure التقريبي من الصفقات الحالية (من بيانات trades).
- * - تقدير بسيط للـ leverage بناءً على حجم التداول مقابل سعر السوق.
- * - تقدير لحالة الـ drawdown (مبدئي).
- *
- * هذا الكومبوننت مصمم ليكون مستقل، ويمكن لاحقاً ربطه مع خدمة مخاطر حقيقية.
+ * - Net exposure (صافي التعرض)
+ * - Leverage تقديري
+ * - Drawdown تقديري مبني على تغير السعر
  */
-
 const RiskMonitor = () => {
   const trades = useSelector((state) => state.trading.trades);
   const ticker = useSelector((state) => state.trading.ticker);
@@ -29,8 +26,8 @@ const RiskMonitor = () => {
       };
     }
 
-    let netPosition = 0; // كمية صافية
-    let notional = 0; // القيمة الاسمية (تقريبية)
+    let netPosition = 0; // الكمية الصافية
+    let notional = 0; // القيمة الاسمية التقريبية
 
     trades.forEach((t) => {
       const side = (t.side || '').toLowerCase();
@@ -47,15 +44,20 @@ const RiskMonitor = () => {
     const lastPrice = Number(ticker?.lastPrice ?? 0) || 0;
     const exposure = lastPrice ? netPosition * lastPrice : 0;
 
-    // Leverage تقديري: notional / (|exposure| أو رقم ثابت صغير)
-    const baseCapital = Math.max(Math.abs(exposure), notional * 0.2, 1);
+    // Leverage تقديري
+    const baseCapital = Math.max(
+      Math.abs(exposure),
+      notional * 0.2,
+      1
+    );
     const leverage = notional / baseCapital;
 
-    // Drawdown تقديري بسيط (يمكن استبداله ببيانات حقيقية لاحقاً)
+    // Drawdown تقديري بسيط من تغير السعر 24h
     const priceChangePercent = Number(
-      ticker?.priceChangePercent ?? 0,
+      ticker?.priceChangePercent ?? 0
     );
-    const drawdown = priceChangePercent < 0 ? -priceChangePercent : 0;
+    const drawdown =
+      priceChangePercent < 0 ? -priceChangePercent : 0;
 
     let riskLevel = 'ok';
     if (leverage > 6 || drawdown > 15) {
@@ -88,39 +90,61 @@ const RiskMonitor = () => {
       ? 0.65
       : 0.35;
 
+  const exposureClass =
+    exposure >= 0 ? 'text-up' : 'text-down';
+
+  const drawdownClass =
+    drawdown > 0 ? 'text-down' : '';
+
   return (
-    <div className="risk-monitor-container">
-      <div className="risk-header">
+    <section className="risk-monitor-container">
+      <header className="risk-header">
         <div>
-          <div className="risk-title">Risk Monitor</div>
-          <div className="risk-subtitle">
+          <h3 className="risk-title">Risk Monitor</h3>
+          <p className="risk-subtitle">
             Live snapshot of exposure, leverage and drawdown.
-          </div>
+          </p>
         </div>
-        <div className={`chip-pill ${riskClass}`}>{riskLabel}</div>
-      </div>
+
+        <div className={`risk-tag ${riskClass}`}>
+          {riskLabel}
+        </div>
+      </header>
 
       <div className="risk-grid">
+        {/* Net Exposure */}
         <div className="risk-card">
           <div className="risk-label">Net Exposure</div>
-          <div className={`risk-value ${exposure >= 0 ? 'text-up' : 'text-down'}`}>
+          <div
+            className={`risk-value ${exposureClass}`}
+          >
             {exposure ? exposure.toFixed(2) : '0.00'}
           </div>
-          <div className="risk-tag">Estimated notional position</div>
-        </div>
-
-        <div className="risk-card">
-          <div className="risk-label">Leverage (approx.)</div>
-          <div className="risk-value">{leverage.toFixed(2)}×</div>
           <div className="risk-tag">
-            Higher than 3× starts raising flags.
+            Estimated notional exposure in quote currency.
           </div>
         </div>
 
+        {/* Leverage */}
+        <div className="risk-card">
+          <div className="risk-label">Leverage (approx.)</div>
+          <div className="risk-value">
+            {leverage.toFixed(2)}×
+          </div>
+          <div className="risk-tag">
+            Above 3× starts raising flags.
+          </div>
+        </div>
+
+        {/* Drawdown */}
         <div className="risk-card">
           <div className="risk-label">Drawdown (est.)</div>
-          <div className={`risk-value ${drawdown > 0 ? 'text-down' : ''}`}>
-            {drawdown ? `${drawdown.toFixed(2)}%` : '0.00%'}
+          <div
+            className={`risk-value ${drawdownClass}`}
+          >
+            {drawdown
+              ? `${drawdown.toFixed(2)}%`
+              : '0.00%'}
           </div>
           <div className="risk-tag">
             Based on recent price move vs. entry.
@@ -134,7 +158,7 @@ const RiskMonitor = () => {
           style={{ transform: `scaleX(${meterScale})` }}
         />
       </div>
-    </div>
+    </section>
   );
 };
 

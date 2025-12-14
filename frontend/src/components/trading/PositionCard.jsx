@@ -1,15 +1,14 @@
 // frontend/src/components/trading/PositionCard.jsx
-
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
  * PositionCard
  * بطاقة تعرض تفاصيل مركز واحد:
- * - الرمز، الاتجاه (Long/Short)، الرافعة
- * - حجم المركز، سعر الدخول، السعر الحالي
+ * - الرمز، الاتجاه، الرافعة
+ * - الحجم، سعر الدخول، السعر الحالي
  * - الربح/الخسارة غير المحققة ونسبتها
- * - ملخص سريع عن المخاطر (riskScore / riskLevel)
+ * - ملخص المخاطر (riskLevel / riskScore)
  *
  * لا تغيّر أي منطق في PositionManager، فقط تعرض البيانات التي يمررها.
  */
@@ -50,12 +49,12 @@ const PositionCard = ({
   } = useMemo(() => {
     if (calculatedFields) return calculatedFields;
 
-    // fallback بسيط جداً في حال لم تُمرّر calculatedFields لأي سبب
-    const mktPrice = marketData?.[symbol]?.price || Number(entryPrice) || 0;
+    // fallback بسيط جداً في حال لم تُمرّر calculatedFields
+    const mktPrice =
+      marketData?.[symbol]?.price || Number(entryPrice) || 0;
     const s = Number(size || quantity || 0);
     const e = Number(entryPrice || 0);
     const lev = Number(leverage || 1);
-
     const diff = mktPrice - e;
     const uPnl = side === 'long' ? diff * s : -diff * s;
     const pct = s && e ? (uPnl / (s * e)) * 100 : 0;
@@ -68,7 +67,16 @@ const PositionCard = ({
       positionValue: s * mktPrice,
       marginUsed: s && lev ? (s * e) / lev : 0,
     };
-  }, [calculatedFields, marketData, symbol, size, quantity, entryPrice, leverage, side]);
+  }, [
+    calculatedFields,
+    marketData,
+    symbol,
+    size,
+    quantity,
+    entryPrice,
+    leverage,
+    side,
+  ]);
 
   const formatted = useMemo(
     () => ({
@@ -84,7 +92,17 @@ const PositionCard = ({
           ? formatNumber(liquidationDistance, 2)
           : null,
     }),
-    [size, quantity, entryPrice, currentPrice, unrealizedPnl, pnlPercentage, positionValue, marginUsed, liquidationDistance],
+    [
+      size,
+      quantity,
+      entryPrice,
+      currentPrice,
+      unrealizedPnl,
+      pnlPercentage,
+      positionValue,
+      marginUsed,
+      liquidationDistance,
+    ],
   );
 
   const handleSelect = () => {
@@ -104,183 +122,380 @@ const PositionCard = ({
   const isLong = side === 'long';
   const isClosed = status === 'closed';
   const pnlPositive = unrealizedPnl > 0;
+
   const riskLevel = riskAnalysis?.riskLevel ?? 'low';
   const riskScore = riskAnalysis?.riskScore ?? 0;
 
-  const cardBorder =
-    theme === 'dark' ? 'border-slate-700' : 'border-slate-300';
-  const selectedRing =
-    theme === 'dark' ? 'ring-emerald-400/70' : 'ring-emerald-500/80';
+  const borderColor = isSelected
+    ? 'rgba(45,212,191,0.9)'
+    : isLong
+    ? 'rgba(34,197,94,0.8)'
+    : 'rgba(248,113,113,0.8)';
+
+  const sideStripe = isLong
+    ? 'linear-gradient(180deg, #22c55e, #4ade80)'
+    : 'linear-gradient(180deg, #fb7185, #f97373)';
+
+  const cardBackground =
+    theme === 'dark'
+      ? 'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(8,47,73,0.96))'
+      : 'linear-gradient(135deg, #f9fafb, #e0f2fe)';
 
   return (
-    <button
-      type="button"
+    <article
+      className="position-card"
       onClick={handleSelect}
-      className={`relative w-full text-left rounded-xl border ${cardBorder} bg-slate-900/80 hover:bg-slate-900/95 transition shadow-lg ${
-        isSelected ? `ring-2 ${selectedRing}` : ''
-      }`}
-      data-testid={`position-card-${id}`}
+      role="button"
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        borderRadius: 18,
+        border: `1px solid ${borderColor}`,
+        background: cardBackground,
+        boxShadow: isSelected
+          ? '0 0 0 1px rgba(45,212,191,0.5), 0 18px 35px rgba(15,23,42,0.9)'
+          : '0 14px 30px rgba(15,23,42,0.85)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        minHeight: 92,
+      }}
     >
       {/* شريط جانبي يوضح الاتجاه */}
       <div
-        className={`absolute inset-y-0 right-0 w-1.5 rounded-r-xl ${
-          isLong ? 'bg-emerald-400' : 'bg-rose-400'
-        }`}
+        style={{
+          width: 4,
+          background: sideStripe,
+        }}
       />
 
-      <div className="px-3.5 py-3 space-y-2.5 pr-4">
-        {/* السطر الأول: الرمز + الحالة + الرافعة */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-200">
-              {symbol}
+      {/* محتوى الكارت */}
+      <div
+        style={{
+          flex: 1,
+          padding: '8px 10px',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 2.2fr) minmax(0, 2fr)',
+          gap: 8,
+        }}
+      >
+        {/* العمود الأيسر: معلومات أساسية */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          {/* السطر الأول: الرمز + الحالة + الرافعة */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#e5e7eb',
+              }}
+            >
+              {symbol || '—'}
             </span>
             <span
-              className={`text-[0.7rem] px-2 py-0.5 rounded-full border ${
-                isLong
-                  ? 'border-emerald-400/60 text-emerald-300'
-                  : 'border-rose-400/60 text-rose-300'
-              }`}
+              style={{
+                fontSize: 11,
+                color: 'var(--qa-text-soft)',
+              }}
             >
-              {isLong ? t('positions.long', 'شراء (Long)') : t('positions.short', 'بيع (Short)')}
+              {isLong
+                ? t('positions.long', 'شراء (Long)')
+                : t('positions.short', 'بيع (Short)')}
             </span>
             {leverage && (
-              <span className="text-[0.7rem] px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-600 text-slate-300">
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: '1px 7px',
+                  borderRadius: 999,
+                  border: '1px solid rgba(56,189,248,0.7)',
+                  color: '#7dd3fc',
+                }}
+              >
                 {leverage}x
               </span>
             )}
-          </div>
-
-          <div className="flex items-center gap-2 text-[0.7rem]">
-            <RiskBadge riskLevel={riskLevel} riskScore={riskScore} />
             <span
-              className={`px-2 py-0.5 rounded-full border text-[0.68rem] ${
-                isClosed
-                  ? 'border-slate-600 text-slate-300'
-                  : 'border-sky-500/60 text-sky-300'
-              }`}
+              style={{
+                marginInlineStart: 'auto',
+                fontSize: 10,
+                padding: '2px 6px',
+                borderRadius: 999,
+                border: '1px solid rgba(148,163,184,0.6)',
+                color: isClosed ? '#e5e7eb' : '#bbf7d0',
+                background: isClosed
+                  ? 'rgba(15,23,42,0.9)'
+                  : 'rgba(22,163,74,0.25)',
+              }}
             >
-              {isClosed ? t('positions.closed', 'مغلق') : t('positions.open', 'مفتوح')}
+              {isClosed
+                ? t('positions.closed', 'مغلق')
+                : t('positions.open', 'مفتوح')}
             </span>
           </div>
+
+          {/* السطر الثاني: الأسعار */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: 6,
+              marginTop: 2,
+            }}
+          >
+            <InfoItem
+              label={t('positions.size', 'الحجم')}
+              value={`${formatted.size || 0} ${
+                symbol || ''
+              }`}
+            />
+            <InfoItem
+              label={t('positions.entryPrice', 'سعر الدخول')}
+              value={formatted.entryPrice}
+            />
+            <InfoItem
+              label={t('positions.currentPrice', 'السعر الحالي')}
+              value={formatted.currentPrice}
+            />
+          </div>
+
+          {/* السطر الثالث: القيمة / الهامش */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: 6,
+            }}
+          >
+            <InfoItem
+              label={t(
+                'positions.positionValue',
+                'القيمة الحالية للمركز',
+              )}
+              value={`${formatted.positionValue} USDT`}
+            />
+            {marginUsed > 0 && (
+              <InfoItem
+                label={t(
+                  'positions.marginUsed',
+                  'الهامش المستخدم',
+                )}
+                value={`${formatted.marginUsed} USDT`}
+              />
+            )}
+          </div>
         </div>
 
-        {/* السطر الثاني: الأسعار */}
-        <div className="grid grid-cols-2 gap-3 text-[0.72rem]">
-          <InfoItem
-            label={t('positions.entryPrice', 'سعر الدخول')}
-            value={formatted.entryPrice}
-          />
-          <InfoItem
-            label={t('positions.currentPrice', 'السعر الحالي')}
-            value={formatted.currentPrice}
-          />
-          <InfoItem
-            label={t('positions.positionSize', 'حجم المركز')}
-            value={formatted.size}
-          />
-          <InfoItem
-            label={t('positions.positionValue', 'قيمة المركز')}
-            value={`${formatted.positionValue} USDT`}
-          />
-        </div>
-
-        {/* السطر الثالث: الربح/الخسارة + مسافة التصفية */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[0.72rem]">
-          <div>
-            <div className="text-slate-400">
-              {t('positions.unrealizedPnl', 'ربح/خسارة غير محققة')}
+        {/* العمود الأيمن: PnL + مخاطر + أزرار */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            alignItems: 'flex-end',
+          }}
+        >
+          {/* الربح / الخسارة */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 2,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--qa-text-soft)',
+              }}
+            >
+              {t(
+                'positions.unrealizedPnl',
+                'ربح/خسارة غير محققة',
+              )}
             </div>
             <div
-              className={`font-semibold ${
-                pnlPositive
-                  ? 'text-emerald-300'
-                  : unrealizedPnl < 0
-                    ? 'text-rose-300'
-                    : 'text-slate-200'
-              }`}
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: pnlPositive ? '#4ade80' : '#fca5a5',
+                fontVariantNumeric: 'tabular-nums',
+              }}
             >
-              {formatted.unrealizedPnl} USDT
-              <span className="ml-1">
-                ({formatted.pnlPercentage}
-                %)
+              {formatted.unrealizedPnl} USDT{' '}
+              <span
+                style={{
+                  fontSize: 11,
+                  opacity: 0.8,
+                }}
+              >
+                ({formatted.pnlPercentage}%)
               </span>
             </div>
-          </div>
 
-          <div className="flex flex-col items-end gap-1">
             {formatted.liquidationDistance != null && (
-              <>
-                <span className="text-slate-400">
-                  {t('positions.liquidationDistance', 'المسافة عن التصفية')}
-                </span>
-                <span className="text-xs text-slate-200">
-                  {formatted.liquidationDistance}%{' '}
-                  {t('positions.liquidationDistanceSuffix', 'عن سعر التصفية التقريبي')}
-                </span>
-              </>
-            )}
-            {marginUsed > 0 && (
-              <span className="text-[0.68rem] text-slate-400">
-                {t('positions.marginUsed', 'الهامش المستخدم')}: {formatted.marginUsed} USDT
-              </span>
+              <div
+                style={{
+                  marginTop: 2,
+                  fontSize: 10,
+                  color: 'var(--qa-text-soft)',
+                  textAlign: 'right',
+                }}
+              >
+                {t(
+                  'positions.liquidationDistance',
+                  'المسافة عن التصفية',
+                )}{' '}
+                {formatted.liquidationDistance}
+                %{' '}
+                {t(
+                  'positions.liquidationDistanceSuffix',
+                  'عن سعر التصفية التقريبي',
+                )}
+              </div>
             )}
           </div>
-        </div>
 
-        {/* الأزرار السريعة */}
-        {!isClosed && (
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleModifyClick}
-              className="text-[0.7rem] px-2.5 py-1 rounded-full border border-slate-600 text-slate-200 hover:bg-slate-800/80 transition"
+          {/* شارة المخاطر */}
+          <RiskBadge
+            riskLevel={riskLevel}
+            riskScore={riskScore}
+          />
+
+          {/* الأزرار السريعة */}
+          {!isClosed && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
+              }}
             >
-              {t('positions.modify', 'تعديل')}
-            </button>
-            <button
-              type="button"
-              onClick={handleCloseClick}
-              className="text-[0.7rem] px-2.5 py-1 rounded-full bg-rose-600/90 hover:bg-rose-500 text-slate-50 font-semibold transition"
-            >
-              {t('positions.close', 'إغلاق')}
-            </button>
-          </div>
-        )}
+              {onModify && (
+                <button
+                  type="button"
+                  onClick={handleModifyClick}
+                  style={{
+                    fontSize: 11,
+                    padding: '4px 9px',
+                    borderRadius: 999,
+                    border:
+                      '1px solid rgba(56,189,248,0.9)',
+                    background:
+                      'linear-gradient(135deg, rgba(8,47,73,0.95), rgba(30,64,175,0.98))',
+                    color: '#e0f2fe',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('positions.modify', 'تعديل')}
+                </button>
+              )}
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={handleCloseClick}
+                  style={{
+                    fontSize: 11,
+                    padding: '4px 9px',
+                    borderRadius: 999,
+                    border:
+                      '1px solid rgba(248,113,113,0.85)',
+                    background:
+                      'linear-gradient(135deg, rgba(127,29,29,0.95), rgba(153,27,27,0.98))',
+                    color: '#fee2e2',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('positions.close', 'إغلاق')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </button>
+    </article>
   );
 };
 
 const InfoItem = ({ label, value }) => (
-  <div>
-    <div className="text-slate-400 text-[0.7rem] mb-0.5">{label}</div>
-    <div className="text-slate-100 text-xs font-medium">{value}</div>
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 1,
+      fontSize: 11,
+    }}
+  >
+    <span
+      style={{
+        color: 'var(--qa-text-soft)',
+      }}
+    >
+      {label}
+    </span>
+    <span
+      style={{
+        color: '#e5e7eb',
+        fontWeight: 500,
+        fontVariantNumeric: 'tabular-nums',
+      }}
+    >
+      {value}
+    </span>
   </div>
 );
 
 const RiskBadge = ({ riskLevel, riskScore }) => {
   let label = 'منخفض';
-  let color = 'bg-emerald-900/70 text-emerald-300 border-emerald-500/60';
+  let bg = 'rgba(22,163,74,0.18)';
+  let border = 'rgba(22,163,74,0.9)';
+  let color = '#bbf7d0';
 
   if (riskLevel === 'medium') {
     label = 'متوسط';
-    color = 'bg-amber-900/70 text-amber-200 border-amber-500/60';
+    bg = 'rgba(245,158,11,0.2)';
+    border = 'rgba(245,158,11,0.9)';
+    color = '#fed7aa';
   } else if (riskLevel === 'high') {
     label = 'عالٍ';
-    color = 'bg-orange-900/70 text-orange-200 border-orange-500/60';
+    bg = 'rgba(249,115,22,0.18)';
+    border = 'rgba(249,115,22,0.9)';
+    color = '#fed7aa';
   } else if (riskLevel === 'critical') {
     label = 'حرِج';
-    color = 'bg-rose-900/70 text-rose-200 border-rose-500/60';
+    bg = 'rgba(248,113,113,0.18)';
+    border = 'rgba(248,113,113,0.9)';
+    color = '#fecaca';
   }
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[0.68rem] ${color}`}
+      style={{
+        alignSelf: 'flex-end',
+        fontSize: 10,
+        padding: '3px 8px',
+        borderRadius: 999,
+        background: bg,
+        border: `1px solid ${border}`,
+        color,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+      }}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      <span>{label}</span>
-      <span className="opacity-80">· {Math.round(riskScore || 0)}</span>
+      {label} · {Math.round(riskScore || 0)}
     </span>
   );
 };

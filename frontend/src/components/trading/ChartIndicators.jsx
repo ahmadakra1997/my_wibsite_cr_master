@@ -31,14 +31,20 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
 
     const getLastFromArray = (arr) => {
       if (!Array.isArray(arr) || arr.length === 0) return null;
+
       for (let i = arr.length - 1; i >= 0; i -= 1) {
         const v = arr[i];
         if (v == null) continue;
         if (typeof v === 'number') return v;
-        if (typeof v === 'object' && v !== null && typeof v.value === 'number') {
+        if (
+          typeof v === 'object' &&
+          v !== null &&
+          typeof v.value === 'number'
+        ) {
           return v.value;
         }
       }
+
       return null;
     };
 
@@ -47,11 +53,9 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
     if (indicatorData.sma) {
       result.sma = getLastFromArray(indicatorData.sma);
     }
-
     if (indicatorData.ema) {
       result.ema = getLastFromArray(indicatorData.ema);
     }
-
     if (indicatorData.rsi) {
       result.rsi = getLastFromArray(indicatorData.rsi);
     }
@@ -101,66 +105,70 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
       case 'rsi':
         return t('charts.indicators.rsi', 'RSI (مؤشر القوة النسبية)');
       case 'macd':
-        return t('charts.indicators.macd', 'MACD (تقارب/تباعد المتوسطات)');
+        return t(
+          'charts.indicators.macd',
+          'MACD (تقارب/تباعد المتوسطات)',
+        );
       case 'bollinger':
-        return t('charts.indicators.bollinger', 'Bollinger Bands');
+        return t(
+          'charts.indicators.bollinger',
+          'Bollinger Bands',
+        );
       default:
         return key.toUpperCase();
     }
   };
 
   return (
-    <div
+    <section
       className="chart-indicators"
       style={{
-        marginTop: '0.6rem',
-        padding: '0.55rem 0.75rem',
-        borderRadius: '12px',
-        border: '1px solid rgba(30,64,175,0.7)',
+        borderRadius: 16,
+        border: '1px solid rgba(30,64,175,0.55)',
         background:
-          'radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,1))',
-        direction: 'rtl',
-        fontSize: '0.8rem',
+          'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,1))',
+        padding: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
       }}
     >
       <div
         className="chart-indicators-header"
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '0.5rem',
-          marginBottom: '0.4rem',
+          flexDirection: 'column',
+          gap: 2,
         }}
       >
-        <div
+        <h4
           style={{
-            fontSize: '0.85rem',
+            fontSize: 12,
             fontWeight: 600,
             color: '#e5e7eb',
           }}
         >
           {t('charts.indicators.title', 'المؤشرات الفنية')}
-        </div>
-        <div
+        </h4>
+        <p
           style={{
-            fontSize: '0.75rem',
-            color: 'rgba(148,163,184,0.96)',
+            fontSize: 11,
+            color: 'rgba(148,163,184,0.9)',
           }}
         >
           {t(
             'charts.indicators.subtitle',
             'قم بتفعيل أو إلغاء تفعيل المؤشرات لعرض المزيد من التفاصيل على المخطط.',
           )}
-        </div>
+        </p>
       </div>
 
       <div
         className="chart-indicators-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '0.5rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: 8,
         }}
       >
         {INDICATOR_KEYS.map((key) => {
@@ -175,7 +183,7 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
               style={{
                 textAlign: 'right',
                 padding: '0.45rem 0.6rem',
-                borderRadius: '10px',
+                borderRadius: 10,
                 border: enabled
                   ? '1px solid rgba(59,130,246,0.9)'
                   : '1px solid rgba(30,64,175,0.7)',
@@ -187,117 +195,139 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 gap: '0.25rem',
+                color: '#e5e7eb',
+                fontSize: 11,
               }}
             >
               <div
                 style={{
                   display: 'flex',
+                  width: '100%',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '0.3rem',
+                  gap: 6,
                 }}
               >
                 <span
                   style={{
-                    width: '0.9rem',
-                    height: '0.9rem',
-                    borderRadius: '999px',
-                    border: '1px solid rgba(148,163,184,0.8)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.7rem',
-                    background: enabled
-                      ? 'rgba(15,23,42,0.95)'
-                      : 'transparent',
-                  }}
-                >
-                  {enabled ? '✓' : ''}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.78rem',
-                    fontWeight: 500,
-                    color: '#e5e7eb',
+                    fontSize: 11,
+                    opacity: enabled ? 1 : 0.5,
                   }}
                 >
                   {getLabel(key)}
                 </span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    opacity: enabled ? 1 : 0.6,
+                  }}
+                >
+                  {enabled ? '✓' : ''}
+                </span>
               </div>
 
-              {/* عرض القيم الأخيرة لكل مؤشر إن وجدت */}
-              {key === 'macd' && value && (
-                <div
-                  style={{
-                    fontSize: '0.74rem',
-                    color: 'rgba(226,232,240,0.95)',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  <div>MACD: {formatNumber(value.macd)}</div>
-                  <div>
-                    {t('charts.indicators.signal', 'إشارة')}:{' '}
-                    {formatNumber(value.signal)}
-                  </div>
-                  <div>
-                    {t('charts.indicators.histogram', 'هيستوغرام')}:{' '}
-                    {formatNumber(value.histogram)}
-                  </div>
-                </div>
-              )}
+              {/* Latest values */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  width: '100%',
+                }}
+              >
+                {key === 'macd' && value && (
+                  <>
+                    <div>
+                      <strong>MACD:</strong>{' '}
+                      {formatNumber(value.macd)}
+                    </div>
+                    <div>
+                      <strong>
+                        {t('charts.indicators.signal', 'إشارة')}:
+                      </strong>{' '}
+                      {formatNumber(value.signal)}
+                    </div>
+                    <div>
+                      <strong>
+                        {t(
+                          'charts.indicators.histogram',
+                          'هيستوغرام',
+                        )}
+                        :
+                      </strong>{' '}
+                      {formatNumber(value.histogram)}
+                    </div>
+                  </>
+                )}
 
-              {key === 'bollinger' && value && (
-                <div
-                  style={{
-                    fontSize: '0.74rem',
-                    color: 'rgba(226,232,240,0.95)',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  <div>
-                    {t('charts.indicators.upper', 'الحد العلوي')}:{' '}
-                    {formatNumber(value.upper)}
-                  </div>
-                  <div>
-                    {t('charts.indicators.middle', 'الخط الأوسط')}:{' '}
-                    {formatNumber(value.middle)}
-                  </div>
-                  <div>
-                    {t('charts.indicators.lower', 'الحد السفلي')}:{' '}
-                    {formatNumber(value.lower)}
-                  </div>
-                </div>
-              )}
+                {key === 'bollinger' && value && (
+                  <>
+                    <div>
+                      <strong>
+                        {t(
+                          'charts.indicators.upper',
+                          'الحد العلوي',
+                        )}
+                        :
+                      </strong>{' '}
+                      {formatNumber(value.upper)}
+                    </div>
+                    <div>
+                      <strong>
+                        {t(
+                          'charts.indicators.middle',
+                          'الخط الأوسط',
+                        )}
+                        :
+                      </strong>{' '}
+                      {formatNumber(value.middle)}
+                    </div>
+                    <div>
+                      <strong>
+                        {t(
+                          'charts.indicators.lower',
+                          'الحد السفلي',
+                        )}
+                        :
+                      </strong>{' '}
+                      {formatNumber(value.lower)}
+                    </div>
+                  </>
+                )}
 
-              {key !== 'macd' && key !== 'bollinger' && value != null && (
-                <div
-                  style={{
-                    fontSize: '0.74rem',
-                    color: 'rgba(226,232,240,0.95)',
-                  }}
-                >
-                  {t('charts.indicators.lastValue', 'آخر قيمة')}:{' '}
-                  {formatNumber(value)}
-                </div>
-              )}
-
-              {value == null && (
-                <div
-                  style={{
-                    fontSize: '0.72rem',
-                    color: 'rgba(148,163,184,0.9)',
-                  }}
-                >
-                  {t(
-                    'charts.indicators.waiting',
-                    'جارٍ انتظار بيانات كافية لحساب هذا المؤشر...',
+                {key !== 'macd' &&
+                  key !== 'bollinger' &&
+                  value != null && (
+                    <div>
+                      <strong>
+                        {t(
+                          'charts.indicators.lastValue',
+                          'آخر قيمة',
+                        )}
+                        :
+                      </strong>{' '}
+                      {formatNumber(value)}
+                    </div>
                   )}
-                </div>
-              )}
+
+                {value == null && (
+                  <div
+                    style={{
+                      opacity: 0.7,
+                    }}
+                  >
+                    {t(
+                      'charts.indicators.waiting',
+                      'جارٍ انتظار بيانات كافية لحساب هذا المؤشر...',
+                    )}
+                  </div>
+                )}
+              </div>
             </button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };
 

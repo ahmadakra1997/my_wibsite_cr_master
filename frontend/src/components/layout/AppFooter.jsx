@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * تذييل التطبيق الرئيسي
- * يعرض معلومات أساسية عن النظام وحقوق النشر.
+ * يعرض:
+ * - اسم المنصّة + الإصدار
+ * - حقوق النشر
+ * - Tagline بسيط للـ Quantum AI Engine
  */
 const AppFooter = () => {
   const { t } = useTranslation();
@@ -12,60 +15,77 @@ const AppFooter = () => {
 
   const appName = t('app.name', 'QA TRADER');
   const appVersion = t('app.version', 'الإصدار 2.0');
+
   const copyright =
-    t('app.copyright', `جميع الحقوق محفوظة © ${year}`) ||
-    `جميع الحقوق محفوظة © ${year}`;
+    t(
+      'app.copyright',
+      `جميع الحقوق محفوظة © ${year}`,
+    ) || `جميع الحقوق محفوظة © ${year}`;
+
+  const tagline =
+    t(
+      'app.tagline',
+      '⚡ Quantum AI Trading Engine — Bot Orchestration System',
+    ) ||
+    '⚡ Quantum AI Trading Engine — Bot Orchestration System';
+
+  const footerStyle = {
+    marginTop: 10,
+    borderRadius: 18,
+    padding: '8px 12px',
+    border: '1px solid rgba(30,64,175,0.7)',
+    background:
+      'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(8,47,73,0.96))',
+    boxShadow: '0 14px 30px rgba(15,23,42,0.9)',
+    fontSize: 11,
+    color: 'var(--qa-text-soft, #9ca3af)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  };
+
+  const leftStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+  };
+
+  const rightStyle = {
+    textAlign: 'end',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+  };
+
+  const nameVersionStyle = {
+    color: '#e5e7eb',
+    fontSize: 11,
+  };
 
   return (
-    <footer
-      className="app-footer"
-      style={{
-        borderTop: '1px solid rgba(15,118,255,0.3)',
-        marginTop: '2rem',
-        padding: '0.75rem 1rem',
-        background:
-          'linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,1) 100%)',
-      }}
-    >
-      <div
-        className="app-footer-inner"
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-          direction: 'rtl',
-          fontSize: '0.8rem',
-          color: 'rgba(148,163,184,0.95)',
-        }}
-      >
-        <div className="app-footer-left" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ opacity: 0.9 }}>{appName}</span>
-          <span style={{ opacity: 0.45 }}>•</span>
-          <span style={{ opacity: 0.9 }}>{appVersion}</span>
-        </div>
+    <footer className="app-footer" style={footerStyle}>
+      <div className="app-footer__left" style={leftStyle}>
+        <span style={nameVersionStyle}>
+          {appName} • {appVersion}
+        </span>
+        <span>{copyright}</span>
+      </div>
 
-        <div className="app-footer-middle" style={{ textAlign: 'center', flex: 1 }}>
-          <span>{copyright}</span>
-        </div>
-
-        <div
-          className="app-footer-right"
+      <div className="app-footer__right" style={rightStyle}>
+        <span>{tagline}</span>
+        <span
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            justifyContent: 'flex-end',
+            fontSize: 10,
+            opacity: 0.85,
           }}
         >
-          <span style={{ opacity: 0.9 }}>⚡</span>
-          <span style={{ opacity: 0.85 }}>
-            Quantum AI Trading Engine — Bot Orchestration System
-          </span>
-        </div>
+          {t(
+            'app.disclaimerShort',
+            'هذه المنصّة لأغراض تحليلية وتعليمية، وليست نصيحة استثمارية.',
+          )}
+        </span>
       </div>
     </footer>
   );

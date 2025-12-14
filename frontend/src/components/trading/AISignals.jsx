@@ -1,28 +1,105 @@
 // frontend/src/components/trading/AISignals.jsx
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import api from '../../services/api';
+import {
+  aiSignalsLoading,
+  aiSignalsUpdated,
+  aiSignalsError,
+} from '../../store/tradingSlice';
 
 /**
  * AISignals
  * لوحة عرض إشارات الذكاء الاصطناعي (دخول / خروج / مراقبة).
  *
+ * - تتكامل مع الباكيند عبر /trading/ai-signals
+ * - وتقرأ الحالة من Redux (aiSignals, isLoadingAiSignals, aiSignalsError)
+ *
  * props (اختيارية):
- * - signals: Array<{
- *     id,
- *     symbol,
- *     type,        // 'entry' | 'exit' | 'watch'
- *     direction,   // 'long' | 'short'
- *     confidence,  // 0 – 100
- *     timeframe,   // '1h' | '4h' ...
- *     strategy,    // اسم الإستراتيجية
- *     time         // Date | timestamp | string
- *   }>
- * - isLoading: boolean
- * - onSelectSignal: fn(signal)
+ * - signals, isLoading: لو حابب تمرّر بيانات يدويًا من مكوّن أب
+ * - autoFetch: تفعيل / تعطيل الجلب الآلي من الـ API
+ * - symbol, timeframe: لفلترة الإشارات من الباكيند
  */
-const AISignals = ({ signals = [], isLoading = false, onSelectSignal }) => {
+const AISignals = ({
+  signals: signalsProp,
+  isLoading: isLoadingProp,
+  autoFetch = true,
+  symbol,
+  timeframe = '1h',
+  onSelectSignal,
+}) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  const {
+    aiSignals,
+    isLoadingAiSignals,
+    aiSignalsError: storeError,
+  } = useSelector((state) => state.trading || {});
+
+  const signals = signalsProp ?? aiSignals ?? [];
+  const isLoading = isLoadingProp ?? isLoadingAiSignals;
+
+  // جلب الإشارات من الباكيند
+  useEffect(() => {
+    if (!autoFetch) return;
+
+    let cancelled = false;
+
+    const fetchSignals = async () => {
+      try {
+        dispatch(aiSignalsLoading());
+
+        const params = new URLSearchParams();
+        if (symbol) params.append('symbol', symbol);
+        if (timeframe) params.append('timeframe', timeframe);
+        params.append('limit', '20');
+
+        const response = await api.get(
+          `/trading/ai-signals?${params.toString()}`,
+        );
+
+        const raw = response?.data ?? response;
+
+        const payload =
+          raw?.signals ||
+          raw?.result?.signals ||
+          (Array.isArray(raw) ? raw : []);
+
+        const normalized = Array.isArray(payload)
+          ? payload
+          : [];
+
+        if (!cancelled) {
+          dispatch(aiSignalsUpdated(normalized));
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        // eslint-disable-next-line no-console
+        console.error(
+          '[AISignals] Failed to fetch AI signals:',
+          error,
+        );
+
+        const msg =
+          error?.message ||
+          t(
+            'trading.aiSignals.error',
+            'فشل تحميل إشارات الذكاء الاصطناعي.',
+          );
+        dispatch(aiSignalsError(msg));
+      }
+    };
+
+    fetchSignals();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [autoFetch, symbol, timeframe, dispatch, t]);
 
   const hasSignals = Array.isArray(signals) && signals.length > 0;
 
@@ -39,20 +116,59 @@ const AISignals = ({ signals = [], isLoading = false, onSelectSignal }) => {
     }
   };
 
+  const containerStyle = {
+    borderRadius: 22,
+    padding: 12,
+    border: '1px solid rgba(30,64,175,0.55)',
+    background:
+      'radial-gradient(circle at top, rgba(56,189,248,0.16), rgba(15,23,42,0.98))',
+    boxShadow: '0 16px 36px rgba(15,23,42,0.9)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  };
+
+  const headerRowStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  };
+
+  const statusChipStyle = {
+    borderRadius: 999,
+    padding: '3px 8px',
+    fontSize: 10,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    border: '1px solid rgba(34,197,235,0.9)',
+    color: '#e0f2fe',
+    background:
+      'linear-gradient(135deg, rgba(8,47,73,0.9), rgba(22,101,52,0.95))',
+  };
+
   return (
-    <div
-      className="space-y-3"
-      style={{ direction: 'rtl' }}
-      data-testid="ai-signals-panel"
-    >
-      {/* رأس اللوحة */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <span className="text-lg">🧠</span>
+    <section className="ai-signals-panel" style={containerStyle}>
+      <header style={headerRowStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#e5e7eb',
+            }}
+          >
             {t('trading.aiSignals.title', 'إشارات الذكاء الاصطناعي')}
-          </h2>
-          <p className="text-[0.75rem] text-slate-400 mt-0.5">
+          </h3>
+          <p
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-muted)',
+              maxWidth: 420,
+            }}
+          >
             {t(
               'trading.aiSignals.subtitle',
               'رصد فرص الدخول والخروج اعتماداً على خوارزميات تحليل السوق.',
@@ -60,61 +176,144 @@ const AISignals = ({ signals = [], isLoading = false, onSelectSignal }) => {
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-1 text-[0.7rem]">
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 border border-emerald-500/60 px-2 py-0.5 text-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-            {t('trading.aiSignals.status', 'الوحدة التجريبية مفعّلة')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={statusChipStyle}>
+            {t(
+              'trading.aiSignals.status',
+              'الوحدة التجريبية مفعّلة',
+            )}
           </span>
           {hasSignals && (
-            <span className="text-slate-400">
-              {t('trading.aiSignals.count', 'عدد الإشارات الحالية')}:{' '}
-              <span className="text-slate-100 font-semibold">
+            <span
+              style={{
+                fontSize: 11,
+                color: 'var(--qa-text-soft)',
+                textAlign: 'end',
+              }}
+            >
+              {t(
+                'trading.aiSignals.count',
+                'عدد الإشارات الحالية',
+              )}
+              :{' '}
+              <strong style={{ color: '#e5e7eb' }}>
                 {sortedSignals.length}
-              </span>
+              </strong>
             </span>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* حالة التحميل */}
       {isLoading && (
-        <div className="flex items-center justify-center py-6 text-xs text-slate-300">
-          <span className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin ml-2" />
-          {t('trading.aiSignals.loading', 'جاري تحليل السوق وإعداد الإشارات...')}
+        <div
+          style={{
+            fontSize: 11,
+            color: 'var(--qa-text-muted)',
+            padding: '6px 4px',
+          }}
+        >
+          {t(
+            'trading.aiSignals.loading',
+            'جاري تحليل السوق وإعداد الإشارات...',
+          )}
         </div>
       )}
 
-      {/* لا توجد بيانات */}
       {!isLoading && !hasSignals && (
-        <div className="rounded-2xl border border-slate-700/80 bg-slate-950/90 px-4 py-4 text-center space-y-2">
-          <div className="text-3xl mb-1">✨</div>
-          <p className="text-xs text-slate-200">
-            {t(
-              'trading.aiSignals.empty',
-              'سيتم قريباً تفعيل نظام إشارات ذكاء اصطناعي متقدم، لاقتراح صفقات دخول وخروج وفق استراتيجيات مدروسة.',
-            )}
-          </p>
-          <ul className="text-[0.7rem] text-slate-400 space-y-1 text-right max-w-md mx-auto">
-            <li>• {t('trading.aiSignals.benefit1', 'تحليل تلقائي لعشرات الأزواج السوقية في نفس الوقت.')}</li>
-            <li>• {t('trading.aiSignals.benefit2', 'تقييم قوة الإشارة بناءً على السيولة والتذبذب والتوقيت.')}</li>
-            <li>• {t('trading.aiSignals.benefit3', 'دمج الإشارات مع إدارة مخاطرك الحالية في المنصة.')}</li>
+        <div
+          style={{
+            borderRadius: 16,
+            border: '1px dashed rgba(148,163,184,0.6)',
+            padding: '10px 9px',
+            fontSize: 11,
+            color: 'var(--qa-text-soft)',
+            background:
+              'radial-gradient(circle at top, rgba(56,189,248,0.08), rgba(15,23,42,0.95))',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>✨</span>
+            <span>
+              {t(
+                'trading.aiSignals.empty',
+                'سيتم قريباً تفعيل نظام إشارات ذكاء اصطناعي متقدم، لاقتراح صفقات دخول وخروج وفق استراتيجيات مدروسة.',
+              )}
+            </span>
+          </div>
+          <ul
+            style={{
+              paddingInlineStart: 18,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            <li>
+              {t(
+                'trading.aiSignals.benefit1',
+                'تحليل تلقائي لعشرات الأزواج السوقية في نفس الوقت.',
+              )}
+            </li>
+            <li>
+              {t(
+                'trading.aiSignals.benefit2',
+                'تقييم قوة الإشارة بناءً على السيولة والتذبذب والتوقيت.',
+              )}
+            </li>
+            <li>
+              {t(
+                'trading.aiSignals.benefit3',
+                'دمج الإشارات مع إدارة مخاطرك الحالية في المنصة.',
+              )}
+            </li>
           </ul>
         </div>
       )}
 
-      {/* قائمة الإشارات */}
+      {storeError && (
+        <div
+          style={{
+            marginTop: 4,
+            padding: '6px 8px',
+            borderRadius: 10,
+            fontSize: 11,
+            color: '#fecaca',
+            background:
+              'linear-gradient(135deg, rgba(127,29,29,0.9), rgba(153,27,27,0.95))',
+            border: '1px solid rgba(248,113,113,0.85)',
+          }}
+        >
+          {storeError}
+        </div>
+      )}
+
       {hasSignals && (
-        <div className="space-y-1.5">
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            marginTop: 4,
+          }}
+        >
           {sortedSignals.map((signal) => (
             <SignalRow
-              key={signal.id || `${signal.symbol}-${signal.time}-${signal.type}`}
+              // eslint-disable-next-line no-underscore-dangle
+              key={signal.id || `${signal.symbol}-${signal.time}`}
               signal={signal}
               onClick={handleSelect}
             />
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
@@ -133,27 +332,14 @@ const SignalRow = ({ signal, onClick }) => {
 
   const isEntry = type === 'entry';
   const isExit = type === 'exit';
-
   const isLong = direction === 'long';
   const isShort = direction === 'short';
 
   const labelType = isEntry
     ? t('trading.aiSignals.type.entry', 'دخول')
     : isExit
-      ? t('trading.aiSignals.type.exit', 'خروج')
-      : t('trading.aiSignals.type.watch', 'مراقبة');
-
-  const typeColor = isEntry
-    ? 'bg-emerald-500/15 border-emerald-400/60 text-emerald-200'
-    : isExit
-      ? 'bg-rose-500/15 border-rose-400/60 text-rose-200'
-      : 'bg-sky-500/10 border-sky-400/60 text-sky-200';
-
-  const dirColor = isLong
-    ? 'text-emerald-300'
-    : isShort
-      ? 'text-rose-300'
-      : 'text-slate-200';
+    ? t('trading.aiSignals.type.exit', 'خروج')
+    : t('trading.aiSignals.type.watch', 'مراقبة');
 
   const conf = Number(confidence) || 0;
   const isStrong = conf >= 80;
@@ -174,67 +360,177 @@ const SignalRow = ({ signal, onClick }) => {
     }
   };
 
+  const baseBg =
+    direction === 'long'
+      ? 'rgba(34,197,94,0.08)'
+      : direction === 'short'
+      ? 'rgba(248,113,113,0.08)'
+      : 'rgba(56,189,248,0.06)';
+
+  const borderColor =
+    direction === 'long'
+      ? 'rgba(34,197,94,0.7)'
+      : direction === 'short'
+      ? 'rgba(248,113,113,0.7)'
+      : 'rgba(56,189,248,0.7)';
+
+  const accentColor =
+    direction === 'long'
+      ? '#22c55e'
+      : direction === 'short'
+      ? '#fb7185'
+      : '#38bdf8';
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      className="w-full text-right rounded-xl border border-slate-700/80 bg-slate-950/80 hover:bg-slate-900/90 transition shadow-sm shadow-slate-950/60 px-3 py-2.5 flex items-center justify-between gap-3"
+      style={{
+        width: '100%',
+        textAlign: 'right',
+        borderRadius: 14,
+        border: `1px solid ${borderColor}`,
+        background: `linear-gradient(135deg, ${baseBg}, rgba(15,23,42,0.98))`,
+        padding: '8px 9px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'stretch',
+        gap: 10,
+        cursor: 'pointer',
+      }}
     >
       {/* اليسار: الرمز / الإطار الزمني / الإستراتيجية */}
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-2 mb-1">
-          <span className="text-xs font-semibold text-slate-100">
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+          alignItems: 'flex-start',
+          minWidth: 0,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: 6,
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#e5e7eb',
+            }}
+          >
             {symbol || '—'}
           </span>
           {timeframe && (
-            <span className="text-[0.65rem] px-2 py-0.5 rounded-full bg-slate-900/90 border border-slate-600 text-slate-300">
+            <span
+              style={{
+                fontSize: 10,
+                color: 'var(--qa-text-soft)',
+              }}
+            >
               {timeframe}
             </span>
           )}
           <span
-            className={`text-[0.65rem] px-2 py-0.5 rounded-full border ${typeColor}`}
+            style={{
+              fontSize: 10,
+              padding: '2px 7px',
+              borderRadius: 999,
+              border: `1px solid ${borderColor}`,
+              color: accentColor,
+            }}
           >
             {labelType}
           </span>
         </div>
 
         {strategy && (
-          <div className="text-[0.7rem] text-slate-400 truncate">
-            {t('trading.aiSignals.strategy', 'الإستراتيجية')}: {strategy}
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-muted)',
+            }}
+          >
+            {t('trading.aiSignals.strategy', 'الإستراتيجية')}:{' '}
+            <span style={{ color: '#e5e7eb' }}>{strategy}</span>
           </div>
         )}
 
-        <div className="text-[0.7rem] text-slate-500">
+        <div
+          style={{
+            fontSize: 10,
+            color: 'var(--qa-text-soft)',
+          }}
+        >
           {formattedTime}
         </div>
       </div>
 
-      {/* اليمين: الاتجاه والثقة */}
-      <div className="flex flex-col items-end gap-1 text-[0.75rem]">
-        <div className="flex items-center gap-1">
-          {isLong && <span className="text-emerald-400 text-sm">⬆</span>}
-          {isShort && <span className="text-rose-400 text-sm">⬇</span>}
-          <span className={`font-semibold ${dirColor}`}>
+      {/* اليمين: الاتجاه + الثقة */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 4,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            alignItems: 'center',
+            fontSize: 11,
+            color: accentColor,
+          }}
+        >
+          <span>{isLong ? '⬆' : isShort ? '⬇' : '⟷'}</span>
+          <span>
             {isLong
-              ? t('trading.aiSignals.direction.long', 'اتجاه: شراء')
+              ? t(
+                  'trading.aiSignals.direction.long',
+                  'اتجاه: شراء',
+                )
               : isShort
-                ? t('trading.aiSignals.direction.short', 'اتجاه: بيع')
-                : t('trading.aiSignals.direction.neutral', 'اتجاه: محايد')}
+              ? t(
+                  'trading.aiSignals.direction.short',
+                  'اتجاه: بيع',
+                )
+              : t(
+                  'trading.aiSignals.direction.neutral',
+                  'اتجاه: محايد',
+                )}
           </span>
         </div>
 
-        <div className="flex items-center gap-1 text-[0.7rem] text-slate-300">
-          <span className="w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-            <span
-              className="block h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
-              style={{ width: `${Math.min(100, Math.max(conf, 0))}%` }}
-            />
-          </span>
-          <span className="font-semibold">{conf.toFixed(0)}%</span>
+        <div
+          style={{
+            fontSize: 11,
+            color: '#e5e7eb',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {conf.toFixed(0)}%
         </div>
 
         {isStrong && (
-          <div className="text-[0.65rem] text-emerald-300 bg-emerald-900/40 border border-emerald-500/50 rounded-full px-2 py-0.5">
+          <div
+            style={{
+              fontSize: 10,
+              padding: '2px 6px',
+              borderRadius: 999,
+              border: '1px solid rgba(250,250,250,0.9)',
+              color: '#fefce8',
+              background:
+                'linear-gradient(135deg, rgba(250,204,21,0.3), rgba(30,64,175,0.98))',
+            }}
+          >
             {t('trading.aiSignals.strong', 'إشارة قوية')}
           </div>
         )}

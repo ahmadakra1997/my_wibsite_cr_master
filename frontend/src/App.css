@@ -11,15 +11,16 @@
 ::-webkit-scrollbar-track {
   background: #0A1F3A;
 }
-
+/* شريط تمرير بألوان تركوازي + أخضر + أزرق */
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #00D4FF, #8B5CF6);
+  background: linear-gradient(135deg, #00E5FF, #00F59B);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #8B5CF6, #00D4FF);
+  background: linear-gradient(135deg, #00F59B, #0EA5E9);
 }
+
 
 /* تأثيرات للشعار */
 .quantum-glow {

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import './TradeHistory.css'; // اختياري
+import './TradeHistory.css';
 
 /**
  * نتوقع شكل الـ trade:
@@ -14,18 +14,23 @@ import './TradeHistory.css'; // اختياري
  *   timestamp: number | string (ms)
  * }
  */
-
 const TradeHistory = () => {
   const trades = useSelector((state) => state.trading.trades);
-  const isLoading = useSelector((state) => state.trading.isLoadingTrades);
-  const error = useSelector((state) => state.trading.tradesError);
+  const isLoading = useSelector(
+    (state) => state.trading.isLoadingTrades
+  );
+  const error = useSelector(
+    (state) => state.trading.tradesError
+  );
 
   const renderState = () => {
     if (error) {
       return (
         <div className="th-state th-state-error">
-          <span>Failed to load trades.</span>
-          <span className="th-state-sub">{String(error)}</span>
+          Failed to load trades.
+          <span className="th-state-sub">
+            {String(error)}
+          </span>
         </div>
       );
     }
@@ -33,7 +38,7 @@ const TradeHistory = () => {
     if (isLoading && (!trades || trades.length === 0)) {
       return (
         <div className="th-state th-state-loading">
-          <span>Loading trades…</span>
+          Loading trades…
         </div>
       );
     }
@@ -41,7 +46,7 @@ const TradeHistory = () => {
     if (!trades || trades.length === 0) {
       return (
         <div className="th-state th-state-empty">
-          <span>No trades yet.</span>
+          No trades yet.
         </div>
       );
     }
@@ -50,48 +55,70 @@ const TradeHistory = () => {
   };
 
   const stateNode = renderState();
+
+  // حالة خطأ / تحميل / لا يوجد بيانات
   if (stateNode) {
     return (
-      <div className="trade-history-container">
-        <div className="th-header">
-          <span className="th-title">Recent Trades</span>
-        </div>
+      <section className="trade-history-container">
+        <header className="th-header">
+          <h3 className="th-title">Recent Trades</h3>
+        </header>
         {stateNode}
-      </div>
+      </section>
     );
   }
 
+  // حالة وجود بيانات
   return (
-    <div className="trade-history-container">
-      <div className="th-header">
-        <span className="th-title">Recent Trades</span>
-      </div>
+    <section className="trade-history-container">
+      <header className="th-header">
+        <h3 className="th-title">Recent Trades</h3>
+      </header>
+
       <div className="th-table-header">
         <span>Time</span>
         <span>Side</span>
         <span>Price</span>
         <span>Amount</span>
       </div>
+
       <div className="th-table-body">
         {trades.map((trade, idx) => {
           const time = trade.timestamp
             ? new Date(Number(trade.timestamp)).toLocaleTimeString()
             : '-';
-          const side = (trade.side || '').toLowerCase();
-          const isBuy = side === 'buy';
-          const isSell = side === 'sell';
+
+          const rawSide = (trade.side || '').toLowerCase();
+          const isBuy = rawSide === 'buy';
+          const isSell = rawSide === 'sell';
+
+          const sideText =
+            rawSide ? rawSide.toUpperCase() : '—';
+
+          const rowClass = [
+            'th-row',
+            isBuy ? 'th-row-buy' : '',
+            isSell ? 'th-row-sell' : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+
+          const sideClass = [
+            'th-side',
+            isBuy
+              ? 'th-side-buy'
+              : isSell
+              ? 'th-side-sell'
+              : 'th-side-unknown',
+          ].join(' ');
 
           return (
             <div
               key={trade.id || idx}
-              className={`th-row ${
-                isBuy ? 'th-row-buy' : isSell ? 'th-row-sell' : ''
-              }`}
+              className={rowClass}
             >
               <span className="th-time">{time}</span>
-              <span className={`th-side th-side-${side || 'unknown'}`}>
-                {side.toUpperCase() || '-'}
-              </span>
+              <span className={sideClass}>{sideText}</span>
               <span className="th-price">
                 {Number(trade.price ?? 0).toFixed(4)}
               </span>
@@ -102,7 +129,7 @@ const TradeHistory = () => {
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };
 

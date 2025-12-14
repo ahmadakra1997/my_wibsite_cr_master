@@ -2,17 +2,22 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import './PriceTicker.css'; // اختياري
+import './PriceTicker.css';
 
 const PriceTicker = () => {
   const ticker = useSelector((state) => state.trading.ticker);
-  const isLoading = useSelector((state) => state.trading.isLoadingTicker);
-  const error = useSelector((state) => state.trading.tickerError);
+  const isLoading = useSelector(
+    (state) => state.trading.isLoadingTicker
+  );
+  const error = useSelector(
+    (state) => state.trading.tickerError
+  );
 
+  // حالات الخطأ / التحميل / لا توجد بيانات
   if (error) {
     return (
       <div className="ticker-container ticker-error">
-        <span>Failed to load ticker: {String(error)}</span>
+        Failed to load ticker: {String(error)}
       </div>
     );
   }
@@ -20,7 +25,7 @@ const PriceTicker = () => {
   if (isLoading && !ticker) {
     return (
       <div className="ticker-container ticker-loading">
-        <span>Loading ticker…</span>
+        Loading ticker…
       </div>
     );
   }
@@ -28,7 +33,7 @@ const PriceTicker = () => {
   if (!ticker) {
     return (
       <div className="ticker-container ticker-empty">
-        <span>No ticker data yet.</span>
+        No ticker data yet.
       </div>
     );
   }
@@ -46,32 +51,44 @@ const PriceTicker = () => {
   const isUp = priceChange > 0;
   const isDown = priceChange < 0;
 
+  const changeClass = [
+    'ticker-change',
+    isUp ? 'ticker-up' : '',
+    isDown ? 'ticker-down' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const lastPriceClass = [
+    'ticker-last-price',
+    isUp ? 'ticker-up' : '',
+    isDown ? 'ticker-down' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div className="ticker-container">
+      {/* الرمز */}
       <div className="ticker-symbol">
         <span>{symbol || 'SYMBOL'}</span>
       </div>
 
+      {/* السعر + التغيير */}
       <div className="ticker-main">
-        <span
-          className={`ticker-last-price ${
-            isUp ? 'ticker-up' : isDown ? 'ticker-down' : ''
-          }`}
-        >
+        <div className={lastPriceClass}>
           {Number(lastPrice ?? 0).toFixed(4)}
-        </span>
-        <span
-          className={`ticker-change ${
-            isUp ? 'ticker-up' : isDown ? 'ticker-down' : ''
-          }`}
-        >
+        </div>
+
+        <div className={changeClass}>
           {isUp ? '+' : ''}
           {Number(priceChange ?? 0).toFixed(4)} (
           {isUp ? '+' : ''}
           {Number(priceChangePercent ?? 0).toFixed(2)}%)
-        </span>
+        </div>
       </div>
 
+      {/* high / low / volume */}
       <div className="ticker-extra">
         <div className="ticker-extra-item">
           <span className="ticker-label">High</span>
@@ -79,12 +96,14 @@ const PriceTicker = () => {
             {Number(highPrice ?? 0).toFixed(4)}
           </span>
         </div>
+
         <div className="ticker-extra-item">
           <span className="ticker-label">Low</span>
           <span className="ticker-value">
             {Number(lowPrice ?? 0).toFixed(4)}
           </span>
         </div>
+
         <div className="ticker-extra-item">
           <span className="ticker-label">Volume</span>
           <span className="ticker-value">

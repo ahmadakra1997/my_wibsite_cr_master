@@ -11,14 +11,18 @@ const AuthPanel = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [remember, setRemember] = useState(true);
+
   const navigate = useNavigate();
   const { addToast } = useToast();
 
+  const isSignup = mode === 'signup';
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const isSignup = mode === 'signup';
 
-    if (isSignup && password !== confirm) {
+    const isSignupMode = mode === 'signup';
+
+    if (isSignupMode && password !== confirm) {
       addToast({
         title: 'Passwords do not match',
         description:
@@ -30,7 +34,7 @@ const AuthPanel = () => {
 
     // هنا لاحقاً يوضع منطق الاتصال بالـ backend
     addToast({
-      title: isSignup ? 'Account ready' : 'Welcome back',
+      title: isSignupMode ? 'Account ready' : 'Welcome back',
       description: 'Routing you to the trading cockpit…',
       type: 'success',
     });
@@ -38,52 +42,74 @@ const AuthPanel = () => {
     navigate('/trading');
   };
 
-  const isSignup = mode === 'signup';
+  const handleForgotPassword = () => {
+    addToast({
+      title: 'Reset link',
+      description:
+        'Password reset flow is not wired yet — connect to backend later.',
+      type: 'info',
+    });
+  };
 
   return (
     <div className="auth-root">
       <div className="auth-card">
+        {/* يسار: النص / البراند */}
         <div className="auth-left">
-          <div className="auth-logo-badge">Quantum AI Trader</div>
+          <div className="auth-logo-badge">
+            <span>Quantum AI Trader</span>
+          </div>
+
           <h1 className="auth-title">
-            Secure access to your
-            <span> automated trading cockpit.</span>
+            Secure access to your{' '}
+            <span>automated trading cockpit.</span>
           </h1>
+
           <p className="auth-subtitle">
-            Log in to control your bots, monitor risk and manage live trading
-            sessions — all from a single neon interface.
+            Log in to control your bots, monitor risk and manage live
+            trading sessions — all from a single neon interface.
           </p>
 
           <div className="auth-meta">
             <div className="auth-meta-item">
-              <span className="auth-meta-label">Sessions</span>
-              <span className="auth-meta-value">24/7</span>
+              <div className="auth-meta-label">Sessions</div>
+              <div className="auth-meta-value">24 / 7</div>
             </div>
+
             <div className="auth-meta-item">
-              <span className="auth-meta-label">Security</span>
-              <span className="auth-meta-value">2FA-ready</span>
+              <div className="auth-meta-label">Security</div>
+              <div className="auth-meta-value">2FA-ready</div>
             </div>
+
             <div className="auth-meta-item">
-              <span className="auth-meta-label">Latency</span>
-              <span className="auth-meta-value">&lt; 5 ms*</span>
+              <div className="auth-meta-label">Latency</div>
+              <div className="auth-meta-value">&lt; 5 ms*</div>
             </div>
           </div>
         </div>
 
+        {/* يمين: الفورم */}
         <div className="auth-right">
+          {/* Tabs: Log in / Create account */}
           <div className="auth-tabs">
             <button
               type="button"
-              className={`auth-tab ${mode === 'login' ? 'auth-tab-active' : ''}`}
+              className={
+                mode === 'login'
+                  ? 'auth-tab auth-tab-active'
+                  : 'auth-tab'
+              }
               onClick={() => setMode('login')}
             >
               Log In
             </button>
             <button
               type="button"
-              className={`auth-tab ${
-                mode === 'signup' ? 'auth-tab-active' : ''
-              }`}
+              className={
+                mode === 'signup'
+                  ? 'auth-tab auth-tab-active'
+                  : 'auth-tab'
+              }
               onClick={() => setMode('signup')}
             >
               Create Account
@@ -91,49 +117,53 @@ const AuthPanel = () => {
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
-            <label className="auth-field">
+            {/* Email */}
+            <div className="auth-field">
               <span>Email</span>
               <input
                 type="email"
-                required
-                placeholder="you@domain.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
               />
-            </label>
+            </div>
 
-            <label className="auth-field">
+            {/* Password */}
+            <div className="auth-field">
               <span>Password</span>
               <input
                 type="password"
-                required
-                minLength={6}
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
               />
-            </label>
+            </div>
 
+            {/* Confirm password في وضع signup فقط */}
             {isSignup && (
-              <label className="auth-field">
+              <div className="auth-field">
                 <span>Confirm Password</span>
                 <input
                   type="password"
-                  required
-                  minLength={6}
-                  placeholder="••••••••"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="Repeat your password"
+                  required
                 />
-              </label>
+              </div>
             )}
 
+            {/* Remember + Forgot password */}
             <div className="auth-row">
               <label className="auth-checkbox">
                 <input
                   type="checkbox"
                   checked={remember}
-                  onChange={() => setRemember((v) => !v)}
+                  onChange={() =>
+                    setRemember((v) => !v)
+                  }
                 />
                 <span>Remember this device</span>
               </label>
@@ -142,27 +172,23 @@ const AuthPanel = () => {
                 <button
                   type="button"
                   className="auth-link-button"
-                  onClick={() =>
-                    addToast({
-                      title: 'Reset link',
-                      description:
-                        'Password reset flow is not wired yet — connect to backend later.',
-                      type: 'info',
-                    })
-                  }
+                  onClick={handleForgotPassword}
                 >
                   Forgot password?
                 </button>
               )}
             </div>
 
+            {/* Submit */}
             <button type="submit" className="auth-submit">
               {isSignup ? 'Create & Continue' : 'Log In'}
             </button>
 
             <div className="auth-footer-note">
-              <span>Back to </span>
-              <Link to="/">Landing</Link>
+              Back to{' '}
+              <Link to="/">
+                Landing
+              </Link>
             </div>
           </form>
         </div>

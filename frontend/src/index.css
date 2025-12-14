@@ -22,9 +22,45 @@ body {
   color: #e5f4ff;
 }
 
-/* يمكنك إضافة كلاس على body من React:
-   <body class="quantum-theme"> أو في App: <div className="quantum-theme"> */
+/* متغيرات الثيم على :root كـ fallback (حتى لو ما تم تفعيل .quantum-theme) */
+:root {
+  --qa-bg: #020617;
+  --qa-bg-elevated: #050b1f;
+  --qa-bg-elevated-soft: #070f2b;
 
+  --qa-primary: #00e5ff;
+  --qa-primary-soft: rgba(0, 229, 255, 0.12);
+  --qa-primary-strong-soft: rgba(0, 229, 255, 0.22);
+
+  --qa-accent-green: #00f59b;
+  --qa-accent-pink: #ff46c4;
+  --qa-accent-orange: #f97316;
+
+  --qa-border-subtle: rgba(255, 255, 255, 0.06);
+  --qa-border-strong: rgba(0, 229, 255, 0.4);
+
+  --qa-text-main: #e5f4ff;
+  --qa-text-muted: #7b8ca8;
+  --qa-text-soft: #6b7280;
+
+  --qa-danger: #fb3b7f;
+  --qa-success: #00f59b;
+  --qa-warning: #facc15;
+
+  --qa-radius-lg: 18px;
+  --qa-radius-xl: 22px;
+  --qa-radius-pill: 999px;
+
+  --qa-shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.55);
+  --qa-shadow-glow: 0 0 32px rgba(0, 229, 255, 0.34);
+
+  --qa-transition-fast: 150ms ease-out;
+  --qa-transition-med: 220ms ease-out;
+}
+
+/* يمكنك إضافة كلاس على body من React أو في App:
+   document.body.classList.add('quantum-theme')
+*/
 body.quantum-theme,
 .quantum-theme {
   --qa-bg: #020617;
@@ -60,7 +96,12 @@ body.quantum-theme,
   --qa-transition-fast: 150ms ease-out;
   --qa-transition-med: 220ms ease-out;
 
-  background: radial-gradient(circle at top, #020e3b 0, #020617 50%, #000 100%);
+  background: radial-gradient(
+    circle at top,
+    #020e3b 0,
+    #020617 50%,
+    #000 100%
+  );
   color: var(--qa-text-main);
 }
 

@@ -1,9 +1,13 @@
 // frontend/src/App.js
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { Provider } from 'react-redux';
-
 import store from './store/store';
 
 // صفحات رئيسية
@@ -25,17 +29,28 @@ function App() {
       <BrowserRouter>
         <ToastProvider>
           <ErrorBoundary>
-            <div className="quantum-theme">
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/trading" element={<TradingInterface />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/bot" element={<BotDashboard />} />
-                <Route path="/auth" element={<AuthPanel />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
+            <Routes>
+              {/* صفحة الهبوط */}
+              <Route path="/" element={<LandingPage />} />
+
+              {/* واجهة التداول */}
+              <Route path="/trading" element={<TradingInterface />} />
+
+              {/* لوحة الـ Overview */}
+              <Route path="/dashboard" element={<Dashboard />} />
+
+              {/* لوحة إدارة البوتات */}
+              <Route path="/bot" element={<BotDashboard />} />
+
+              {/* صفحة الدخول/التسجيل */}
+              <Route path="/auth" element={<AuthPanel />} />
+
+              {/* إعدادات المستخدم / الواجهة */}
+              <Route path="/settings" element={<SettingsPage />} />
+
+              {/* أي مسار غلط يرجع للـ Landing */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </ErrorBoundary>
         </ToastProvider>
       </BrowserRouter>

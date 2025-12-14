@@ -7,10 +7,8 @@ import PositionAnalyzer from '../../services/positionAnalyzer';
 
 /**
  * PerformanceAnalytics
- * لوحة تحليلات الأداء مبنية على المراكز الموجودة في trading.positions
- * عبر خدمة PositionAnalyzer.
- *
- * تُستخدم داخل TradingInterface أسفل الصفحة.
+ * لوحة تحليلات الأداء مبنية على المراكز في trading.positions
+ * باستخدام PositionAnalyzer في الفرونت.
  */
 const PerformanceAnalytics = () => {
   const { t } = useTranslation();
@@ -26,7 +24,10 @@ const PerformanceAnalytics = () => {
   const analyzer = useMemo(() => new PositionAnalyzer(), []);
 
   const stats = useMemo(
-    () => analyzer.calculatePositionStats(Array.isArray(positions) ? positions : []),
+    () =>
+      analyzer.calculatePositionStats(
+        Array.isArray(positions) ? positions : [],
+      ),
     [positions, analyzer],
   );
 
@@ -35,6 +36,8 @@ const PerformanceAnalytics = () => {
     openPositions = 0,
     closedPositions = 0,
     netProfit = 0,
+    grossProfit = 0,
+    grossLoss = 0,
     winRate = 0,
     maxDrawdown = 0,
     bestTrade,
@@ -43,12 +46,13 @@ const PerformanceAnalytics = () => {
 
   const netProfitColor =
     netProfit > 0
-      ? 'text-emerald-300'
+      ? '#4ade80'
       : netProfit < 0
-        ? 'text-rose-300'
-        : 'text-slate-100';
+      ? '#fca5a5'
+      : '#e5e7eb';
 
-  const ddColor = maxDrawdown > 0 ? 'text-amber-300' : 'text-slate-100';
+  const ddColor =
+    maxDrawdown > 0 ? '#facc15' : 'var(--qa-text-soft)';
 
   const metrics = [
     {
@@ -56,61 +60,89 @@ const PerformanceAnalytics = () => {
       label: t('analytics.netProfit', 'صافي الربح'),
       value: formatNumber(netProfit, 2),
       suffix: 'USDT',
-      icon: '💰',
-      className: netProfitColor,
+      accentColor: netProfitColor,
     },
     {
       key: 'winRate',
       label: t('analytics.winRate', 'نسبة الصفقات الرابحة'),
       value: formatNumber(winRate, 2),
       suffix: '%',
-      icon: '📈',
     },
     {
       key: 'totalPositions',
       label: t('analytics.totalPositions', 'إجمالي المراكز'),
       value: totalPositions,
       suffix: '',
-      icon: '📊',
     },
     {
       key: 'openPositions',
       label: t('analytics.openPositions', 'مفتوحة الآن'),
       value: openPositions,
       suffix: '',
-      icon: '🟢',
     },
     {
       key: 'closedPositions',
       label: t('analytics.closedPositions', 'مغلقة'),
       value: closedPositions,
       suffix: '',
-      icon: '⚪',
     },
     {
       key: 'maxDrawdown',
       label: t('analytics.maxDrawdown', 'أقصى تراجع'),
       value: formatNumber(maxDrawdown, 2),
       suffix: 'USDT',
-      icon: '📉',
-      className: ddColor,
+      accentColor: ddColor,
     },
   ];
 
+  const containerStyle = {
+    borderRadius: 22,
+    padding: 12,
+    border: '1px solid rgba(30,64,175,0.6)',
+    background:
+      'radial-gradient(circle at top, rgba(45,212,191,0.1), rgba(15,23,42,0.98))',
+    boxShadow: '0 16px 36px rgba(15,23,42,0.9)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  };
+
   return (
-    <div
-      className="space-y-3"
-      style={{ direction: 'rtl' }}
-      data-testid="performance-analytics"
-    >
+    <section className="performance-analytics" style={containerStyle}>
       {/* رأس اللوحة */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-            <span className="text-lg">📊</span>
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#e5e7eb',
+            }}
+          >
             {t('analytics.title', 'تحليلات الأداء')}
-          </h2>
-          <p className="text-[0.75rem] text-slate-400 mt-0.5">
+          </h3>
+          <p
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-muted)',
+              maxWidth: 420,
+            }}
+          >
             {t(
               'analytics.subtitle',
               'نظرة شاملة على نتائج تداولاتك: الربحية، نسبة الفوز، وأقصى تراجع في الحساب.',
@@ -118,66 +150,122 @@ const PerformanceAnalytics = () => {
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-1 text-[0.7rem] text-slate-400">
+        <div
+          style={{
+            textAlign: 'end',
+            fontSize: 11,
+            color: 'var(--qa-text-soft)',
+          }}
+        >
           {isLoading && (
-            <span className="inline-flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-              {t('analytics.loading', 'جاري تحديث بيانات الأداء...')}
-            </span>
+            <div
+              style={{
+                marginBottom: 4,
+              }}
+            >
+              {t(
+                'analytics.loading',
+                'جاري تحديث بيانات الأداء...',
+              )}
+            </div>
           )}
-          <span>
-            {t('analytics.totalTradesLabel', 'إجمالي المراكز المسجّلة')}:{' '}
-            <span className="text-slate-100 font-semibold">{totalPositions}</span>
-          </span>
+          <div>
+            {t(
+              'analytics.totalTradesLabel',
+              'إجمالي المراكز المسجّلة',
+            )}
+            :{' '}
+            <strong style={{ color: '#e5e7eb' }}>
+              {totalPositions}
+            </strong>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* شبكة المقاييس الأساسية */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: 8,
+          marginTop: 6,
+        }}
+      >
         {metrics.map((metric) => (
           <MetricCard key={metric.key} metric={metric} />
         ))}
       </div>
 
       {/* أفضل / أسوأ صفقة */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 8,
+          marginTop: 10,
+        }}
+      >
         <TradeHighlight
           type="best"
-          trade={bestTrade}
           title={t('analytics.bestTrade', 'أفضل صفقة')}
           icon="🏆"
+          trade={bestTrade}
         />
         <TradeHighlight
           type="worst"
-          trade={worstTrade}
           title={t('analytics.worstTrade', 'أسوأ صفقة')}
           icon="⚠️"
+          trade={worstTrade}
         />
       </div>
-    </div>
+    </section>
   );
 };
 
 const MetricCard = ({ metric }) => {
-  const { label, value, suffix, icon, className } = metric;
+  const { label, value, suffix, accentColor } = metric;
+
+  const cardStyle = {
+    borderRadius: 14,
+    padding: '8px 9px',
+    border: '1px solid rgba(30,64,175,0.55)',
+    background:
+      'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,1))',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+  };
 
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-950/90 px-3 py-2.5 shadow-sm shadow-slate-950/80">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col">
-          <span className="text-[0.72rem] text-slate-400 mb-1">{label}</span>
+    <div style={cardStyle}>
+      <div
+        style={{
+          fontSize: 11,
+          color: 'var(--qa-text-soft)',
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 16,
+          fontWeight: 600,
+          fontVariantNumeric: 'tabular-nums',
+          color: accentColor || '#e5e7eb',
+        }}
+      >
+        {value}{' '}
+        {suffix && (
           <span
-            className={`text-xs font-semibold text-slate-100 ${className || ''}`}
+            style={{
+              fontSize: 11,
+              opacity: 0.8,
+            }}
           >
-            {value}{' '}
-            {suffix && (
-              <span className="text-[0.7rem] text-slate-400">{suffix}</span>
-            )}
+            {suffix}
           </span>
-        </div>
-        <div className="w-7 h-7 rounded-full bg-slate-900/90 border border-slate-700 flex items-center justify-center text-base">
-          <span>{icon}</span>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -188,17 +276,33 @@ const TradeHighlight = ({ trade, type, title, icon }) => {
 
   if (!trade) {
     return (
-      <div className="rounded-xl border border-slate-700/80 bg-slate-950/90 px-3 py-2.5 text-[0.75rem] text-slate-400">
+      <div
+        style={{
+          borderRadius: 14,
+          padding: '8px 9px',
+          border: '1px dashed rgba(148,163,184,0.6)',
+          background: 'rgba(15,23,42,0.98)',
+          fontSize: 11,
+          color: 'var(--qa-text-soft)',
+        }}
+      >
         {type === 'best'
-          ? t('analytics.noBestTrade', 'لم يتم تسجيل صفقة رابحة بعد.')
-          : t('analytics.noWorstTrade', 'لم يتم تسجيل صفقة خاسرة بعد.')}
+          ? t(
+              'analytics.noBestTrade',
+              'لم يتم تسجيل صفقة رابحة بعد.',
+            )
+          : t(
+              'analytics.noWorstTrade',
+              'لم يتم تسجيل صفقة خاسرة بعد.',
+            )}
       </div>
     );
   }
 
   const pnl = Number(trade.realizedPnl || trade.pnl || 0);
+
   const pnlColor =
-    pnl > 0 ? 'text-emerald-300' : pnl < 0 ? 'text-rose-300' : 'text-slate-100';
+    pnl > 0 ? '#4ade80' : pnl < 0 ? '#fca5a5' : '#e5e7eb';
 
   const formatDate = (value) => {
     if (!value) return '—';
@@ -211,31 +315,70 @@ const TradeHighlight = ({ trade, type, title, icon }) => {
   };
 
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-950/90 px-3 py-2.5 text-[0.75rem]">
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-lg">{icon}</span>
-          <span className="text-xs font-semibold text-slate-100">{title}</span>
-        </div>
-        <span className={`text-xs font-semibold ${pnlColor}`}>
-          {pnl.toFixed(2)} USDT
-        </span>
+    <div
+      style={{
+        borderRadius: 14,
+        padding: '8px 9px',
+        border: '1px solid rgba(30,64,175,0.7)',
+        background:
+          'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,1))',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        fontSize: 11,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          color: '#e5e7eb',
+        }}
+      >
+        <span>{icon}</span>
+        <span>{title}</span>
       </div>
-      <div className="flex items-center justify-between gap-2 text-[0.7rem] text-slate-400">
-        <span>
-          {t('analytics.symbol', 'الرمز')}: {trade.symbol || '—'}
-        </span>
-        <span>
-          {t('analytics.side', 'الاتجاه')}:{' '}
-          {trade.side === 'long'
-            ? t('positions.long', 'شراء (Long)')
-            : trade.side === 'short'
-              ? t('positions.short', 'بيع (Short)')
-              : '—'}
-        </span>
+
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: pnlColor,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {pnl.toFixed(2)} USDT
       </div>
-      <div className="mt-1 text-[0.7rem] text-slate-500">
-        {t('analytics.closedAt', 'تاريخ الإغلاق')}: {formatDate(trade.closedAt)}
+
+      <div
+        style={{
+          color: 'var(--qa-text-soft)',
+        }}
+      >
+        {t('analytics.symbol', 'الرمز')}: {trade.symbol || '—'}
+      </div>
+
+      <div
+        style={{
+          color: 'var(--qa-text-soft)',
+        }}
+      >
+        {t('analytics.side', 'الاتجاه')}:{' '}
+        {trade.side === 'long'
+          ? t('positions.long', 'شراء (Long)')
+          : trade.side === 'short'
+          ? t('positions.short', 'بيع (Short)')
+          : '—'}
+      </div>
+
+      <div
+        style={{
+          color: 'var(--qa-text-soft)',
+        }}
+      >
+        {t('analytics.closedAt', 'تاريخ الإغلاق')}:{' '}
+        {formatDate(trade.closedAt)}
       </div>
     </div>
   );

@@ -1,28 +1,35 @@
 // frontend/src/components/trading/RiskIndicator.jsx
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
  * RiskIndicator
- * مكوّن رسالة تحذير/تنبيه لمستوى مخاطر المحفظة:
- * - يعرض مستوى المخاطر (low / medium / high / critical)
- * - رسالة نصية رئيسية
- * - قائمة مقترحات لإدارة المخاطر (riskSuggestions)
  *
- * يُستخدم في:
- * - PositionManager (على مستوى المحفظة)
- * - يمكن إعادة استخدامه في RiskMonitor لاحقاً.
+ * يمكن استدعاؤه بطريقتين:
+ * 1) <RiskIndicator riskLevel="high" message="..." suggestions={[...]} />
+ * 2) <RiskIndicator stats={positionStats} />  // من PositionAnalyzer
  */
-const RiskIndicator = ({ riskLevel = 'low', message, suggestions = [] }) => {
+const RiskIndicator = ({
+  stats,
+  riskLevel = 'low',
+  message,
+  suggestions = [],
+  theme = 'dark',
+}) => {
   const { t } = useTranslation();
 
-  const config = getRiskConfig(riskLevel);
-  const hasSuggestions = Array.isArray(suggestions) && suggestions.length > 0;
+  const effectiveLevel =
+    stats?.riskLevel || riskLevel || 'low';
 
+  const config = getRiskConfig(effectiveLevel, theme);
+
+  const hasSuggestions =
+    Array.isArray(suggestions) && suggestions.length > 0;
+
+  // توليد رسالة افتراضية ذكية
   const defaultMessage =
     message ||
-    (riskLevel === 'low'
+    (effectiveLevel === 'low'
       ? t(
           'risk.defaultLow',
           'مستوى المخاطر على المحفظة منخفض، استمر بالالتزام بخطة إدارة رأس المال.',
@@ -32,102 +39,236 @@ const RiskIndicator = ({ riskLevel = 'low', message, suggestions = [] }) => {
           'تحليل المخاطر يشير إلى نقاط يمكن تحسينها في إدارة المراكز.',
         ));
 
+  // لو لدينا stats وما في suggestions ممرّرة، نولّد اقتراحات بسيطة
+  const autoSuggestions =
+    !hasSuggestions && stats
+      ? buildSuggestionsFromStats(stats, t)
+      : suggestions;
+
   return (
-    <div
-      className={`rounded-xl border px-3.5 py-3 mb-3 flex gap-3 items-start bg-slate-900/90 ${config.border} ${config.bg}`}
-      data-testid="risk-indicator"
+    <section
+      className="risk-indicator"
+      style={{
+        borderRadius: 18,
+        padding: 10,
+        border: `1px solid ${config.borderColor}`,
+        background: config.background,
+        boxShadow: config.shadow,
+        display: 'flex',
+        gap: 10,
+        alignItems: 'flex-start',
+      }}
     >
       {/* الأيقونة الجانبية */}
       <div
-        className={`mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-full border text-sm ${config.iconBg} ${config.iconBorder} ${config.iconText}`}
+        style={{
+          minWidth: 32,
+          height: 32,
+          borderRadius: 999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `1px solid ${config.iconBorder}`,
+          background: config.iconBackground,
+          color: config.iconColor,
+          fontSize: 18,
+        }}
       >
         {config.icon}
       </div>
 
       {/* النصوص */}
-      <div className="flex-1 space-y-1.5 text-[0.75rem]">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-100">
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 6,
+            alignItems: 'center',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#e5e7eb',
+            }}
+          >
             {t('risk.title', 'تحليل مستوى المخاطر')}
           </span>
           <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[0.65rem] ${config.chipBg} ${config.chipText} ${config.chipBorder}`}
+            style={{
+              fontSize: 10,
+              padding: '2px 8px',
+              borderRadius: 999,
+              border: `1px solid ${config.chipBorder}`,
+              background: config.chipBackground,
+              color: config.chipColor,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+            }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-current mr-1" />
             {config.label}
           </span>
         </div>
 
-        <p className="text-slate-200 leading-relaxed">{defaultMessage}</p>
+        <p
+          style={{
+            fontSize: 11,
+            color: 'var(--qa-text-muted)',
+            marginTop: 2,
+          }}
+        >
+          {defaultMessage}
+        </p>
 
-        {hasSuggestions && (
-          <ul className="list-disc mr-4 space-y-0.5 text-slate-300">
-            {suggestions.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        )}
+        {autoSuggestions &&
+          autoSuggestions.length > 0 && (
+            <ul
+              style={{
+                marginTop: 4,
+                paddingInlineStart: 18,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+                fontSize: 11,
+                color: 'var(--qa-text-soft)',
+              }}
+            >
+              {autoSuggestions.map((item, idx) => (
+                <li key={idx}>• {item}</li>
+              ))}
+            </ul>
+          )}
       </div>
-    </div>
+    </section>
   );
 };
 
-const getRiskConfig = (level) => {
+const getRiskConfig = (level, theme) => {
+  const isDark = theme === 'dark';
+
   switch (level) {
     case 'critical':
       return {
         label: 'مخاطر حرجة',
         icon: '⛔',
-        border: 'border-rose-600/70',
-        bg: 'shadow-[0_0_0_1px_rgba(248,113,113,0.45)] shadow-rose-900/40',
-        iconBg: 'bg-rose-900/80',
-        iconBorder: 'border-rose-500/70',
-        iconText: 'text-rose-200',
-        chipBg: 'bg-rose-900/80',
-        chipText: 'text-rose-100',
-        chipBorder: 'border-rose-500/70',
+        borderColor: 'rgba(248,113,113,0.85)',
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(127,29,29,0.95), rgba(15,23,42,0.98))'
+          : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+        shadow:
+          '0 0 0 1px rgba(248,113,113,0.4), 0 14px 30px rgba(127,29,29,0.9)',
+        iconBackground: 'rgba(127,29,29,0.95)',
+        iconBorder: 'rgba(248,113,113,0.85)',
+        iconColor: '#fee2e2',
+        chipBackground: 'rgba(127,29,29,0.9)',
+        chipBorder: 'rgba(248,113,113,0.9)',
+        chipColor: '#fee2e2',
       };
     case 'high':
       return {
         label: 'مخاطر عالية',
         icon: '⚠️',
-        border: 'border-orange-500/70',
-        bg: 'shadow-[0_0_0_1px_rgba(249,115,22,0.45)] shadow-orange-900/40',
-        iconBg: 'bg-orange-900/80',
-        iconBorder: 'border-orange-500/70',
-        iconText: 'text-orange-200',
-        chipBg: 'bg-orange-900/80',
-        chipText: 'text-orange-100',
-        chipBorder: 'border-orange-500/70',
+        borderColor: 'rgba(249,115,22,0.85)',
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(124,45,18,0.95), rgba(15,23,42,0.98))'
+          : 'linear-gradient(135deg, #fed7aa, #fed7aa)',
+        shadow:
+          '0 0 0 1px rgba(249,115,22,0.4), 0 14px 30px rgba(124,45,18,0.9)',
+        iconBackground: 'rgba(124,45,18,0.95)',
+        iconBorder: 'rgba(249,115,22,0.85)',
+        iconColor: '#ffedd5',
+        chipBackground: 'rgba(124,45,18,0.9)',
+        chipBorder: 'rgba(249,115,22,0.9)',
+        chipColor: '#ffedd5',
       };
     case 'medium':
       return {
         label: 'مخاطر متوسطة',
         icon: '⚡',
-        border: 'border-amber-500/70',
-        bg: 'shadow-[0_0_0_1px_rgba(245,158,11,0.35)] shadow-amber-900/40',
-        iconBg: 'bg-amber-900/80',
-        iconBorder: 'border-amber-500/70',
-        iconText: 'text-amber-100',
-        chipBg: 'bg-amber-900/80',
-        chipText: 'text-amber-100',
-        chipBorder: 'border-amber-500/70',
+        borderColor: 'rgba(245,158,11,0.85)',
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(120,53,15,0.95), rgba(15,23,42,0.98))'
+          : 'linear-gradient(135deg, #fef3c7, #fde68a)',
+        shadow:
+          '0 0 0 1px rgba(245,158,11,0.3), 0 14px 30px rgba(120,53,15,0.9)',
+        iconBackground: 'rgba(120,53,15,0.95)',
+        iconBorder: 'rgba(245,158,11,0.9)',
+        iconColor: '#fef3c7',
+        chipBackground: 'rgba(120,53,15,0.9)',
+        chipBorder: 'rgba(245,158,11,0.9)',
+        chipColor: '#fef3c7',
       };
     case 'low':
     default:
       return {
         label: 'مخاطر منخفضة',
         icon: '✅',
-        border: 'border-emerald-500/60',
-        bg: 'shadow-[0_0_0_1px_rgba(16,185,129,0.35)] shadow-emerald-900/40',
-        iconBg: 'bg-emerald-900/80',
-        iconBorder: 'border-emerald-500/70',
-        iconText: 'text-emerald-100',
-        chipBg: 'bg-emerald-900/80',
-        chipText: 'text-emerald-100',
-        chipBorder: 'border-emerald-500/70',
+        borderColor: 'rgba(16,185,129,0.85)',
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(6,78,59,0.95), rgba(15,23,42,0.98))'
+          : 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+        shadow:
+          '0 0 0 1px rgba(16,185,129,0.4), 0 14px 30px rgba(6,78,59,0.9)',
+        iconBackground: 'rgba(6,78,59,0.95)',
+        iconBorder: 'rgba(16,185,129,0.9)',
+        iconColor: '#bbf7d0',
+        chipBackground: 'rgba(6,78,59,0.9)',
+        chipBorder: 'rgba(16,185,129,0.9)',
+        chipColor: '#bbf7d0',
       };
   }
+};
+
+const buildSuggestionsFromStats = (stats, t) => {
+  const s = stats || {};
+  const suggestions = [];
+
+  if (s.leverage && s.leverage > 5) {
+    suggestions.push(
+      t(
+        'risk.suggestionLowerLeverage',
+        'خفّض الرافعة المالية أو حجم المراكز المفتوحة لتقليل حساسية المحفظة لتقلبات السوق.',
+      ),
+    );
+  }
+
+  if (s.openPositions && s.openPositions > 5) {
+    suggestions.push(
+      t(
+        'risk.suggestionConcentrate',
+        'قلّل عدد المراكز المفتوحة وركّز على أفضل الفرص بدل تشتيت رأس المال.',
+      ),
+    );
+  }
+
+  if (s.maxDrawdown && s.maxDrawdown > 10) {
+    suggestions.push(
+      t(
+        'risk.suggestionDrawdown',
+        'ضع حدودًا واضحة للخسارة اليومية/الأسبوعية لتجنّب التراجع الكبير في رصيد الحساب.',
+      ),
+    );
+  }
+
+  if (!suggestions.length) {
+    suggestions.push(
+      t(
+        'risk.suggestionGeneric',
+        'استمر بمراجعة أداء الصفقات وتحديث خطة إدارة المخاطر بشكل دوري.',
+      ),
+    );
+  }
+
+  return suggestions;
 };
 
 export default RiskIndicator;

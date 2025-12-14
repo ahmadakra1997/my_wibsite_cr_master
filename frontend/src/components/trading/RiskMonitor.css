@@ -1,4 +1,5 @@
 /* frontend/src/components/trading/RiskMonitor.css */
+
 /* === Risk Monitor === */
 
 .risk-monitor-container {
@@ -35,6 +36,7 @@
 }
 
 /* ثلاثة مؤشرات رئيسية */
+
 .risk-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -45,7 +47,8 @@
 .risk-card {
   border-radius: 16px;
   padding: 10px 9px 8px;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at top,
       rgba(0, 229, 255, 0.16),
       transparent 70%
@@ -76,17 +79,21 @@
 }
 
 /* ألوان حالات */
+
 .risk-ok {
   color: var(--qa-success);
 }
+
 .risk-warning {
   color: var(--qa-warning);
 }
+
 .risk-danger {
   color: var(--qa-danger);
 }
 
 /* شريط مستوى المخاطرة */
+
 .risk-meter {
   margin-top: 8px;
   height: 6px;
@@ -109,11 +116,13 @@
 }
 
 /* استجابة */
+
 @media (max-width: 960px) {
   .risk-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
+
 @media (max-width: 640px) {
   .risk-grid {
     grid-template-columns: 1fr;

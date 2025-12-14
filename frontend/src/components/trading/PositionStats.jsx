@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * PositionStats
- * يعرض ملخصًا سريعًا لإحصائيات المحفظة:
+ * ملخص سريع لإحصائيات المحفظة:
  * - إجمالي وعدد المراكز المفتوحة/المغلقة
  * - صافي الربح، الربح الإجمالي، الخسارة الإجمالية
- * - نسبة الفوز، أقصى تراجع
+ * - نسبة الفوز، أقصى تراجع، مستوى المخاطرة
  *
  * يعتمد على كائن stats القادم من PositionAnalyzer.calculatePositionStats().
  */
@@ -29,109 +29,185 @@ const PositionStats = ({ stats, compact = false }) => {
     riskLevel = 'low',
   } = stats;
 
-  const profitClass =
+  const profitClassColor =
     netProfit > 0
-      ? 'text-emerald-300'
+      ? '#4ade80'
       : netProfit < 0
-        ? 'text-rose-300'
-        : 'text-slate-200';
+      ? '#fca5a5'
+      : '#e5e7eb';
 
-  const drawdownClass =
-    maxDrawdown > 0 ? 'text-amber-200' : 'text-slate-200';
+  const drawdownColor =
+    maxDrawdown > 0 ? '#facc15' : 'var(--qa-text-soft)';
 
-  const containerClasses = compact
-    ? 'py-2.5 px-3 rounded-xl'
-    : 'py-3 px-3.5 rounded-2xl';
+  const containerStyle = {
+    borderRadius: compact ? 16 : 20,
+    padding: compact ? '8px 10px' : '10px 11px',
+    border: '1px solid rgba(30,64,175,0.55)',
+    background:
+      'linear-gradient(145deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98))',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+  };
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: compact
+      ? 'repeat(2, minmax(0, 1fr))'
+      : 'repeat(auto-fit, minmax(120px, 1fr))',
+    gap: 6,
+    marginTop: 4,
+  };
 
   return (
-    <div
-      className={`bg-slate-900/80 border border-slate-700/80 shadow-inner shadow-slate-950/80 ${containerClasses}`}
-      data-testid="position-stats"
-    >
+    <div className="position-stats" style={containerStyle}>
       {/* العنوان */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-100">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#e5e7eb',
+            }}
+          >
             {t('positions.overview', 'ملخص المراكز')}
-          </span>
-          <RiskChip riskLevel={riskLevel} />
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft)',
+            }}
+          >
+            {t(
+              'positions.totalPositions',
+              'إجمالي المراكز',
+            )}
+            : {totalPositions} ·{' '}
+            {t('positions.openPositions', 'المفتوحة')}:{' '}
+            {openPositions} ·{' '}
+            {t('positions.closedPositions', 'المغلقة')}:{' '}
+            {closedPositions}
+          </div>
         </div>
-        <span className="text-[0.7rem] text-slate-400">
-          {t('positions.totalPositions', 'إجمالي المراكز')}: {totalPositions}
-        </span>
+
+        <RiskChip riskLevel={riskLevel} />
       </div>
 
       {/* شبكة الأرقام */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[0.72rem]">
-        <StatItem
-          label={t('positions.openPositions', 'المراكز المفتوحة')}
-          value={openPositions}
-        />
-        <StatItem
-          label={t('positions.closedPositions', 'المراكز المغلقة')}
-          value={closedPositions}
-        />
+      <div style={gridStyle}>
         <StatItem
           label={t('positions.netProfit', 'صافي الربح')}
           value={`${formatNumber(netProfit, 2)} USDT`}
-          valueClass={profitClass}
+          valueClass={{ color: profitClassColor }}
         />
         <StatItem
-          label={t('positions.winRate', 'نسبة الصفقات الرابحة')}
+          label={t('positions.grossProfit', 'الربح الإجمالي')}
+          value={`${formatNumber(grossProfit, 2)} USDT`}
+        />
+        <StatItem
+          label={t('positions.grossLoss', 'الخسارة الإجمالية')}
+          value={`${formatNumber(grossLoss, 2)} USDT`}
+        />
+        <StatItem
+          label={t('positions.winRate', 'نسبة الفوز')}
           value={`${formatNumber(winRate, 2)}%`}
         />
-        {!compact && (
-          <>
-            <StatItem
-              label={t('positions.grossProfit', 'إجمالي الأرباح')}
-              value={`${formatNumber(grossProfit, 2)} USDT`}
-            />
-            <StatItem
-              label={t('positions.grossLoss', 'إجمالي الخسائر')}
-              value={`${formatNumber(grossLoss, 2)} USDT`}
-            />
-            <StatItem
-              label={t('positions.maxDrawdown', 'أقصى تراجع')}
-              value={`${formatNumber(maxDrawdown, 2)} USDT`}
-              valueClass={drawdownClass}
-            />
-          </>
-        )}
+        <StatItem
+          label={t('positions.maxDrawdown', 'أقصى تراجع')}
+          value={`${formatNumber(maxDrawdown, 2)} USDT`}
+          valueClass={{ color: drawdownColor }}
+        />
       </div>
     </div>
   );
 };
 
 const StatItem = ({ label, value, valueClass }) => (
-  <div className="flex flex-col">
-    <span className="text-slate-400 text-[0.7rem] mb-0.5">{label}</span>
-    <span className={`text-xs font-medium ${valueClass || 'text-slate-100'}`}>
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 2,
+      fontSize: 11,
+    }}
+  >
+    <div
+      style={{
+        color: 'var(--qa-text-soft)',
+      }}
+    >
+      {label}
+    </div>
+    <div
+      style={{
+        fontWeight: 600,
+        fontVariantNumeric: 'tabular-nums',
+        color: '#e5e7eb',
+        ...(valueClass || {}),
+      }}
+    >
       {value}
-    </span>
+    </div>
   </div>
 );
 
 const RiskChip = ({ riskLevel }) => {
   let label = 'منخفض';
-  let klass = 'bg-emerald-900/70 text-emerald-300 border-emerald-500/50';
+  let klass = {
+    background: 'rgba(22,163,74,0.18)',
+    color: '#bbf7d0',
+    border: '1px solid rgba(22,163,74,0.9)',
+  };
 
   if (riskLevel === 'medium') {
     label = 'متوسط';
-    klass = 'bg-amber-900/70 text-amber-200 border-amber-500/50';
+    klass = {
+      background: 'rgba(245,158,11,0.18)',
+      color: '#fed7aa',
+      border: '1px solid rgba(245,158,11,0.9)',
+    };
   } else if (riskLevel === 'high') {
     label = 'عالٍ';
-    klass = 'bg-orange-900/70 text-orange-200 border-orange-500/50';
+    klass = {
+      background: 'rgba(249,115,22,0.18)',
+      color: '#fed7aa',
+      border: '1px solid rgba(249,115,22,0.9)',
+    };
   } else if (riskLevel === 'critical') {
     label = 'حرِج';
-    klass = 'bg-rose-900/70 text-rose-200 border-rose-500/50';
+    klass = {
+      background: 'rgba(248,113,113,0.18)',
+      color: '#fecaca',
+      border: '1px solid rgba(248,113,113,0.9)',
+    };
   }
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[0.65rem] ${klass}`}
+      style={{
+        fontSize: 10,
+        padding: '3px 8px',
+        borderRadius: 999,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        ...klass,
+      }}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-      <span>{label}</span>
+      {label}
     </span>
   );
 };

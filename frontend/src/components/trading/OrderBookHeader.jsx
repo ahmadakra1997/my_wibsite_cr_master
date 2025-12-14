@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * OrderBookHeader
- * رأس دفتر الأوامر: الرمز, حالة الاتصال, أفضل Bid/Ask, السعر الوسطي, السبريد, ضغط السيولة.
+ * رأس دفتر الأوامر: الرمز, حالة الاتصال, أفضل Bid/Ask,
+ * السعر الوسطي, السبريد, ضغط السيولة.
  *
  * props:
  * - symbol
@@ -13,13 +14,27 @@ import { useTranslation } from 'react-i18next';
  * - isConnected
  * - stats: ناتج OrderBookAnalyzer.analyzeOrderBook()
  */
-const OrderBookHeader = ({ symbol, lastUpdate, isConnected, stats = {} }) => {
+const OrderBookHeader = ({
+  symbol,
+  lastUpdate,
+  isConnected,
+  stats = {},
+}) => {
   const { t } = useTranslation();
-
-  const { bestBid, bestAsk, midPrice, spreadText, marketPressure } = stats;
+  const {
+    bestBid,
+    bestAsk,
+    midPrice,
+    spreadText,
+    marketPressure,
+  } = stats;
 
   const formatTime = (value) => {
-    if (!value) return t('orderBook.noUpdates', 'لا يوجد تحديث بعد');
+    if (!value)
+      return t(
+        'orderBook.noUpdates',
+        'لا يوجد تحديث بعد',
+      );
 
     if (value instanceof Date) return value.toLocaleTimeString();
 
@@ -35,176 +50,231 @@ const OrderBookHeader = ({ symbol, lastUpdate, isConnected, stats = {} }) => {
   };
 
   const connectionColor = isConnected ? '#22c55e' : '#ef4444';
+
   const pressureLabel =
     marketPressure === 'bullish'
       ? t('orderBook.pressure.bullish', 'ضغط شرائي')
       : marketPressure === 'bearish'
-        ? t('orderBook.pressure.bearish', 'ضغط بيعي')
-        : t('orderBook.pressure.neutral', 'توازن');
+      ? t('orderBook.pressure.bearish', 'ضغط بيعي')
+      : t('orderBook.pressure.neutral', 'توازن');
+
+  const pressureColor =
+    marketPressure === 'bullish'
+      ? '#4ade80'
+      : marketPressure === 'bearish'
+      ? '#fca5a5'
+      : '#e5e7eb';
+
+  const containerStyle = {
+    borderRadius: 18,
+    padding: '8px 10px',
+    border: '1px solid rgba(30,64,175,0.8)',
+    background:
+      'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(8,47,73,0.96))',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+  };
 
   return (
-    <div
-      className="order-book-header"
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: '0.75rem',
-        marginBottom: '0.6rem',
-        direction: 'rtl',
-      }}
-    >
-      {/* الرمز + حالة الاتصال */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <header className="orderbook-header" style={containerStyle}>
+      {/* الرمز + حالة الاتصال + الوقت */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 8,
+          alignItems: 'center',
+        }}
+      >
         <div
           style={{
-            width: '2.3rem',
-            height: '2.3rem',
-            borderRadius: '999px',
-            border: '1px solid rgba(30,64,175,0.8)',
-            background:
-              'radial-gradient(circle at top, rgba(37,99,235,0.35), rgba(15,23,42,1))',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.2rem',
+            flexDirection: 'column',
+            gap: 2,
           }}
         >
-          📊
-        </div>
-        <div>
           <div
             style={{
-              fontSize: '0.95rem',
-              fontWeight: 600,
-              color: '#e5e7eb',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              alignItems: 'center',
             }}
           >
-            {t('orderBook.title', 'دفتر الطلبات')}{' '}
             <span
               style={{
-                fontSize: '0.85rem',
-                color: 'rgba(148,163,184,0.96)',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#e5e7eb',
               }}
             >
-              · {symbol}
+              {t('orderBook.title', 'دفتر الطلبات')}{' '}
+              {symbol ? `· ${symbol}` : ''}
             </span>
-          </div>
-          <div
-            style={{
-              marginTop: '0.15rem',
-              fontSize: '0.78rem',
-              color: 'rgba(148,163,184,0.96)',
-            }}
-          >
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.25rem',
+                gap: 4,
+                fontSize: 10,
+                padding: '2px 8px',
+                borderRadius: 999,
+                border: '1px solid rgba(148,163,184,0.6)',
+                background: 'rgba(15,23,42,0.95)',
+                color: '#e5e7eb',
               }}
             >
               <span
                 style={{
-                  width: '0.5rem',
-                  height: '0.5rem',
+                  width: 7,
+                  height: 7,
                   borderRadius: '999px',
                   backgroundColor: connectionColor,
-                  boxShadow: `0 0 10px ${connectionColor}`,
+                  boxShadow: `0 0 0 4px ${
+                    isConnected
+                      ? 'rgba(34,197,94,0.25)'
+                      : 'rgba(248,113,113,0.25)'
+                  }`,
                 }}
               />
-              <span>
-                {isConnected
-                  ? t('common.connected', 'متصل')
-                  : t('common.disconnected', 'غير متصل')}
-              </span>
+              {isConnected
+                ? t('common.connected', 'متصل')
+                : t('common.disconnected', 'غير متصل')}
             </span>
+          </div>
 
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft, #9ca3af)',
+            }}
+          >
+            {t('common.lastUpdated', 'آخر تحديث')}:{' '}
             <span
               style={{
-                marginInlineStart: '0.6rem',
+                color: '#e5e7eb',
               }}
             >
-              {t('common.lastUpdated', 'آخر تحديث')}: {formatTime(lastUpdate)}
+              {formatTime(lastUpdate)}
             </span>
           </div>
         </div>
+
+        {/* الضغط الشرائي/البيعي */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            alignItems: 'flex-end',
+          }}
+        >
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--qa-text-soft, #9ca3af)',
+            }}
+          >
+            {t(
+              'orderBook.pressureLabel',
+              'حالة ضغط السيولة',
+            )}
+          </span>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: pressureColor,
+            }}
+          >
+            {pressureLabel}
+          </span>
+        </div>
       </div>
 
-      {/* أفضل الأسعار + السبريد + ضغط السيولة */}
+      {/* أفضل الأسعار + السبريد */}
       <div
         style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'flex-end',
-          gap: '0.6rem',
-          fontSize: '0.78rem',
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(120px, 1fr))',
+          gap: 6,
+          marginTop: 4,
         }}
       >
         <HeaderPill
-          label={t('orderBook.bestBid', 'أفضل عرض شراء')}
-          value={bestBid}
-          color="#22c55e"
+          label={t('orderBook.bestBid', 'أفضل Bid')}
+          value={formatNumber(bestBid)}
+          color="#4ade80"
         />
         <HeaderPill
-          label={t('orderBook.bestAsk', 'أفضل طلب بيع')}
-          value={bestAsk}
-          color="#ef4444"
+          label={t('orderBook.bestAsk', 'أفضل Ask')}
+          value={formatNumber(bestAsk)}
+          color="#fca5a5"
         />
         <HeaderPill
           label={t('orderBook.midPrice', 'السعر الوسطي')}
-          value={midPrice}
+          value={formatNumber(midPrice)}
           color="#38bdf8"
         />
         <HeaderPill
-          label={t('orderBook.spread', 'فارق السعر (سبريد)')}
-          value={spreadText}
-          color="#eab308"
-        />
-        <HeaderPill
-          label={t('orderBook.pressure.label', 'اتجاه السيولة')}
-          value={pressureLabel}
-          color="#a855f7"
+          label={t('orderBook.spread', 'السبريد')}
+          value={spreadText || '--'}
+          color="#e5e7eb"
         />
       </div>
-    </div>
+    </header>
   );
 };
 
 const HeaderPill = ({ label, value, color }) => {
   const displayValue =
-    value === null || value === undefined || value === '' ? '--' : value;
+    value === null || value === undefined || value === ''
+      ? '--'
+      : value;
 
   return (
     <div
       style={{
-        borderRadius: '999px',
-        padding: '0.25rem 0.7rem',
-        border: `1px solid ${color}`,
-        background: 'rgba(15,23,42,0.96)',
-        minWidth: '140px',
+        borderRadius: 999,
+        padding: '5px 10px',
+        border: '1px solid rgba(30,64,175,0.75)',
+        background:
+          'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,1))',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        fontSize: 11,
       }}
     >
-      <div
+      <span
         style={{
-          fontSize: '0.75rem',
-          color: 'rgba(148,163,184,0.96)',
-          marginBottom: '0.05rem',
+          color: 'var(--qa-text-soft, #9ca3af)',
         }}
       >
         {label}
-      </div>
-      <div
+      </span>
+      <span
         style={{
-          fontSize: '0.8rem',
           fontWeight: 600,
-          color,
+          fontVariantNumeric: 'tabular-nums',
+          color: color || '#e5e7eb',
         }}
       >
         {displayValue}
-      </div>
+      </span>
     </div>
   );
+};
+
+const formatNumber = (value, digits = 2) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '--';
+  if (Math.abs(num) >= 1000) return num.toFixed(2);
+  return num.toFixed(digits);
 };
 
 export default OrderBookHeader;

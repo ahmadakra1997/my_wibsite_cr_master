@@ -11,52 +11,165 @@
   pointer-events: none;
 }
 
+/* دعم RTL: في حالة اتجاه عربي نضعها يسار */
+html[dir='rtl'] .toast-container {
+  right: auto;
+  left: 16px;
+}
+
 .toast {
-  min-width: 220px;
-  max-width: 340px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  background: radial-gradient(
-      circle at top left,
-      rgba(0, 229, 255, 0.18),
-      transparent 55%
-    ),
+  position: relative;
+  min-width: 230px;
+  max-width: 360px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background:
+    radial-gradient(circle at top left, rgba(0, 229, 255, 0.18), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.18), transparent 55%),
     rgba(15, 23, 42, 0.98);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 0.8);
   font-size: 12px;
-  color: var(--qa-text-main);
-  backdrop-filter: blur(10px);
+  color: var(--qa-text-main, #e5f4ff);
+  backdrop-filter: blur(12px);
   cursor: pointer;
   pointer-events: auto;
-  transform: translateX(0);
+  overflow: hidden;
+  transform: translateX(0) translateY(0);
   animation: toast-slide-in 180ms ease-out;
+}
+
+/* خط جانبي ملوّن حسب النوع */
+.toast-accent {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 1),
+    rgba(56, 189, 248, 0.9),
+    rgba(74, 222, 128, 0.9)
+  );
+}
+
+/* RTL: حط الخط الجانبي على اليمين */
+html[dir='rtl'] .toast-accent {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.toast-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .toast-title {
   font-weight: 600;
   margin-bottom: 3px;
+  font-size: 12px;
 }
 
 .toast-description {
-  color: var(--qa-text-muted);
+  color: var(--qa-text-muted, #7b8ca8);
   font-size: 11px;
 }
 
-/* أنواع التوست */
-.toast-success {
-  border-color: rgba(0, 245, 155, 0.8);
-}
-.toast-error {
-  border-color: rgba(251, 59, 127, 0.9);
-}
-.toast-warning {
-  border-color: rgba(250, 204, 21, 0.9);
-}
-.toast-info {
-  border-color: rgba(0, 229, 255, 0.9);
+/* زر الإغلاق */
+.toast-close {
+  border: none;
+  background: transparent;
+  color: var(--qa-text-muted, #9ca3af);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-inline-start: 4px;
+  align-self: flex-start;
+  transition:
+    color var(--qa-transition-fast, 150ms ease-out),
+    transform var(--qa-transition-fast, 150ms ease-out);
 }
 
+.toast-close:hover {
+  color: var(--qa-text-main, #e5f4ff);
+  transform: scale(1.05);
+}
+
+/* أنواع التوست (نفس الأسماء القديمة + توهج) */
+.toast-success {
+  border-color: rgba(0, 245, 155, 0.9);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(0, 245, 155, 0.45);
+}
+
+.toast-error {
+  border-color: rgba(251, 59, 127, 0.95);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(251, 59, 127, 0.5);
+}
+
+.toast-warning {
+  border-color: rgba(250, 204, 21, 0.95);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(250, 204, 21, 0.45);
+}
+
+.toast-info {
+  border-color: rgba(0, 229, 255, 0.95);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(0, 229, 255, 0.5);
+}
+
+/* Progress bar أسفل التوست */
+.toast-progress {
+  position: absolute;
+  inset-inline: 32px 10px;
+  inset-block-end: 4px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(34, 211, 238, 1),
+    rgba(56, 189, 248, 1),
+    rgba(74, 222, 128, 1)
+  );
+  transform-origin: left center;
+  animation-name: toast-progress-line;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/* RTL: من اليمين لليسار */
+html[dir='rtl'] .toast-progress {
+  transform-origin: right center;
+}
+
+/* حركات */
 @keyframes toast-slide-in {
   from {
     opacity: 0;
@@ -65,5 +178,14 @@
   to {
     opacity: 1;
     transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes toast-progress-line {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }

@@ -1,7 +1,4 @@
-/**
- * المخططات الحية المتقدمة - Quantum AI Trader
- * مخططات تداول متطورة مع تحليلات فنية فورية وهوية بصرية احترافية.
- */
+// frontend/src/components/trading/LiveCharts.jsx
 
 import React, {
   useState,
@@ -13,31 +10,29 @@ import React, {
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
-// مكتبة Lightweight Charts
+// Lightweight Charts
 import {
   createChart,
   CrosshairMode,
   PriceScaleMode,
 } from 'lightweight-charts';
 
-// تحليلات فنية
+// Technical analysis helpers
 import { TechnicalAnalysis } from '../../utils/technicalAnalysis';
 
-// الخدمات
+// Services
 import WebSocketService from '../../services/websocketService';
 import ChartDataService from '../../services/chartDataService';
 
-// أكشنات التداول من الـ Redux (سيتم تعريفها في tradingSlice)
+// Redux actions
 import {
   setChartLoading,
   updateChartData,
   setTradingError,
 } from '../../store/tradingSlice';
 
-// مكونات التحكم والعرض
+// UI pieces
 import ChartControls from './ChartControls';
-import TimeframeSelector from './TimeframeSelector';
-import ChartLegend from './ChartLegend';
 import ChartIndicators from './ChartIndicators';
 
 const LiveCharts = ({
@@ -52,7 +47,7 @@ const LiveCharts = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  // ==================== حالة Redux ====================
+  // ==================== Redux state ====================
   const { chartLoading, globalError } = useSelector((state) => {
     const trading = state?.trading || {};
     return {
@@ -61,13 +56,13 @@ const LiveCharts = ({
     };
   });
 
-  // ==================== مراجع أساسية ====================
+  // ==================== Refs ====================
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
   const volumeSeriesRef = useRef(null);
 
-  // سلاسل المؤشرات
+  // Indicator series
   const smaSeriesRef = useRef(null);
   const emaSeriesRef = useRef(null);
   const upperBandSeriesRef = useRef(null);
@@ -77,13 +72,17 @@ const LiveCharts = ({
   const chartDataServiceRef = useRef(new ChartDataService());
   const taRef = useRef(new TechnicalAnalysis());
 
-  // ==================== الحالة المحلية ====================
+  // ==================== Local state ====================
   const [currentSymbol, setCurrentSymbol] = useState(defaultSymbol);
   const [currentInterval, setCurrentInterval] = useState(interval || '1h');
+  const [chartTheme, setChartTheme] = useState(theme || 'dark');
+
   const [isChartReady, setIsChartReady] = useState(false);
   const [chartData, setChartData] = useState([]);
   const [crosshairData, setCrosshairData] = useState(null);
   const [localError, setLocalError] = useState(null);
+
+  // Indicator toggles + raw indicator series data
   const [indicatorValues, setIndicatorValues] = useState({});
   const [indicators, setIndicators] = useState({
     sma: true,
@@ -93,25 +92,24 @@ const LiveCharts = ({
     bollinger: false,
   });
 
-  // ==================== اشتقاقات ====================
+  // ==================== Derived ====================
   const latestCandle = useMemo(
     () => (chartData.length ? chartData[chartData.length - 1] : null),
     [chartData],
   );
-
   const lastPrice = latestCandle ? latestCandle.close : null;
 
-  // ==================== تهيئة المخطط ====================
+  // ==================== Chart init ====================
   const initializeChart = useCallback(() => {
     const container = chartContainerRef.current;
-    if (!container) return;
+    if (!container) return undefined;
 
-    // تنظيف أي مخطط سابق
+    // Clean any existing chart
     if (chartRef.current) {
       try {
         chartRef.current.remove();
-      } catch (_) {
-        /* ignore */
+      } catch {
+        // ignore
       }
       chartRef.current = null;
       candlestickSeriesRef.current = null;
@@ -125,8 +123,7 @@ const LiveCharts = ({
     const rect = container.getBoundingClientRect();
     const chartWidth = rect.width || 600;
     const chartHeight = height || 420;
-
-    const isDark = theme === 'dark';
+    const isDark = chartTheme === 'dark';
 
     const chart = createChart(container, {
       width: chartWidth,
@@ -137,7 +134,8 @@ const LiveCharts = ({
           color: isDark ? '#020617' : '#f8fafc',
         },
         textColor: isDark ? '#e5e7eb' : '#020617',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
       },
       rightPriceScale: {
         mode: PriceScaleMode.Normal,
@@ -154,11 +152,15 @@ const LiveCharts = ({
       },
       grid: {
         vertLines: {
-          color: isDark ? 'rgba(30,64,175,0.35)' : 'rgba(148,163,184,0.35)',
+          color: isDark
+            ? 'rgba(30,64,175,0.35)'
+            : 'rgba(148,163,184,0.35)',
           style: 1,
         },
         horzLines: {
-          color: isDark ? 'rgba(15,23,42,0.85)' : 'rgba(226,232,240,0.85)',
+          color: isDark
+            ? 'rgba(15,23,42,0.85)'
+            : 'rgba(226,232,240,0.85)',
           style: 1,
         },
       },
@@ -200,28 +202,27 @@ const LiveCharts = ({
     candlestickSeriesRef.current = candleSeries;
     volumeSeriesRef.current = volumeSeries;
 
-    // تحديث العرض عند تغيير حجم النافذة
+    // Resize handling
     const handleResize = () => {
       const newRect = container.getBoundingClientRect();
-      chart.applyOptions({ width: newRect.width || chartWidth });
+      chart.applyOptions({
+        width: newRect.width || chartWidth,
+      });
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // crosshair
+    // Crosshair
     const handleCrosshairMove = (param) => {
       if (!param || !param.time || !param.seriesPrices) {
         setCrosshairData(null);
         return;
       }
-
       const price = param.seriesPrices.get(candleSeries);
       if (!price) {
         setCrosshairData(null);
         return;
       }
-
       setCrosshairData({
         time: param.time,
         price,
@@ -229,7 +230,6 @@ const LiveCharts = ({
     };
 
     chart.subscribeCrosshairMove(handleCrosshairMove);
-
     setIsChartReady(true);
 
     return () => {
@@ -237,8 +237,8 @@ const LiveCharts = ({
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
       try {
         chart.remove();
-      } catch (_) {
-        /* ignore */
+      } catch {
+        // ignore
       }
       chartRef.current = null;
       candlestickSeriesRef.current = null;
@@ -249,19 +249,20 @@ const LiveCharts = ({
       lowerBandSeriesRef.current = null;
       setIsChartReady(false);
     };
-  }, [theme, height]);
+  }, [chartTheme, height]);
 
   useEffect(() => {
     const cleanup = initializeChart();
     return cleanup;
   }, [initializeChart]);
 
-  // ==================== دوال مساعدة ====================
+  // ==================== Helpers ====================
   const normalizeCandles = useCallback((rawCandles = []) => {
     return rawCandles
       .map((candle) => {
         if (!candle) return null;
 
+        // Array format: [time, open, high, low, close, volume]
         if (Array.isArray(candle)) {
           const [time, open, high, low, close, volume] = candle;
           return {
@@ -274,6 +275,7 @@ const LiveCharts = ({
           };
         }
 
+        // Object formats
         const time =
           candle.time ??
           candle.t ??
@@ -282,13 +284,31 @@ const LiveCharts = ({
           null;
 
         const open =
-          candle.open ?? candle.o ?? candle[1] ?? candle.close ?? candle.c;
-        const high = candle.high ?? candle.h ?? candle[2] ?? open;
-        const low = candle.low ?? candle.l ?? candle[3] ?? open;
+          candle.open ??
+          candle.o ??
+          candle[1] ??
+          candle.close ??
+          candle.c;
+
+        const high =
+          candle.high ?? candle.h ?? candle[2] ?? open;
+
+        const low =
+          candle.low ?? candle.l ?? candle[3] ?? open;
+
         const close =
-          candle.close ?? candle.c ?? candle[4] ?? candle.price ?? open;
+          candle.close ??
+          candle.c ??
+          candle[4] ??
+          candle.price ??
+          open;
+
         const volume =
-          candle.volume ?? candle.v ?? candle[5] ?? candle.qty ?? 0;
+          candle.volume ??
+          candle.v ??
+          candle[5] ??
+          candle.qty ??
+          0;
 
         if (
           !Number.isFinite(open) ||
@@ -327,20 +347,19 @@ const LiveCharts = ({
       low: c.low,
       close: c.close,
     }));
-
     candlestickSeriesRef.current.setData(dataForSeries);
 
     const volumeData = candles.map((c) => ({
       time: c.time,
       value: c.volume || 0,
-      color: c.close >= c.open
-        ? 'rgba(34,197,94,0.65)'
-        : 'rgba(248,113,113,0.65)',
+      color:
+        c.close >= c.open
+          ? 'rgba(34,197,94,0.65)'
+          : 'rgba(248,113,113,0.65)',
     }));
-
     volumeSeriesRef.current.setData(volumeData);
 
-    // ضبط نطاق الوقت تلقائياً
+    // Fit time scale
     chartRef.current.timeScale().fitContent();
   }, []);
 
@@ -350,18 +369,16 @@ const LiveCharts = ({
 
       const ta = taRef.current;
       const hasData = candles && candles.length > 0;
-      const lastIndex = hasData ? candles.length - 1 : -1;
 
-      let lastSma = null;
-      let lastEma = null;
-      let lastRsi = null;
-      let lastMacd = null;
-      let lastUpper = null;
-      let lastLower = null;
+      let smaValues = null;
+      let emaValues = null;
+      let rsiValues = null;
+      let macdData = null;
+      let bollingerData = null;
 
-      // ===================== SMA =====================
+      // ========== SMA ==========
       if (indicatorState.sma && hasData) {
-        const smaValues = ta.calculateSMA
+        smaValues = ta.calculateSMA
           ? ta.calculateSMA(candles, 20)
           : new Array(candles.length).fill(null);
 
@@ -382,15 +399,14 @@ const LiveCharts = ({
           });
         }
         smaSeriesRef.current.setData(seriesData);
-        lastSma = smaValues[lastIndex] ?? null;
       } else if (smaSeriesRef.current) {
         chartRef.current.removeSeries(smaSeriesRef.current);
         smaSeriesRef.current = null;
       }
 
-      // ===================== EMA =====================
+      // ========== EMA ==========
       if (indicatorState.ema && hasData) {
-        const emaValues = ta.calculateEMA
+        emaValues = ta.calculateEMA
           ? ta.calculateEMA(candles, 50)
           : new Array(candles.length).fill(null);
 
@@ -411,13 +427,12 @@ const LiveCharts = ({
           });
         }
         emaSeriesRef.current.setData(seriesData);
-        lastEma = emaValues[lastIndex] ?? null;
       } else if (emaSeriesRef.current) {
         chartRef.current.removeSeries(emaSeriesRef.current);
         emaSeriesRef.current = null;
       }
 
-      // ===================== Bollinger Bands =====================
+      // ========== Bollinger Bands ==========
       if (indicatorState.bollinger && hasData) {
         const bands = ta.calculateBollingerBands
           ? ta.calculateBollingerBands(candles, 20, 2)
@@ -446,25 +461,28 @@ const LiveCharts = ({
           });
 
           if (!upperBandSeriesRef.current) {
-            upperBandSeriesRef.current = chartRef.current.addLineSeries({
-              color: 'rgba(148,163,184,0.6)',
-              lineWidth: 1,
-            });
+            upperBandSeriesRef.current =
+              chartRef.current.addLineSeries({
+                color: 'rgba(148,163,184,0.6)',
+                lineWidth: 1,
+              });
           }
           if (!lowerBandSeriesRef.current) {
-            lowerBandSeriesRef.current = chartRef.current.addLineSeries({
-              color: 'rgba(148,163,184,0.6)',
-              lineWidth: 1,
-            });
+            lowerBandSeriesRef.current =
+              chartRef.current.addLineSeries({
+                color: 'rgba(148,163,184,0.6)',
+                lineWidth: 1,
+              });
           }
 
           upperBandSeriesRef.current.setData(upperData);
           lowerBandSeriesRef.current.setData(lowerData);
 
-          lastUpper =
-            bands.upper[lastIndex] != null ? bands.upper[lastIndex] : null;
-          lastLower =
-            bands.lower[lastIndex] != null ? bands.lower[lastIndex] : null;
+          bollingerData = {
+            upperBand: bands.upper,
+            middleBand: bands.middle || [],
+            lowerBand: bands.lower,
+          };
         }
       } else {
         if (upperBandSeriesRef.current) {
@@ -477,41 +495,34 @@ const LiveCharts = ({
         }
       }
 
-      // ===================== RSI =====================
+      // ========== RSI ==========
       if (indicatorState.rsi && hasData && ta.calculateRSI) {
-        const rsiValues = ta.calculateRSI(candles, 14);
-        lastRsi = rsiValues[lastIndex] ?? null;
+        rsiValues = ta.calculateRSI(candles, 14);
       }
 
-      // ===================== MACD =====================
+      // ========== MACD ==========
       if (indicatorState.macd && hasData && ta.calculateMACD) {
-        const macd = ta.calculateMACD(candles);
-        if (macd && Array.isArray(macd.histogram)) {
-          lastMacd = macd.histogram[lastIndex] ?? null;
-        }
+        macdData = ta.calculateMACD(candles);
       }
 
       setIndicatorValues({
-        sma: lastSma,
-        ema: lastEma,
-        rsi: lastRsi,
-        macd: lastMacd,
-        bollinger: {
-          upper: lastUpper,
-          lower: lastLower,
-        },
+        sma: smaValues,
+        ema: emaValues,
+        rsi: rsiValues,
+        macd: macdData,
+        bollinger: bollingerData,
       });
     },
     [],
   );
 
-  // إعادة حساب المؤشرات عند تغيّر البيانات أو الحالة
+  // Recalculate indicators whenever data/toggles change
   useEffect(() => {
     if (!isChartReady || !chartData.length) return;
     updateIndicatorSeries(chartData, indicators);
   }, [chartData, indicators, isChartReady, updateIndicatorSeries]);
 
-  // ==================== تحميل البيانات الأساسية ====================
+  // ==================== Data loading ====================
   const loadChartData = useCallback(
     async (symbol, timeframe) => {
       if (!symbol) return;
@@ -521,12 +532,15 @@ const LiveCharts = ({
       dispatch(setChartLoading(true));
 
       try {
-        const data = await chartDataServiceRef.current.getChartData(
-          symbol,
-          timeframe,
-        );
+        const data =
+          await chartDataServiceRef.current.getChartData(
+            symbol,
+            timeframe,
+          );
 
-        const normalizedCandles = normalizeCandles(data?.candles || []);
+        const normalizedCandles = normalizeCandles(
+          data?.candles || [],
+        );
 
         setChartData(normalizedCandles);
         applyCandlesToChart(normalizedCandles);
@@ -542,10 +556,17 @@ const LiveCharts = ({
           }),
         );
       } catch (error) {
-        console.error('[LiveCharts] Error loading chart data:', error);
+        // eslint-disable-next-line no-console
+        console.error(
+          '[LiveCharts] Error loading chart data:',
+          error,
+        );
         const msg =
           error?.message ||
-          t('charts.errors.loadFailed', 'فشل تحميل بيانات المخطط.');
+          t(
+            'charts.errors.loadFailed',
+            'فشل تحميل بيانات المخطط.',
+          );
         setLocalError(msg);
         dispatch(setTradingError(msg));
       } finally {
@@ -562,13 +583,13 @@ const LiveCharts = ({
     ],
   );
 
-  // تحميل أولي عند جاهزية المخطط أو تغيّر الرمز/الإطار
+  // initial + whenever symbol/interval changes
   useEffect(() => {
     if (!isChartReady || !currentSymbol || !currentInterval) return;
     loadChartData(currentSymbol, currentInterval);
   }, [isChartReady, currentSymbol, currentInterval, loadChartData]);
 
-  // ==================== تحديثات WebSocket ====================
+  // ==================== Realtime via WebSocket ====================
   const handleRealtimeMessage = useCallback(
     (message) => {
       if (!message) return;
@@ -577,8 +598,8 @@ const LiveCharts = ({
       if (typeof message === 'string') {
         try {
           payload = JSON.parse(message);
-        } catch (_) {
-          // تجاهل
+        } catch {
+          // ignore
         }
       }
 
@@ -602,14 +623,14 @@ const LiveCharts = ({
 
         const last = prev[prev.length - 1];
         const incoming = normalized[0];
-
         let updated;
+
         if (incoming.time === last.time) {
           updated = [...prev.slice(0, -1), incoming];
         } else if (incoming.time > last.time) {
           updated = [...prev, incoming];
         } else {
-          // إذا كان التحديث أقدم من آخر شمعة، نتجاهله
+          // ignore out-of-date update
           return prev;
         }
 
@@ -634,26 +655,31 @@ const LiveCharts = ({
         timeframe: currentInterval,
         onMessage: handleRealtimeMessage,
         onError: (error) => {
+          // eslint-disable-next-line no-console
           console.warn('[LiveCharts] WebSocket error:', error);
         },
       });
     } catch (err) {
-      console.warn('[LiveCharts] Failed to initialize WebSocket:', err);
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[LiveCharts] Failed to initialize WebSocket:',
+        err,
+      );
     }
 
     return () => {
       if (wsServiceRef.current) {
         try {
           wsServiceRef.current.disconnect();
-        } catch (_) {
-          /* ignore */
+        } catch {
+          // ignore
         }
         wsServiceRef.current = null;
       }
     };
   }, [currentSymbol, currentInterval, isChartReady, handleRealtimeMessage]);
 
-  // ==================== معالجات التفاعل ====================
+  // ==================== Interaction handlers ====================
   const handleSymbolChange = useCallback((symbol) => {
     setCurrentSymbol(symbol);
   }, []);
@@ -662,103 +688,237 @@ const LiveCharts = ({
     setCurrentInterval(tf);
   }, []);
 
-  const handleToggleIndicator = useCallback((key) => {
-    setIndicators((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const handleThemeChange = useCallback((nextTheme) => {
+    setChartTheme(nextTheme === 'light' ? 'light' : 'dark');
   }, []);
 
-  // ==================== العرض ====================
+  // ==================== Render ====================
   const showLoadingOverlay = chartLoading && !chartData.length;
 
+  const containerStyle = {
+    borderRadius: 22,
+    padding: 12,
+    border: '1px solid rgba(148,163,184,0.32)',
+    background:
+      'radial-gradient(circle at top, rgba(34,211,238,0.12), rgba(15,23,42,0.98))',
+    boxShadow: '0 18px 40px rgba(15,23,42,0.9)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+  };
+
+  const chartShellStyle = {
+    position: 'relative',
+    borderRadius: 18,
+    overflow: 'hidden',
+    background: chartTheme === 'dark' ? '#020617' : '#f8fafc',
+  };
+
+  const headerRowStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+
+  const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d'];
+
   return (
-    <div
-      className="live-charts flex flex-col gap-2.5"
-      style={{ direction: 'rtl' }}
-      data-testid="live-charts"
-    >
-      {/* شريط التحكم العلوي */}
+    <section className="live-charts-wrapper" style={containerStyle}>
+      {/* Top controls */}
       {showControls && (
-        <div className="flex flex-col gap-1.5 mb-1">
+        <div className="live-charts-header" style={headerRowStyle}>
           <ChartControls
             symbols={symbols}
             currentSymbol={currentSymbol}
             onSymbolChange={handleSymbolChange}
-            theme={theme}
-            // يمكن مستقبلاً السماح بتغيير سمة المخطط من هنا
-            onThemeChange={() => {}}
+            theme={chartTheme}
+            onThemeChange={handleThemeChange}
           />
-          <TimeframeSelector
-            currentTimeframe={currentInterval}
-            onTimeframeChange={handleTimeframeChange}
-          />
+
+          <div
+            className="live-charts-timeframes"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+            }}
+          >
+            {timeframes.map((tf) => {
+              const active = tf === currentInterval;
+              return (
+                <button
+                  key={tf}
+                  type="button"
+                  onClick={() => handleTimeframeChange(tf)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    border: active
+                      ? '1px solid rgba(56,189,248,0.95)'
+                      : '1px solid rgba(30,64,175,0.7)',
+                    background: active
+                      ? 'linear-gradient(135deg, rgba(34,211,238,0.95), rgba(56,189,248,0.95))'
+                      : 'rgba(15,23,42,0.98)',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: active ? '#020617' : '#e5e7eb',
+                    cursor: 'pointer',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {tf}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* منطقة المخطط */}
-      <div className="relative rounded-2xl border border-slate-800 bg-slate-950/95 overflow-hidden shadow-[0_20px_45px_rgba(15,23,42,0.95)]">
-        {showLoadingOverlay && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-sm text-xs text-slate-300">
-            <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-2" />
-            {t('charts.loading', 'جاري تحميل بيانات المخطط...')}
-          </div>
-        )}
-
-        {lastPrice != null && (
-          <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-full bg-slate-950/90 border border-slate-700/80 text-[0.7rem] text-slate-200 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-            <span className="font-mono">{currentSymbol}</span>
-            <span className="text-slate-500">·</span>
-            <span className="font-semibold">
-              {Number(lastPrice).toFixed(2)} USDT
-            </span>
-          </div>
-        )}
-
+      {/* Chart area */}
+      <div className="live-charts-main" style={chartShellStyle}>
         <div
           ref={chartContainerRef}
+          className="live-charts-canvas"
           style={{
             width: '100%',
             height,
           }}
         />
+
+        {showLoadingOverlay && (
+          <div
+            className="live-charts-overlay"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 13,
+              color: '#e5e7eb',
+              background: 'rgba(15,23,42,0.75)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            {t(
+              'charts.loading',
+              'جاري تحميل بيانات المخطط...',
+            )}
+          </div>
+        )}
       </div>
 
-      {/* وسيلة الإيضاح والمؤشرات */}
+      {/* Status row */}
+      {lastPrice != null && (
+        <div
+          className="live-charts-status"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 12,
+            color: '#e5e7eb',
+            marginTop: 2,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'baseline',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                opacity: 0.9,
+              }}
+            >
+              {currentSymbol}
+            </span>
+            <span
+              style={{
+                fontVariantNumeric: 'tabular-nums',
+                fontWeight: 600,
+              }}
+            >
+              {Number(lastPrice).toFixed(2)} USDT
+            </span>
+          </div>
+
+          {crosshairData && (
+            <div
+              style={{
+                fontSize: 11,
+                opacity: 0.85,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {t('charts.crosshair', 'عند المؤشر')} ·{' '}
+              {Number(crosshairData.price).toFixed(2)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Indicators panel */}
       {showIndicators && (
-        <div className="flex flex-col gap-2 mt-1.5">
-          <ChartLegend
-            crosshairData={crosshairData}
-            currentSymbol={currentSymbol}
-            theme={theme}
-          />
+        <div
+          className="live-charts-indicators"
+          style={{ marginTop: 6 }}
+        >
           <ChartIndicators
             indicators={indicators}
-            onToggle={handleToggleIndicator}
-            values={indicatorValues}
+            onIndicatorsChange={setIndicators}
+            indicatorData={indicatorValues}
           />
         </div>
       )}
 
-      {/* الأخطاء (عند الحاجة) */}
+      {/* Error banner */}
       {(localError || globalError) && (
-        <div className="mt-1 text-[0.72rem] text-rose-300 bg-rose-950/70 border border-rose-500/70 rounded-xl px-3 py-2">
+        <div
+          className="live-charts-error"
+          style={{
+            marginTop: 8,
+            padding: '8px 10px',
+            borderRadius: 10,
+            fontSize: 11,
+            color: '#fecaca',
+            background:
+              'linear-gradient(135deg, rgba(127,29,29,0.9), rgba(153,27,27,0.95))',
+            border: '1px solid rgba(248,113,113,0.85)',
+          }}
+        >
           {localError || globalError}
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
-// نسخة مصغّرة للمخططات يمكن استخدامها في الـ Dashboard
+// Compact variants for dashboard/cards
 LiveCharts.Compact = (props) => (
-  <LiveCharts showControls={false} showIndicators={false} height={300} {...props} />
+  <LiveCharts
+    {...props}
+    showControls={false}
+    showIndicators={false}
+    height={260}
+  />
 );
 
-// نسخة للمخططات المصغرة في البطاقات
 LiveCharts.MiniView = (props) => (
-  <LiveCharts showControls={false} showIndicators={false} height={220} {...props} />
+  <LiveCharts
+    {...props}
+    showControls={false}
+    showIndicators={false}
+    height={180}
+  />
 );
 
 export default React.memo(LiveCharts);

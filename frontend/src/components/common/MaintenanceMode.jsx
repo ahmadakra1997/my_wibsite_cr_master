@@ -20,58 +20,88 @@ const MaintenanceMode = () => {
 
   return (
     <div
-      className="maintenance-container"
       style={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem',
+        padding: '16px',
         background:
-          'radial-gradient(circle at top, #0f172a 0%, #020617 45%, #000000 100%)',
+          'radial-gradient(circle at top, rgba(34,211,238,0.28), transparent 55%), radial-gradient(circle at bottom, rgba(74,222,128,0.22), transparent 55%), #020617',
         color: '#e5e7eb',
         direction: 'rtl',
-        textAlign: 'center',
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif',
       }}
     >
       <div
-        className="maintenance-card"
         style={{
-          maxWidth: '640px',
           width: '100%',
-          background: 'rgba(15, 23, 42, 0.92)',
-          borderRadius: '18px',
-          border: '1px solid rgba(56, 189, 248, 0.35)',
-          padding: '2rem 2.5rem',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+          maxWidth: '560px',
+          borderRadius: '20px',
+          border: '1px solid rgba(148,163,184,0.6)',
+          background:
+            'radial-gradient(circle at top left, rgba(56,189,248,0.22), transparent 55%), radial-gradient(circle at bottom right, rgba(45,212,191,0.18), transparent 55%), rgba(15,23,42,0.98)',
+          boxShadow:
+            '0 28px 80px rgba(15,23,42,0.95), 0 0 0 1px rgba(15,23,42,0.9)',
+          padding: '20px 20px 18px',
         }}
       >
         <div
-          className="maintenance-icon"
           style={{
-            fontSize: '2.3rem',
-            marginBottom: '0.75rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            marginBottom: '10px',
           }}
         >
-          🛠️
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '999px',
+              background: 'rgba(15,23,42,0.96)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '22px',
+              boxShadow: '0 0 22px rgba(56,189,248,0.7)',
+            }}
+          >
+            🛠️
+          </div>
+          <div>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: '18px',
+                fontWeight: 700,
+                background:
+                  'linear-gradient(90deg,#22d3ee,#38bdf8,#4ade80)',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+              }}
+            >
+              نظام QA TRADER في وضع الصيانة
+            </h1>
+            <p
+              style={{
+                margin: '4px 0 0',
+                fontSize: '13px',
+                color: '#9ca3af',
+              }}
+            >
+              نعمل على تجهيز نسخة أكثر استقراراً وذكاءً من منصة التداول
+              الكمية.
+            </p>
+          </div>
         </div>
-
-        <h1
-          style={{
-            fontSize: '1.5rem',
-            margin: 0,
-            marginBottom: '0.5rem',
-          }}
-        >
-          نظام QA TRADER في وضع الصيانة
-        </h1>
 
         <p
           style={{
-            fontSize: '0.95rem',
-            margin: 0,
-            marginBottom: '0.75rem',
-            color: 'rgba(209,213,219,0.9)',
+            margin: '10px 0 6px',
+            fontSize: '13px',
+            color: '#e5e7eb',
           }}
         >
           {message}
@@ -79,31 +109,24 @@ const MaintenanceMode = () => {
 
         <p
           style={{
-            fontSize: '0.85rem',
-            margin: 0,
-            marginBottom: '1.5rem',
-            color: 'rgba(148,163,184,0.95)',
+            margin: '0 0 8px',
+            fontSize: '12px',
+            color: '#a5f3fc',
           }}
         >
           {eta}
         </p>
 
-        <div
-          className="maintenance-notice"
+        <p
           style={{
-            fontSize: '0.8rem',
-            color: 'rgba(148,163,184,0.9)',
-            borderRadius: '999px',
-            border: '1px dashed rgba(148,163,184,0.5)',
-            padding: '0.5rem 1rem',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
+            margin: 0,
+            fontSize: '11px',
+            color: '#9ca3af',
           }}
         >
-          <span>💡</span>
-          <span>في هذه الفترة لن يعمل التداول الآلي ولا واجهة السوق الحيّة بشكل كامل.</span>
-        </div>
+          في هذه الفترة لن يعمل التداول الآلي ولا واجهة السوق الحيّة بشكل
+          كامل.
+        </p>
       </div>
     </div>
   );
