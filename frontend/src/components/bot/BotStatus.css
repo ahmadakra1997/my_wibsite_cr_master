@@ -1,852 +1,369 @@
-/* frontend/src/components/bot/BotSettings.css */
-/* ✅ إعادة كتابة بنفس الكلاسات الموجودة + هوية داكنة تركوازي/أزرق/أخضر */
-/* ✅ Scoped لمنع تعارض .metric-card و .status-indicator مع ملفات أخرى */
+/* frontend/src/components/bot/BotStatus.css
+   Dark teal/blue/green identity — professional controls + cards
+*/
 
-:where(.bot-status-container, .bot-settings-wrapper) {
-  --qa-bg: #020617;
-  --qa-panel: rgba(15, 23, 42, 0.96);
-  --qa-panel2: rgba(15, 23, 42, 0.985);
-  --qa-border: rgba(148, 163, 184, 0.55);
-  --qa-border-soft: rgba(148, 163, 184, 0.35);
-  --qa-text: #e5e7eb;
-  --qa-muted: #9ca3af;
-  --qa-soft: #cbd5f5;
-
-  --qa-primary: #22d3ee;
-  --qa-blue: #38bdf8;
-  --qa-green: #4ade80;
-  --qa-danger: #fb7185;
-  --qa-warning: #facc15;
-
-  --qa-radius-xl: 20px;
-  --qa-radius-lg: 15px;
-  --qa-radius-md: 12px;
-  --qa-pill: 999px;
-
-  color: var(--qa-text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+:root {
+  --q-teal: #22d3ee;
+  --q-blue: #38bdf8;
+  --q-green: #4ade80;
+  --q-bg: #020617;
+  --q-card: rgba(15, 23, 42, 0.96);
+  --q-border: rgba(148, 163, 184, 0.30);
+  --q-text: #e5e7eb;
+  --q-muted: #9ca3af;
 }
 
-/* الحاوية الرئيسية (الكلاس الأصلي عندك) */
-:where(.bot-status-container, .bot-settings-wrapper) {
+.botStatus {
   background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.16), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.14), transparent 55%),
-    var(--qa-bg);
-  border-radius: var(--qa-radius-xl);
-  padding: 22px;
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.12), transparent 55%),
+    var(--q-bg);
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
   box-shadow: 0 22px 60px rgba(15, 23, 42, 0.95);
-  border: 1px solid var(--qa-border);
-  margin: 0;
-  min-height: 600px;
+  padding: 16px;
+  color: var(--q-text);
 }
 
-/* رأس الحالة */
-:where(.bot-status-container, .bot-settings-wrapper) .status-header {
+.botStatus__header {
   display: flex;
   justify-content: space-between;
+  gap: 14px;
   align-items: flex-start;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--qa-border-soft);
-  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .header-main {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .status-header h2 {
+.botStatus__title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(90deg, var(--qa-primary), var(--qa-blue), var(--qa-green));
+  font-size: 15px;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--q-teal), var(--q-blue), var(--q-green));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .connection-status {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-/* ⚠️ Scoped لتجنّب تعارض status-indicator مع BotActivation وغيره */
-:where(.bot-status-container, .bot-settings-wrapper) .status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  border-radius: var(--qa-pill);
-  font-weight: 600;
+.botStatus__subtitle {
+  margin: 6px 0 0;
   font-size: 12px;
-  border: 1px solid var(--qa-border);
-  background: var(--qa-panel);
+  color: var(--q-muted);
+  max-width: 680px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-/* Connected / Disconnected */
-:where(.bot-status-container, .bot-settings-wrapper) .status-indicator.connected {
-  border-color: rgba(34, 197, 94, 0.55);
-  background: rgba(34, 197, 94, 0.10);
-  color: #bbf7d0;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .status-indicator.connected .status-dot {
-  background: #22c55e;
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.85);
-  animation: pulse 2s infinite;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .status-indicator.disconnected {
-  border-color: rgba(251, 113, 133, 0.55);
-  background: rgba(251, 113, 133, 0.10);
-  color: #fecdd3;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .status-indicator.disconnected .status-dot {
-  background: #fb7185;
-  box-shadow: 0 0 12px rgba(251, 113, 133, 0.8);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .last-update {
-  font-size: 12px;
-  color: var(--qa-muted);
-}
-
-/* Controls */
-:where(.bot-status-container, .bot-settings-wrapper) .header-controls {
+.botStatus__headerRight {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .timeframe-select {
-  padding: 9px 12px;
-  border: 1px solid var(--qa-border);
-  border-radius: 12px;
-  background: var(--qa-panel2);
-  color: var(--qa-text);
-  font-size: 12px;
-  cursor: pointer;
-  transition: border-color 150ms ease, transform 150ms ease;
-  min-width: 140px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .timeframe-select:focus {
-  outline: none;
-  border-color: rgba(34, 211, 238, 0.9);
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.6);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .timeframe-select:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .refresh-btn {
-  padding: 9px 14px;
-  background: linear-gradient(90deg, var(--qa-primary), var(--qa-blue));
-  color: #020617;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700;
-  transition: transform 150ms ease, opacity 150ms ease;
+.botStatus__conn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  font-weight: 900;
   font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--q-border);
+  background: rgba(2, 6, 23, 0.35);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .refresh-btn:hover:not(:disabled) {
+.botStatus__conn.is-on {
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #bbf7d0;
+}
+
+.botStatus__conn.is-off {
+  border-color: rgba(251, 113, 133, 0.55);
+  color: #fecdd3;
+}
+
+.botStatus__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
+}
+
+.botStatus__conn.is-on .botStatus__dot {
+  background: #22c55e;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.85);
+}
+
+.botStatus__conn.is-off .botStatus__dot {
+  background: #fb7185;
+  box-shadow: 0 0 14px rgba(251, 113, 133, 0.75);
+}
+
+.botStatus__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.botStatus__btn {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(2, 6, 23, 0.35);
+  color: var(--q-text);
+  font-weight: 900;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.botStatus__btn:hover:not(:disabled) {
   transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.40);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.55);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .refresh-btn:disabled {
+.botStatus__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .refresh-btn.small {
-  padding: 8px 12px;
-  font-size: 11px;
-}
-
-/* مؤشر الحالة الرئيسي */
-:where(.bot-status-container, .bot-settings-wrapper) .main-status-indicator {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(56, 189, 248, 0.16), rgba(74, 222, 128, 0.14));
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .status-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .badge-icon {
-  font-size: 30px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .badge-content h3 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .badge-content p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 12px;
-  color: var(--qa-muted);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .uptime-display {
-  text-align: center;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .uptime-label {
-  display: block;
-  font-size: 12px;
-  opacity: 0.85;
-  margin-bottom: 4px;
-  color: var(--qa-muted);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .uptime-value {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--qa-text);
-}
-
-/* تبويبات التنقل (النظام القديم) */
-:where(.bot-status-container, .bot-settings-wrapper) .status-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--qa-border-soft);
-  padding-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .tab-button {
-  padding: 9px 14px;
-  border: 1px solid var(--qa-border);
-  background: var(--qa-panel2);
-  color: var(--qa-muted);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 150ms ease, border-color 150ms ease;
-  font-weight: 700;
-  font-size: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .tab-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(34, 211, 238, 0.75);
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .tab-button.active {
-  background: linear-gradient(90deg, var(--qa-primary), var(--qa-blue), var(--qa-green));
-  color: #020617;
-  border-color: transparent;
-}
-
-/* تبويبات النسخة الجديدة (BotSettings.js الجديد) */
-:where(.bot-status-container, .bot-settings-wrapper) .settings-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .settings-tab {
-  padding: 9px 14px;
-  border: 1px solid var(--qa-border);
-  background: var(--qa-panel2);
-  color: var(--qa-muted);
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .settings-tab--active {
-  background: linear-gradient(90deg, var(--qa-primary), var(--qa-blue), var(--qa-green));
-  color: #020617;
-  border-color: transparent;
-}
-
-/* المحتوى */
-:where(.bot-status-container, .bot-settings-wrapper) .tab-content {
-  min-height: 400px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: var(--qa-muted);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .spinner-large {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(148, 163, 184, 0.35);
-  border-top: 4px solid var(--qa-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* بطاقات المقاييس */
-:where(.bot-status-container, .bot-settings-wrapper) .metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-/* Scoped لمنع تعارض metric-card */
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-radius: 16px;
-  background: var(--qa-panel2);
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
-  border: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.85);
-  border-color: rgba(34, 211, 238, 0.55);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.primary {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(56, 189, 248, 0.14));
-  border-color: rgba(34, 211, 238, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.success,
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.excellent {
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.18), rgba(34, 197, 94, 0.12));
-  border-color: rgba(74, 222, 128, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.info,
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.good {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(59, 130, 246, 0.12));
-  border-color: rgba(56, 189, 248, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.average {
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(245, 158, 11, 0.12));
-  border-color: rgba(250, 204, 21, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-card.poor {
-  background: linear-gradient(135deg, rgba(251, 113, 133, 0.18), rgba(239, 68, 68, 0.12));
-  border-color: rgba(251, 113, 133, 0.45);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-icon {
-  font-size: 24px;
-  margin-right: 12px;
-  opacity: 0.95;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-content h3 {
-  margin: 0 0 6px 0;
-  font-size: 12px;
-  font-weight: 800;
-  opacity: 0.95;
-  color: var(--qa-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-value {
-  font-size: 18px;
-  font-weight: 900;
-  margin-bottom: 4px;
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-value.profit { color: #4ade80; }
-:where(.bot-status-container, .bot-settings-wrapper) .metric-value.loss { color: #fb7185; }
-
-:where(.bot-status-container, .bot-settings-wrapper) .metric-subtext {
-  font-size: 11px;
-  opacity: 0.9;
-  color: var(--qa-muted);
-}
-
-/* الإحصائيات السريعة */
-:where(.bot-status-container, .bot-settings-wrapper) .quick-stats {
-  background: var(--qa-panel2);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .quick-stats h3 {
-  margin: 0 0 12px 0;
-  color: var(--qa-text);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stat-item:last-child {
-  border-bottom: none;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stat-label {
-  color: var(--qa-muted);
-  font-weight: 700;
-  font-size: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stat-value {
-  font-weight: 900;
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .stat-value.profit { color: #4ade80; }
-:where(.bot-status-container, .bot-settings-wrapper) .stat-value.loss { color: #fb7185; }
-
-/* أداء التداول */
-:where(.bot-status-container, .bot-settings-wrapper) .performance-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .perf-card {
-  background: var(--qa-panel2);
-  border-radius: 16px;
-  padding: 16px;
-  border-left: 3px solid var(--qa-primary);
-  border-right: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .perf-card h4 {
-  margin: 0 0 12px 0;
-  color: var(--qa-text);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .perf-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .perf-metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .perf-metric:last-child {
-  border-bottom: none;
-}
-
-/* مؤشرات الأداء */
-:where(.bot-status-container, .bot-settings-wrapper) .performance-indicators {
-  background: var(--qa-panel2);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .performance-indicators h4 {
-  margin: 0 0 12px 0;
-  color: var(--qa-text);
-  font-weight: 800;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicators-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-label {
-  font-weight: 800;
-  color: var(--qa-soft);
-  font-size: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-bar {
-  height: 8px;
-  background: rgba(148, 163, 184, 0.25);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.5s ease;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill.efficiency-excellent,
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill.stability-high {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill.efficiency-good {
-  background: linear-gradient(90deg, #38bdf8, #60a5fa);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill.efficiency-average {
-  background: linear-gradient(90deg, #facc15, #fbbf24);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-fill.efficiency-poor {
-  background: linear-gradient(90deg, #fb7185, #f87171);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .indicator-value {
-  font-weight: 900;
-  color: var(--qa-text);
-  text-align: right;
-  font-size: 12px;
-}
-
-/* السجل */
-:where(.bot-status-container, .bot-settings-wrapper) .history-tab {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .history-header h4 {
-  margin: 0;
-  color: var(--qa-text);
-  font-weight: 800;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trades-table-container {
-  background: var(--qa-panel2);
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trades-table { width: 100%; }
-
-:where(.bot-status-container, .bot-settings-wrapper) .table-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1.5fr;
-  background: linear-gradient(90deg, rgba(34, 211, 238, 0.85), rgba(56, 189, 248, 0.75));
-  color: #020617;
-  font-weight: 900;
-  padding: 12px 14px;
-  font-size: 12px;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .table-body {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .table-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1.5fr;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--qa-border-soft);
-  background: rgba(2, 6, 23, 0.35);
-  transition: background 150ms ease;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .table-row:hover {
-  background: rgba(15, 23, 42, 0.75);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .table-row:last-child {
-  border-bottom: none;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-pair {
-  font-weight: 900;
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-type {
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 900;
-  text-align: center;
-  border: 1px solid var(--qa-border-soft);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-type.buy {
-  background: rgba(34, 197, 94, 0.14);
-  color: #bbf7d0;
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-type.sell {
-  background: rgba(251, 113, 133, 0.14);
+.botStatus__btn.primary {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.95), rgba(56, 189, 248, 0.95), rgba(74, 222, 128, 0.95));
+  color: #05212a;
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+.botStatus__btn.danger {
+  border-color: rgba(251, 113, 133, 0.55);
+  background: rgba(251, 113, 133, 0.12);
   color: #fecdd3;
-  border-color: rgba(251, 113, 133, 0.4);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .trade-volume,
-:where(.bot-status-container, .bot-settings-wrapper) .trade-price {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  color: var(--qa-muted);
+.botStatus__btn.ghost {
+  background: transparent;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .trade-profit {
-  font-weight: 900;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-profit.profit { color: #4ade80; }
-:where(.bot-status-container, .bot-settings-wrapper) .trade-profit.loss { color: #fb7185; }
-
-:where(.bot-status-container, .bot-settings-wrapper) .trade-time {
-  font-size: 11px;
-  color: var(--qa-muted);
-}
-
-/* لا توجد بيانات */
-:where(.bot-status-container, .bot-settings-wrapper) .no-data {
-  display: flex;
-  flex-direction: column;
+.botStatus__badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 50px 18px;
-  color: var(--qa-muted);
-  text-align: center;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .no-data-icon {
-  font-size: 40px;
-  margin-bottom: 10px;
-  opacity: 0.55;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .no-data p {
-  margin: 0 0 8px 0;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--q-border);
+  background: rgba(2, 6, 23, 0.35);
   font-weight: 900;
-  color: var(--qa-text);
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .no-data span {
   font-size: 12px;
-  opacity: 0.9;
 }
 
-/* النظام */
-:where(.bot-status-container, .bot-settings-wrapper) .system-tab {
+.botStatus__badgeDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
+}
+
+.botStatus__badge.is-active {
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #bbf7d0;
+}
+.botStatus__badge.is-active .botStatus__badgeDot {
+  background: #22c55e;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.85);
+}
+
+.botStatus__badge.is-paused {
+  border-color: rgba(250, 204, 21, 0.55);
+  color: #fde68a;
+}
+.botStatus__badge.is-paused .botStatus__badgeDot {
+  background: #f59e0b;
+}
+
+.botStatus__meta {
+  font-size: 12px;
+  color: var(--q-muted);
+  font-weight: 900;
+}
+
+.botStatus__state {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--q-muted);
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 12px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-cards {
+.botStatus__spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(148, 163, 184, 0.35);
+  border-top-color: var(--q-teal);
+  border-right-color: var(--q-blue);
+  animation: botStatusSpin 0.8s linear infinite;
+}
+
+@keyframes botStatusSpin {
+  to { transform: rotate(360deg); }
+}
+
+.botStatus__error {
+  border-radius: 16px;
+  border: 1px solid rgba(251, 113, 133, 0.55);
+  background: rgba(251, 113, 133, 0.12);
+  padding: 12px 14px;
+  color: #fecdd3;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.botStatus__tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.botStatus__tab {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(2, 6, 23, 0.35);
+  color: var(--q-text);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.botStatus__tab.is-active {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.95), rgba(56, 189, 248, 0.95), rgba(74, 222, 128, 0.95));
+  color: #05212a;
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+.botStatus__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-card {
-  background: var(--qa-panel2);
+.botStatus__card {
   border-radius: 16px;
-  padding: 16px;
-  border-left: 3px solid var(--qa-blue);
-  border-right: 1px solid var(--qa-border-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.96);
+  padding: 14px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-card h4 {
-  margin: 0 0 12px 0;
-  color: var(--qa-text);
+.botStatus__cardLabel {
+  font-size: 11px;
+  color: var(--q-muted);
   font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.botStatus__cardValue {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 950;
+  color: var(--q-text);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--qa-border-soft);
+.botStatus__cardHint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--q-muted);
+  font-weight: 800;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric:last-child {
-  border-bottom: none;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric .status.connected,
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric .status.active {
-  color: #4ade80;
-  font-weight: 900;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric .status.disconnected,
-:where(.bot-status-container, .bot-settings-wrapper) .system-metric .status.inactive {
-  color: #fb7185;
-  font-weight: 900;
-}
-
-:where(.bot-status-container, .bot-settings-wrapper) .system-info {
-  background: var(--qa-panel2);
+.botStatus__tableWrap {
+  overflow: auto;
   border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--qa-border-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.96);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .system-info h4 {
-  margin: 0 0 12px 0;
-  color: var(--qa-text);
+.botStatus__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+}
+
+.botStatus__table thead th {
+  padding: 12px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--q-muted);
   font-weight: 900;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(2, 6, 23, 0.35);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .info-grid {
+.botStatus__table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--q-text);
+}
+
+.botStatus__table tbody tr:hover td {
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.botStatus__emptyCell {
+  text-align: center;
+  color: var(--q-muted);
+  font-weight: 900;
+  padding: 18px !important;
+}
+
+.botStatus__system {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.96);
+  padding: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 10px;
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .info-item {
+.botStatus__sysRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--qa-border-soft);
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(2, 6, 23, 0.22);
+  font-weight: 900;
+  color: var(--q-text);
 }
 
-:where(.bot-status-container, .bot-settings-wrapper) .info-item:last-child {
-  border-bottom: none;
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* التصميم المتجاوب */
-@media (max-width: 768px) {
-  :where(.bot-status-container, .bot-settings-wrapper) {
-    padding: 18px;
-    margin: 10px;
-  }
+.profit { color: #bbf7d0 !important; }
+.loss { color: #fecdd3 !important; }
 
-  :where(.bot-status-container, .bot-settings-wrapper) .status-header {
+@media (max-width: 900px) {
+  .botStatus__header {
     flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
+    align-items: flex-start;
   }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .header-controls {
+  .botStatus__headerRight {
+    width: 100%;
     justify-content: space-between;
-    flex-wrap: wrap;
-  }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .main-status-indicator {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .status-tabs {
-    flex-direction: column;
-  }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .metrics-grid,
-  :where(.bot-status-container, .bot-settings-wrapper) .stats-grid,
-  :where(.bot-status-container, .bot-settings-wrapper) .performance-cards,
-  :where(.bot-status-container, .bot-settings-wrapper) .indicators-grid,
-  :where(.bot-status-container, .bot-settings-wrapper) .system-cards,
-  :where(.bot-status-container, .bot-settings-wrapper) .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .table-header,
-  :where(.bot-status-container, .bot-settings-wrapper) .table-row {
-    grid-template-columns: 1fr 1fr;
-    font-size: 11px;
-  }
-
-  :where(.bot-status-container, .bot-settings-wrapper) .table-header div:nth-child(n+3),
-  :where(.bot-status-container, .bot-settings-wrapper) .table-row div:nth-child(n+3) {
-    display: none;
   }
 }
-
-/* الرسوم المتحركة */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-/* فئات المساعدة */
-:where(.bot-status-container, .bot-settings-wrapper) .profit { color: #4ade80 !important; }
-:where(.bot-status-container, .bot-settings-wrapper) .loss { color: #fb7185 !important; }

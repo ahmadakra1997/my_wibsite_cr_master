@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getPerformanceMetrics, getTradingAnalytics } from '../../services/api';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import useBotData from '../../hooks/useBotData';
 import './BotPerformance.css';
 
 const safeParse = (x) => {
@@ -13,14 +14,20 @@ const safeParse = (x) => {
     return null;
   }
 };
-
-const unwrap = (res) => {
-  if (res && typeof res === 'object' && 'success' in res) return res.success ? res.data : null;
-  return res;
+const unwrap = (res) => (res && typeof res === 'object' && 'success' in res ? (res.success ? res.data : null) : res);
+const toNum = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
 };
 
-const BotPerformance = () => {
-  const [performanceData, setPerformanceData] = useState({
+export default function BotPerformance() {
+  const { metrics } = useBotData();
+  const { lastMessage } = useWebSocket('performance-updates');
+
+  const [timeRange, setTimeRange] = useState('24h');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [perf, setPerf] = useState({
     totalProfit: 0,
     dailyProfit: 0,
     weeklyProfit: 0,
@@ -35,137 +42,122 @@ const BotPerformance = () => {
     volatility: 0,
   });
 
-  const [analyticsData, setAnalyticsData] = useState({
+  const [analytics, setAnalytics] = useState({
     hourlyPerformance: [],
     dailyPerformance: [],
     tradeDistribution: [],
     riskMetrics: {},
   });
 
-  const [timeRange, setTimeRange] = useState('24h');
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeChart, setActiveChart] = useState('profit');
+  // دمج PnL القادم من useBotData (بدون تغيير منطقك)
+  useEffect(() => {
+    const pnl = metrics?.pnl || {};
+    setPerf((prev) => ({
+      ...prev,
+      dailyProfit: toNum(pnl.daily ?? prev.dailyProfit),
+      weeklyProfit: toNum(pnl.weekly ?? prev.weeklyProfit),
+      monthlyProfit: toNum(pnl.monthly ?? prev.monthlyProfit),
+    }));
+  }, [metrics?.pnl]);
 
-  const { lastMessage } = useWebSocket('performance-updates');
-
-  // تحديثات WS
+  // WS updates
   useEffect(() => {
     if (!lastMessage) return;
     const data = safeParse(lastMessage?.data ?? lastMessage);
     if (!data) return;
-
     if (data.type === 'performance_update' && data.metrics) {
-      setPerformanceData((prev) => ({ ...prev, ...data.metrics }));
+      setPerf((prev) => ({ ...prev, ...data.metrics }));
     }
   }, [lastMessage]);
 
-  const fetchPerformanceData = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
+      // بعض الباكيندات تقبل range كـ string وبعضها كـ object
       const perfPromise = Promise.resolve(getPerformanceMetrics({ range: timeRange })).catch(() =>
-        Promise.resolve(getPerformanceMetrics(timeRange)),
+        Promise.resolve(getPerformanceMetrics(timeRange))
       );
 
-      const [perfRes, analyticsRes] = await Promise.all([perfPromise, getTradingAnalytics(timeRange)]);
-      const perf = unwrap(perfRes);
-      const analytics = unwrap(analyticsRes);
+      const [perfRes, analyticsRes] = await Promise.all([
+        perfPromise,
+        Promise.resolve(getTradingAnalytics(timeRange)).catch(() => null),
+      ]);
 
-      if (perf) setPerformanceData((prev) => ({ ...prev, ...perf }));
-      if (analytics) setAnalyticsData((prev) => ({ ...prev, ...analytics }));
-    } catch (error) {
-      console.error('[BotPerformance] Error fetching performance data:', error);
+      const p = unwrap(perfRes);
+      const a = unwrap(analyticsRes);
+
+      if (p) setPerf((prev) => ({ ...prev, ...p }));
+      if (a) setAnalytics((prev) => ({ ...prev, ...a }));
+    } catch (e) {
+      console.error('[BotPerformance] fetchAll error:', e);
     } finally {
       setIsLoading(false);
     }
   }, [timeRange]);
 
   useEffect(() => {
-    fetchPerformanceData();
-    const interval = setInterval(fetchPerformanceData, 60000);
-    return () => clearInterval(interval);
-  }, [fetchPerformanceData]);
+    fetchAll();
+    const id = setInterval(fetchAll, 60000);
+    return () => clearInterval(id);
+  }, [fetchAll]);
 
   const derived = useMemo(() => {
-    const netProfit = Number(performanceData.totalProfit || 0);
-    const successRate = Number(performanceData.winRate || 0) * 100;
-    const totalTrades = Number(performanceData.totalTrades || 0);
-    const avgProfitPerTrade = totalTrades > 0 ? netProfit / totalTrades : 0;
+    const net = toNum(perf.totalProfit);
+    const totalTrades = toNum(perf.totalTrades);
+    const winRatePct = toNum(perf.winRate) * 100;
 
-    const maxDD = Number(performanceData.maxDrawdown || 0);
-    const efficiencyScore = Math.min(100, Math.max(0, successRate + (netProfit > 0 ? 20 : 0) - maxDD));
+    const avg = totalTrades > 0 ? net / totalTrades : 0;
+    const maxDD = toNum(perf.maxDrawdown);
 
-    // تقدير مبسط لعامل الربحية (بدون تغيير منطقك، فقط عرض أفضل)
+    const efficiency = Math.min(100, Math.max(0, winRatePct + (net > 0 ? 20 : 0) - maxDD));
+
     const profitFactor =
-      Number(performanceData.failedTrades || 0) > 0
-        ? (Number(performanceData.successfulTrades || 0) + 1) /
-          (Number(performanceData.failedTrades || 0) + 1)
-        : Number(performanceData.successfulTrades || 0) > 0
+      toNum(perf.failedTrades) > 0
+        ? (toNum(perf.successfulTrades) + 1) / (toNum(perf.failedTrades) + 1)
+        : toNum(perf.successfulTrades) > 0
           ? 3.5
           : 0;
 
-    return { netProfit, successRate, avgProfitPerTrade, efficiencyScore, profitFactor };
-  }, [performanceData]);
-
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(Number(value || 0));
-
-  const formatPercentage = (value) => `${Number(value || 0).toFixed(2)}%`;
-  const getPerformanceColor = (value) => (Number(value) >= 0 ? 'success' : 'danger');
-
-  const getEfficiencyLevel = (score) => {
-    if (score >= 80) return 'efficiency-excellent';
-    if (score >= 60) return 'efficiency-good';
-    if (score >= 40) return 'efficiency-average';
-    return 'efficiency-poor';
-  };
+    return { net, totalTrades, winRatePct, avg, efficiency, profitFactor };
+  }, [perf]);
 
   const bars = useMemo(() => {
-    const arr = Array.isArray(analyticsData.hourlyPerformance)
-      ? analyticsData.hourlyPerformance
-      : Array.isArray(analyticsData.dailyPerformance)
-        ? analyticsData.dailyPerformance
+    const arr = Array.isArray(analytics.hourlyPerformance)
+      ? analytics.hourlyPerformance
+      : Array.isArray(analytics.dailyPerformance)
+        ? analytics.dailyPerformance
         : [];
 
     const values = arr
-      .map((x) => Number(x?.value ?? x?.profit ?? x))
+      .map((x) => toNum(x?.value ?? x?.profit ?? x))
       .filter((n) => Number.isFinite(n))
-      .slice(-7);
+      .slice(-10);
 
     if (values.length) {
       const max = Math.max(...values.map((v) => Math.abs(v))) || 1;
-      return values.map((v) => Math.round((Math.abs(v) / max) * 95) + 5);
+      return values.map((v) => Math.round((Math.abs(v) / max) * 92) + 8);
     }
-    return [65, 80, 45, 90, 75, 85, 60];
-  }, [analyticsData]);
+    return [55, 80, 40, 90, 75, 86, 60, 72, 66, 84];
+  }, [analytics]);
 
-  const tradeSplit = useMemo(() => {
-    const total = Number(performanceData.totalTrades || 0);
-    const ok = Number(performanceData.successfulTrades || 0);
-    const bad = Number(performanceData.failedTrades || 0);
-    if (total > 0) {
-      const okPct = Math.max(0, Math.min(100, Math.round((ok / total) * 100)));
-      return { okPct, badPct: 100 - okPct };
-    }
-    return { okPct: 70, badPct: 30 };
-  }, [performanceData]);
+  const formatMoney = (v) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(toNum(v));
 
-  const riskFill = useMemo(() => {
-    // maxDrawdown: كلما زاد، الخطر أعلى
-    const dd = Number(performanceData.maxDrawdown || 0);
-    return Math.max(5, Math.min(100, dd * 10));
-  }, [performanceData]);
+  const formatPct = (v) => `${toNum(v).toFixed(2)}%`;
+
+  const efficiencyTone =
+    derived.efficiency >= 80 ? 'excellent' : derived.efficiency >= 60 ? 'good' : derived.efficiency >= 40 ? 'average' : 'poor';
 
   return (
-    <div className="bot-performance-container">
-      <div className="performance-header">
-        <h2>📊 أداء البوت المتقدم</h2>
+    <section className="botPerf">
+      <header className="botPerf__header">
+        <div>
+          <h3 className="botPerf__title">أداء البوت</h3>
+          <p className="botPerf__subtitle">لوحة أداء احترافية (عرض فقط) — بدون المساس بمنطق التداول.</p>
+        </div>
 
-        <div className="header-controls">
-          <select className="time-range-select" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
+        <div className="botPerf__tools">
+          <select className="botPerf__select" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
             <option value="1h">آخر ساعة</option>
             <option value="24h">آخر 24 ساعة</option>
             <option value="7d">آخر 7 أيام</option>
@@ -173,246 +165,101 @@ const BotPerformance = () => {
             <option value="90d">آخر 90 يوم</option>
           </select>
 
-          <button className="refresh-btn" type="button" onClick={fetchPerformanceData} disabled={isLoading}>
+          <button className="botPerf__btn" type="button" onClick={fetchAll} disabled={isLoading}>
             {isLoading ? 'جاري التحديث...' : 'تحديث'}
           </button>
         </div>
+      </header>
+
+      <div className="botPerf__cards">
+        <div className="botPerf__card">
+          <div className="botPerf__label">صافي الربح</div>
+          <div className={`botPerf__value ${derived.net >= 0 ? 'profit' : 'loss'}`}>
+            {derived.net >= 0 ? '▲ ' : '▼ '}
+            {formatMoney(derived.net)}
+          </div>
+          <div className="botPerf__hint">{timeRange}</div>
+        </div>
+
+        <div className="botPerf__card">
+          <div className="botPerf__label">معدل النجاح</div>
+          <div className="botPerf__value">{derived.winRatePct.toFixed(1)}%</div>
+          <div className="botPerf__hint">
+            ناجحة: {toNum(perf.successfulTrades)} | فاشلة: {toNum(perf.failedTrades)}
+          </div>
+        </div>
+
+        <div className="botPerf__card">
+          <div className="botPerf__label">إجمالي الصفقات</div>
+          <div className="botPerf__value mono">{toNum(perf.totalTrades)}</div>
+          <div className="botPerf__hint">متوسط مدة الصفقة: {toNum(perf.avgTradeDuration)} دقيقة</div>
+        </div>
+
+        <div className={`botPerf__card tone-${efficiencyTone}`}>
+          <div className="botPerf__label">كفاءة البوت</div>
+          <div className="botPerf__value">{derived.efficiency.toFixed(1)}%</div>
+          <div className="botPerf__hint">مؤشر مركّب (نجاح + ربح - خسارة قصوى)</div>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="loading-container">
-          <div className="spinner-large" />
-          <div>جاري تحميل بيانات الأداء...</div>
+      <div className="botPerf__panel">
+        <div className="botPerf__panelHead">
+          <h4>اتجاه الربحية</h4>
+          <span className="botPerf__meta">عرض بصري مبسط</span>
         </div>
-      ) : (
-        <>
-          <div className="metrics-overview">
-            <div className="metric-card primary">
-              <div className="metric-icon">💰</div>
-              <div className="metric-content">
-                <h3>صافي الربح</h3>
-                <div className={`metric-value ${getPerformanceColor(derived.netProfit)}`}>
-                  {formatCurrency(derived.netProfit)}
-                </div>
-                <div className="metric-trend">
-                  <span className="trend-indicator">{derived.netProfit >= 0 ? '▲' : '▼'}</span>
-                  إجمالي الأرباح
-                </div>
-              </div>
-            </div>
 
-            <div className="metric-card success">
-              <div className="metric-icon">✅</div>
-              <div className="metric-content">
-                <h3>معدل النجاح</h3>
-                <div className="metric-value">{derived.successRate.toFixed(1)}%</div>
-                <div className="metric-trend">صفقات ناجحة: {performanceData.successfulTrades}</div>
-              </div>
+        <div className="botPerf__bars" aria-label="profit trend">
+          {bars.map((h, idx) => (
+            <div className="botPerf__bar" key={idx}>
+              <span className="botPerf__barFill" style={{ height: `${h}%` }} />
             </div>
+          ))}
+        </div>
 
-            <div className="metric-card info">
-              <div className="metric-icon">📈</div>
-              <div className="metric-content">
-                <h3>إجمالي الصفقات</h3>
-                <div className="metric-value">{performanceData.totalTrades}</div>
-                <div className="metric-trend">{performanceData.avgTradeDuration} دقيقة/صفقة</div>
-              </div>
-            </div>
-
-            <div className="metric-card warning">
-              <div className="metric-icon">⚡</div>
-              <div className="metric-content">
-                <h3>كفاءة البوت</h3>
-                <div className={`metric-value ${getEfficiencyLevel(derived.efficiencyScore)}`}>
-                  {derived.efficiencyScore.toFixed(1)}%
-                </div>
-                <div className="metric-trend">مؤشر مركّب (نجاح + ربح - خسارة قصوى)</div>
-              </div>
-            </div>
+        <div className="botPerf__grid2">
+          <div className="botPerf__mini">
+            <div className="botPerf__miniLabel">ربحية اليوم</div>
+            <div className={`botPerf__miniVal ${toNum(perf.dailyProfit) >= 0 ? 'profit' : 'loss'}`}>{formatMoney(perf.dailyProfit)}</div>
           </div>
-
-          <div className="advanced-analytics">
-            <div className="analytics-tabs">
-              <button
-                type="button"
-                className={`tab-btn ${activeChart === 'profit' ? 'active' : ''}`}
-                onClick={() => setActiveChart('profit')}
-              >
-                أداء الربحية
-              </button>
-              <button
-                type="button"
-                className={`tab-btn ${activeChart === 'risk' ? 'active' : ''}`}
-                onClick={() => setActiveChart('risk')}
-              >
-                مقاييس المخاطر
-              </button>
-              <button
-                type="button"
-                className={`tab-btn ${activeChart === 'trades' ? 'active' : ''}`}
-                onClick={() => setActiveChart('trades')}
-              >
-                تحليل الصفقات
-              </button>
-            </div>
-
-            <div className="analytics-content">
-              {activeChart === 'profit' ? (
-                <>
-                  <div className="profit-stats">
-                    <div className="profit-stat">
-                      <span className="label">ربحية اليوم</span>
-                      <span className={`value ${getPerformanceColor(performanceData.dailyProfit)}`}>
-                        {formatCurrency(performanceData.dailyProfit)}
-                      </span>
-                    </div>
-                    <div className="profit-stat">
-                      <span className="label">ربحية الأسبوع</span>
-                      <span className={`value ${getPerformanceColor(performanceData.weeklyProfit)}`}>
-                        {formatCurrency(performanceData.weeklyProfit)}
-                      </span>
-                    </div>
-                    <div className="profit-stat">
-                      <span className="label">ربحية الشهر</span>
-                      <span className={`value ${getPerformanceColor(performanceData.monthlyProfit)}`}>
-                        {formatCurrency(performanceData.monthlyProfit)}
-                      </span>
-                    </div>
-                    <div className="profit-stat">
-                      <span className="label">عامل الربحية</span>
-                      <span className="value">{derived.profitFactor.toFixed(2)}</span>
-                    </div>
-                  </div>
-
-                  <div className="chart-placeholder">
-                    <div className="chart-header">
-                      <h5>اتجاه الربحية ({timeRange})</h5>
-                    </div>
-                    <div className="chart-content">
-                      <div className="chart-bars">
-                        {bars.map((h, idx) => (
-                          <div key={idx} className="chart-bar" style={{ height: `${h}%` }} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-
-              {activeChart === 'risk' ? (
-                <>
-                  <div className="risk-metrics">
-                    <div className="risk-metric">
-                      <span className="label">أقصى خسارة</span>
-                      <span className="value danger">{formatPercentage(performanceData.maxDrawdown)}</span>
-                    </div>
-                    <div className="risk-metric">
-                      <span className="label">معدل شارب</span>
-                      <span className="value">{Number(performanceData.sharpeRatio || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="risk-metric">
-                      <span className="label">التقلب</span>
-                      <span className="value">{formatPercentage(performanceData.volatility)}</span>
-                    </div>
-                    <div className="risk-metric">
-                      <span className="label">مخاطرة/عائد</span>
-                      <span className="value">
-                        {performanceData.maxDrawdown > 0 ? `1:${(100 / performanceData.maxDrawdown).toFixed(1)}` : '—'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="risk-assessment">
-                    <div style={{ fontWeight: 800, color: '#2d3748' }}>تقييم مستوى المخاطرة</div>
-                    <div className="risk-level">
-                      <div className="risk-bar">
-                        <div className="risk-fill" style={{ width: `${riskFill}%` }} />
-                      </div>
-                      <div className="risk-labels">
-                        <span>منخفض</span>
-                        <span>متوسط</span>
-                        <span>مرتفع</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-
-              {activeChart === 'trades' ? (
-                <>
-                  <div className="trades-stats">
-                    <div className="trades-metric">
-                      <span className="label">الصفقات الناجحة</span>
-                      <span className="value success">{performanceData.successfulTrades}</span>
-                    </div>
-                    <div className="trades-metric">
-                      <span className="label">الصفقات الفاشلة</span>
-                      <span className="value danger">{performanceData.failedTrades}</span>
-                    </div>
-                    <div className="trades-metric">
-                      <span className="label">متوسط مدة الصفقة</span>
-                      <span className="value">{performanceData.avgTradeDuration} دقيقة</span>
-                    </div>
-                    <div className="trades-metric">
-                      <span className="label">متوسط الربح/صفقة</span>
-                      <span className={`value ${getPerformanceColor(derived.avgProfitPerTrade)}`}>
-                        {formatCurrency(derived.avgProfitPerTrade)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="distribution-chart">
-                    <div style={{ fontWeight: 800, color: '#2d3748' }}>توزيع الصفقات</div>
-                    <div className="distribution-bars">
-                      <div className="dist-bar success" style={{ width: `${tradeSplit.okPct}%` }}>
-                        ناجحة {tradeSplit.okPct}%
-                      </div>
-                      <div className="dist-bar danger" style={{ width: `${tradeSplit.badPct}%` }}>
-                        فاشلة {tradeSplit.badPct}%
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-            </div>
+          <div className="botPerf__mini">
+            <div className="botPerf__miniLabel">ربحية الأسبوع</div>
+            <div className={`botPerf__miniVal ${toNum(perf.weeklyProfit) >= 0 ? 'profit' : 'loss'}`}>{formatMoney(perf.weeklyProfit)}</div>
           </div>
-
-          <div className="performance-recommendations">
-            <div style={{ fontWeight: 900, marginBottom: 12 }}>توصيات تحسين الأداء</div>
-            <div className="recommendations-list">
-              {derived.efficiencyScore < 60 ? (
-                <div className="recommendation warning">
-                  <strong>تحسين معدل النجاح</strong>
-                  حاول تعديل الاستراتيجية أو تقليل الأزواج لتحسين نسبة الصفقات الناجحة.
-                </div>
-              ) : null}
-
-              {Number(performanceData.maxDrawdown || 0) > 5 ? (
-                <div className="recommendation danger">
-                  <strong>إدارة المخاطرة</strong>
-                  الخسارة القصوى مرتفعة—فكر بتقليل حجم الصفقة أو تشديد وقف الخسارة.
-                </div>
-              ) : null}
-
-              {derived.avgProfitPerTrade < 0.5 ? (
-                <div className="recommendation info">
-                  <strong>تحسين الربحية</strong>
-                  متوسط الربح منخفض—قد تحتاج ضبط takeProfit أو فلترة شروط الدخول.
-                </div>
-              ) : null}
-
-              {derived.efficiencyScore >= 80 ? (
-                <div className="recommendation success">
-                  <strong>أداء ممتاز</strong>
-                  البوت يعمل بشكل قوي—حافظ على الإعدادات الحالية مع مراقبة دورية.
-                </div>
-              ) : null}
-            </div>
+          <div className="botPerf__mini">
+            <div className="botPerf__miniLabel">ربحية الشهر</div>
+            <div className={`botPerf__miniVal ${toNum(perf.monthlyProfit) >= 0 ? 'profit' : 'loss'}`}>{formatMoney(perf.monthlyProfit)}</div>
           </div>
-        </>
-      )}
-    </div>
+          <div className="botPerf__mini">
+            <div className="botPerf__miniLabel">عامل الربحية</div>
+            <div className="botPerf__miniVal mono">{derived.profitFactor.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div className="botPerf__risk">
+          <div className="botPerf__riskRow">
+            <span>أقصى خسارة</span>
+            <strong className="mono">{formatPct(perf.maxDrawdown)}</strong>
+          </div>
+          <div className="botPerf__riskRow">
+            <span>معدل شارب</span>
+            <strong className="mono">{toNum(perf.sharpeRatio).toFixed(2)}</strong>
+          </div>
+          <div className="botPerf__riskRow">
+            <span>التقلب</span>
+            <strong className="mono">{formatPct(perf.volatility)}</strong>
+          </div>
+        </div>
+
+        <div className="botPerf__tips">
+          <h4>توصيات تحسين الأداء</h4>
+          <ul>
+            {derived.efficiency < 60 && <li>تحسين معدل النجاح: قلّل الأزواج أو شدّد شروط الدخول.</li>}
+            {toNum(perf.maxDrawdown) > 5 && <li>إدارة المخاطرة: الخسارة القصوى مرتفعة — راجع حجم الصفقة ووقف الخسارة.</li>}
+            {Math.abs(derived.avg) < 0.5 && <li>تحسين الربحية: متوسط الربح/صفقة منخفض — راجع takeProfit وفلترة الإشارات.</li>}
+            {derived.efficiency >= 80 && <li>أداء ممتاز: استمر مع مراقبة دورية للـ drawdown والاتصال.</li>}
+          </ul>
+        </div>
+      </div>
+    </section>
   );
-};
-
-export default BotPerformance;
+}
