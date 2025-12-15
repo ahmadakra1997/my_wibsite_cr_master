@@ -48,7 +48,7 @@ const BotPerformance = () => {
 
   const { lastMessage } = useWebSocket('performance-updates');
 
-  // ✅ WS Updates
+  // تحديثات WS
   useEffect(() => {
     if (!lastMessage) return;
     const data = safeParse(lastMessage?.data ?? lastMessage);
@@ -62,13 +62,11 @@ const BotPerformance = () => {
   const fetchPerformanceData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // يدعم الشكلين: getPerformanceMetrics("24h") أو getPerformanceMetrics({range:"24h"})
       const perfPromise = Promise.resolve(getPerformanceMetrics({ range: timeRange })).catch(() =>
         Promise.resolve(getPerformanceMetrics(timeRange)),
       );
 
       const [perfRes, analyticsRes] = await Promise.all([perfPromise, getTradingAnalytics(timeRange)]);
-
       const perf = unwrap(perfRes);
       const analytics = unwrap(analyticsRes);
 
@@ -87,42 +85,51 @@ const BotPerformance = () => {
     return () => clearInterval(interval);
   }, [fetchPerformanceData]);
 
-  const derivedStats = useMemo(() => {
+  const derived = useMemo(() => {
     const netProfit = Number(performanceData.totalProfit || 0);
     const successRate = Number(performanceData.winRate || 0) * 100;
     const totalTrades = Number(performanceData.totalTrades || 0);
     const avgProfitPerTrade = totalTrades > 0 ? netProfit / totalTrades : 0;
+
     const maxDD = Number(performanceData.maxDrawdown || 0);
+    const efficiencyScore = Math.min(100, Math.max(0, successRate + (netProfit > 0 ? 20 : 0) - maxDD));
 
+    // تقدير مبسط لعامل الربحية (بدون تغيير منطقك، فقط عرض أفضل)
     const profitFactor =
-      performanceData.failedTrades > 0
-        ? (performanceData.successfulTrades * Math.max(avgProfitPerTrade, 0.0001)) /
-          (performanceData.failedTrades * Math.max(Math.abs(avgProfitPerTrade), 0.0001))
-        : 0;
+      Number(performanceData.failedTrades || 0) > 0
+        ? (Number(performanceData.successfulTrades || 0) + 1) /
+          (Number(performanceData.failedTrades || 0) + 1)
+        : Number(performanceData.successfulTrades || 0) > 0
+          ? 3.5
+          : 0;
 
-    const efficiencyScore = Math.min(100, Math.max(0, (successRate + (netProfit > 0 ? 20 : 0)) - maxDD));
-
-    return { netProfit, successRate, avgProfitPerTrade, profitFactor, efficiencyScore };
+    return { netProfit, successRate, avgProfitPerTrade, efficiencyScore, profitFactor };
   }, [performanceData]);
 
   const formatCurrency = (value) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(
-      Number(value || 0),
-    );
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(Number(value || 0));
 
   const formatPercentage = (value) => `${Number(value || 0).toFixed(2)}%`;
-
   const getPerformanceColor = (value) => (Number(value) >= 0 ? 'success' : 'danger');
 
   const getEfficiencyLevel = (score) => {
-    if (score >= 80) return 'excellent';
-    if (score >= 60) return 'good';
-    if (score >= 40) return 'average';
-    return 'poor';
+    if (score >= 80) return 'efficiency-excellent';
+    if (score >= 60) return 'efficiency-good';
+    if (score >= 40) return 'efficiency-average';
+    return 'efficiency-poor';
   };
 
   const bars = useMemo(() => {
-    const arr = Array.isArray(analyticsData.hourlyPerformance) ? analyticsData.hourlyPerformance : [];
+    const arr = Array.isArray(analyticsData.hourlyPerformance)
+      ? analyticsData.hourlyPerformance
+      : Array.isArray(analyticsData.dailyPerformance)
+        ? analyticsData.dailyPerformance
+        : [];
+
     const values = arr
       .map((x) => Number(x?.value ?? x?.profit ?? x))
       .filter((n) => Number.isFinite(n))
@@ -135,10 +142,27 @@ const BotPerformance = () => {
     return [65, 80, 45, 90, 75, 85, 60];
   }, [analyticsData]);
 
+  const tradeSplit = useMemo(() => {
+    const total = Number(performanceData.totalTrades || 0);
+    const ok = Number(performanceData.successfulTrades || 0);
+    const bad = Number(performanceData.failedTrades || 0);
+    if (total > 0) {
+      const okPct = Math.max(0, Math.min(100, Math.round((ok / total) * 100)));
+      return { okPct, badPct: 100 - okPct };
+    }
+    return { okPct: 70, badPct: 30 };
+  }, [performanceData]);
+
+  const riskFill = useMemo(() => {
+    // maxDrawdown: كلما زاد، الخطر أعلى
+    const dd = Number(performanceData.maxDrawdown || 0);
+    return Math.max(5, Math.min(100, dd * 10));
+  }, [performanceData]);
+
   return (
-    <div className="bot-performance-container" dir="rtl">
+    <div className="bot-performance-container">
       <div className="performance-header">
-        <h2>📈 أداء البوت المتقدم</h2>
+        <h2>📊 أداء البوت المتقدم</h2>
 
         <div className="header-controls">
           <select className="time-range-select" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
@@ -158,7 +182,7 @@ const BotPerformance = () => {
       {isLoading ? (
         <div className="loading-container">
           <div className="spinner-large" />
-          <p>جاري تحميل بيانات الأداء...</p>
+          <div>جاري تحميل بيانات الأداء...</div>
         </div>
       ) : (
         <>
@@ -167,10 +191,12 @@ const BotPerformance = () => {
               <div className="metric-icon">💰</div>
               <div className="metric-content">
                 <h3>صافي الربح</h3>
-                <div className="metric-value">{formatCurrency(derivedStats.netProfit)}</div>
+                <div className={`metric-value ${getPerformanceColor(derived.netProfit)}`}>
+                  {formatCurrency(derived.netProfit)}
+                </div>
                 <div className="metric-trend">
-                  <span className="trend-indicator">{derivedStats.netProfit >= 0 ? '▲' : '▼'}</span>
-                  <span>إجمالي الأرباح</span>
+                  <span className="trend-indicator">{derived.netProfit >= 0 ? '▲' : '▼'}</span>
+                  إجمالي الأرباح
                 </div>
               </div>
             </div>
@@ -179,21 +205,17 @@ const BotPerformance = () => {
               <div className="metric-icon">✅</div>
               <div className="metric-content">
                 <h3>معدل النجاح</h3>
-                <div className="metric-value">{derivedStats.successRate.toFixed(1)}%</div>
-                <div className="metric-trend">
-                  <span>صفقات ناجحة: {performanceData.successfulTrades}</span>
-                </div>
+                <div className="metric-value">{derived.successRate.toFixed(1)}%</div>
+                <div className="metric-trend">صفقات ناجحة: {performanceData.successfulTrades}</div>
               </div>
             </div>
 
             <div className="metric-card info">
-              <div className="metric-icon">🔁</div>
+              <div className="metric-icon">📈</div>
               <div className="metric-content">
                 <h3>إجمالي الصفقات</h3>
                 <div className="metric-value">{performanceData.totalTrades}</div>
-                <div className="metric-trend">
-                  <span>{performanceData.avgTradeDuration} دقيقة/صفقة</span>
-                </div>
+                <div className="metric-trend">{performanceData.avgTradeDuration} دقيقة/صفقة</div>
               </div>
             </div>
 
@@ -201,33 +223,42 @@ const BotPerformance = () => {
               <div className="metric-icon">⚡</div>
               <div className="metric-content">
                 <h3>كفاءة البوت</h3>
-                <div className={`metric-value efficiency-${getEfficiencyLevel(derivedStats.efficiencyScore)}`}>
-                  {derivedStats.efficiencyScore.toFixed(1)}%
+                <div className={`metric-value ${getEfficiencyLevel(derived.efficiencyScore)}`}>
+                  {derived.efficiencyScore.toFixed(1)}%
                 </div>
-                <div className="metric-trend">
-                  <span>المستوى: {getEfficiencyLevel(derivedStats.efficiencyScore)}</span>
-                </div>
+                <div className="metric-trend">مؤشر مركّب (نجاح + ربح - خسارة قصوى)</div>
               </div>
             </div>
           </div>
 
           <div className="advanced-analytics">
             <div className="analytics-tabs">
-              <button className={`tab-btn ${activeChart === 'profit' ? 'active' : ''}`} onClick={() => setActiveChart('profit')} type="button">
+              <button
+                type="button"
+                className={`tab-btn ${activeChart === 'profit' ? 'active' : ''}`}
+                onClick={() => setActiveChart('profit')}
+              >
                 أداء الربحية
               </button>
-              <button className={`tab-btn ${activeChart === 'risk' ? 'active' : ''}`} onClick={() => setActiveChart('risk')} type="button">
+              <button
+                type="button"
+                className={`tab-btn ${activeChart === 'risk' ? 'active' : ''}`}
+                onClick={() => setActiveChart('risk')}
+              >
                 مقاييس المخاطر
               </button>
-              <button className={`tab-btn ${activeChart === 'trades' ? 'active' : ''}`} onClick={() => setActiveChart('trades')} type="button">
+              <button
+                type="button"
+                className={`tab-btn ${activeChart === 'trades' ? 'active' : ''}`}
+                onClick={() => setActiveChart('trades')}
+              >
                 تحليل الصفقات
               </button>
             </div>
 
             <div className="analytics-content">
-              {activeChart === 'profit' && (
+              {activeChart === 'profit' ? (
                 <>
-                  <h4>تحليل الربحية</h4>
                   <div className="profit-stats">
                     <div className="profit-stat">
                       <span className="label">ربحية اليوم</span>
@@ -249,7 +280,7 @@ const BotPerformance = () => {
                     </div>
                     <div className="profit-stat">
                       <span className="label">عامل الربحية</span>
-                      <span className="value">{derivedStats.profitFactor.toFixed(2)}</span>
+                      <span className="value">{derived.profitFactor.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -266,11 +297,10 @@ const BotPerformance = () => {
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
 
-              {activeChart === 'risk' && (
+              {activeChart === 'risk' ? (
                 <>
-                  <h4>تحليل المخاطر</h4>
                   <div className="risk-metrics">
                     <div className="risk-metric">
                       <span className="label">أقصى خسارة</span>
@@ -293,13 +323,10 @@ const BotPerformance = () => {
                   </div>
 
                   <div className="risk-assessment">
-                    <h5>تقييم مستوى المخاطرة</h5>
+                    <div style={{ fontWeight: 800, color: '#2d3748' }}>تقييم مستوى المخاطرة</div>
                     <div className="risk-level">
                       <div className="risk-bar">
-                        <div
-                          className="risk-fill"
-                          style={{ width: `${Math.min(100, Math.max(0, performanceData.maxDrawdown * 10))}%` }}
-                        />
+                        <div className="risk-fill" style={{ width: `${riskFill}%` }} />
                       </div>
                       <div className="risk-labels">
                         <span>منخفض</span>
@@ -309,11 +336,10 @@ const BotPerformance = () => {
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
 
-              {activeChart === 'trades' && (
+              {activeChart === 'trades' ? (
                 <>
-                  <h4>تحليل الصفقات</h4>
                   <div className="trades-stats">
                     <div className="trades-metric">
                       <span className="label">الصفقات الناجحة</span>
@@ -329,30 +355,32 @@ const BotPerformance = () => {
                     </div>
                     <div className="trades-metric">
                       <span className="label">متوسط الربح/صفقة</span>
-                      <span className="value">{formatCurrency(derivedStats.avgProfitPerTrade)}</span>
+                      <span className={`value ${getPerformanceColor(derived.avgProfitPerTrade)}`}>
+                        {formatCurrency(derived.avgProfitPerTrade)}
+                      </span>
                     </div>
                   </div>
 
                   <div className="distribution-chart">
-                    <h5>توزيع الصفقات</h5>
+                    <div style={{ fontWeight: 800, color: '#2d3748' }}>توزيع الصفقات</div>
                     <div className="distribution-bars">
-                      <div className="dist-bar success" style={{ width: '70%' }}>
-                        ناجحة 70%
+                      <div className="dist-bar success" style={{ width: `${tradeSplit.okPct}%` }}>
+                        ناجحة {tradeSplit.okPct}%
                       </div>
-                      <div className="dist-bar danger" style={{ width: '30%' }}>
-                        فاشلة 30%
+                      <div className="dist-bar danger" style={{ width: `${tradeSplit.badPct}%` }}>
+                        فاشلة {tradeSplit.badPct}%
                       </div>
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
 
           <div className="performance-recommendations">
-            <h4>🧠 توصيات تحسين الأداء</h4>
+            <div style={{ fontWeight: 900, marginBottom: 12 }}>توصيات تحسين الأداء</div>
             <div className="recommendations-list">
-              {derivedStats.efficiencyScore < 60 ? (
+              {derived.efficiencyScore < 60 ? (
                 <div className="recommendation warning">
                   <strong>تحسين معدل النجاح</strong>
                   حاول تعديل الاستراتيجية أو تقليل الأزواج لتحسين نسبة الصفقات الناجحة.
@@ -362,18 +390,18 @@ const BotPerformance = () => {
               {Number(performanceData.maxDrawdown || 0) > 5 ? (
                 <div className="recommendation danger">
                   <strong>إدارة المخاطرة</strong>
-                  ارتفاع الخسارة القصوى، فكر في تقليل حجم الصفقة أو تشديد وقف الخسارة.
+                  الخسارة القصوى مرتفعة—فكر بتقليل حجم الصفقة أو تشديد وقف الخسارة.
                 </div>
               ) : null}
 
-              {derivedStats.avgProfitPerTrade < 0.5 ? (
+              {derived.avgProfitPerTrade < 0.5 ? (
                 <div className="recommendation info">
                   <strong>تحسين الربحية</strong>
-                  متوسط الربح منخفض، قد تحتاج تعديل takeProfit أو فلترة الدخول.
+                  متوسط الربح منخفض—قد تحتاج ضبط takeProfit أو فلترة شروط الدخول.
                 </div>
               ) : null}
 
-              {derivedStats.efficiencyScore >= 80 ? (
+              {derived.efficiencyScore >= 80 ? (
                 <div className="recommendation success">
                   <strong>أداء ممتاز</strong>
                   البوت يعمل بشكل قوي—حافظ على الإعدادات الحالية مع مراقبة دورية.

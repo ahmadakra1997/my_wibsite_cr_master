@@ -10,16 +10,32 @@ const formatNumber = (value, digits = 2) => {
   return Number(num.toFixed(digits));
 };
 
+const currency = (n) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n || 0));
+
 const MetricPill = ({ label, value }) => (
-  <div className="metric-pill">
-    <span className="metric-pill-label">{label}</span>
-    <span className="metric-pill-value">{value}</span>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      padding: '10px 12px',
+      borderRadius: 12,
+      border: '1px solid rgba(148,163,184,0.35)',
+      background: 'rgba(248,250,252,0.8)',
+      minWidth: 0,
+    }}
+  >
+    <div style={{ color: '#475569', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      {label}
+    </div>
+    <div style={{ color: '#0f172a', fontWeight: 800, fontSize: 13, whiteSpace: 'nowrap' }}>{value}</div>
   </div>
 );
 
 const BotControls = () => {
   const { t } = useTranslation();
-
   const {
     botStatus = {},
     botPerformance = {},
@@ -33,29 +49,31 @@ const BotControls = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
 
-  const isActive = botStatus.isActive ?? hasActiveBot ?? false;
+  const isActive = botStatus?.isActive ?? hasActiveBot ?? false;
   const isBusy = Boolean(loading) || localLoading;
+
+  const totalProfit = botPerformance?.totalProfit ?? 0;
+  const winRate = botPerformance?.winRate ?? 0;
+  const totalTrades = botPerformance?.totalTrades ?? 0;
+
+  const formatted = useMemo(() => {
+    const wr = formatNumber(Number(winRate) * 100, 1);
+    const tt = Number.isFinite(Number(totalTrades)) ? Number(totalTrades) : 0;
+    return {
+      profit: currency(totalProfit),
+      winRate: `${wr}%`,
+      trades: String(tt),
+    };
+  }, [totalProfit, totalTrades, winRate]);
 
   const statusLabel = isActive
     ? t('bot.status.active', 'البوت مفعل')
     : t('bot.status.inactive', 'البوت متوقف');
 
-  const totalProfit = botPerformance.totalProfit ?? 0;
-  const winRate = botPerformance.winRate ?? 0;
-  const totalTrades = botPerformance.totalTrades ?? 0;
-
-  const formattedTotalProfit = useMemo(() => formatNumber(totalProfit, 2), [totalProfit]);
-  const formattedWinRate = useMemo(() => formatNumber(winRate * 100, 1), [winRate]);
-  const formattedTotalTrades = useMemo(
-    () => (Number.isFinite(Number(totalTrades)) ? totalTrades : '--'),
-    [totalTrades],
-  );
-
   const handleToggle = async () => {
     if (isBusy) return;
     setLocalError(null);
     setLocalLoading(true);
-
     try {
       if (isActive) await botService.deactivateBot();
       else await botService.activateBot();
@@ -78,46 +96,95 @@ const BotControls = () => {
   };
 
   return (
-    <div className="bot-controls-card" dir="rtl">
-      <div className="bot-controls-header">
+    <div
+      style={{
+        borderRadius: 18,
+        border: '1px solid rgba(226,232,240,1)',
+        background: 'white',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+        padding: 22,
+        margin: '18px 0',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <h3 className="bot-controls-title">
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
             {t('bot.controls.title', 'التحكم السريع في بوت التداول')}
-          </h3>
-          <p className="bot-controls-subtitle">
-            {t('bot.controls.subtitle', 'قم بتشغيل أو إيقاف البوت فوراً مع نظرة سريعة على الأداء.')}
-          </p>
+          </div>
+          <div style={{ marginTop: 6, color: '#64748b', fontWeight: 600, fontSize: 13 }}>
+            {t('bot.controls.subtitle', 'تشغيل/إيقاف مباشر + مؤشرات أداء سريعة.')}
+          </div>
         </div>
 
-        <div className={`bot-controls-status ${isActive ? 'active' : 'inactive'}`}>
-          <span className="status-dot" />
-          <span>{statusLabel}</span>
-          {isBusy ? <span className="status-loading">{t('bot.controls.updating', 'جاري التحديث...')}</span> : null}
-        </div>
-      </div>
-
-      <div className="bot-controls-body">
         <button
-          className={`bot-primary-btn ${isActive ? 'danger' : 'primary'}`}
           type="button"
           onClick={handleToggle}
           disabled={isBusy}
+          style={{
+            border: 'none',
+            borderRadius: 12,
+            padding: '12px 16px',
+            fontWeight: 900,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            color: 'white',
+            background: isActive
+              ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+              : 'linear-gradient(135deg, #22c55e, #16a34a)',
+            opacity: isBusy ? 0.75 : 1,
+            minWidth: 170,
+          }}
         >
-          {isBusy ? t('bot.controls.processing', 'جاري التنفيذ...') : isActive ? '⏹ إيقاف البوت' : '▶ تشغيل البوت'}
+          {isBusy
+            ? t('bot.controls.processing', 'جاري التنفيذ...')
+            : isActive
+              ? '⏹ إيقاف البوت'
+              : '▶ تشغيل البوت'}
         </button>
-
-        <div className="bot-metrics-row">
-          <MetricPill label="صافي الربح" value={`${formattedTotalProfit} USDT`} />
-          <MetricPill label="معدل الفوز" value={`${formattedWinRate}%`} />
-          <MetricPill label="إجمالي الصفقات" value={formattedTotalTrades} />
-        </div>
-
-        {(error || localError) ? (
-          <div className="bot-controls-error">
-            <strong>{t('bot.controls.errorTitle', 'تنبيه:')}</strong> {localError || error}
-          </div>
-        ) : null}
       </div>
+
+      <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 999,
+            background: isActive ? '#22c55e' : '#ef4444',
+            boxShadow: isActive ? '0 0 0 4px rgba(34,197,94,0.15)' : '0 0 0 4px rgba(239,68,68,0.15)',
+          }}
+        />
+        <div style={{ fontWeight: 800, color: '#0f172a' }}>{statusLabel}</div>
+        {isBusy ? <div style={{ color: '#64748b', fontWeight: 700 }}>(جاري التحديث…)</div> : null}
+      </div>
+
+      <div
+        style={{
+          marginTop: 16,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+          gap: 12,
+        }}
+      >
+        <MetricPill label="إجمالي الربح" value={formatted.profit} />
+        <MetricPill label="معدل النجاح" value={formatted.winRate} />
+        <MetricPill label="عدد الصفقات" value={formatted.trades} />
+      </div>
+
+      {(error || localError) ? (
+        <div
+          style={{
+            marginTop: 14,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(254,242,242,1)',
+            border: '1px solid rgba(254,202,202,1)',
+            color: '#991b1b',
+            fontWeight: 800,
+          }}
+          role="alert"
+        >
+          تنبيه: {localError || error}
+        </div>
+      ) : null}
     </div>
   );
 };
