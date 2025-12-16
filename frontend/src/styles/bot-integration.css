@@ -1,24 +1,35 @@
 /* frontend/src/styles/bot-integration.css
    Integrated bot section — teal/blue/green identity
+   (UI polish فقط — لا تغيير وظائف)
 */
 
 :root {
   --q-teal: #22d3ee;
   --q-blue: #38bdf8;
   --q-green: #4ade80;
+  --q-ink: #0f172a;
 }
 
-/* أنماط نظام البوت المتكامل */
 .bot-management-section {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.20) 0%, rgba(56, 189, 248, 0.18) 45%, rgba(74, 222, 128, 0.18) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(34, 211, 238, 0.20) 0%,
+    rgba(56, 189, 248, 0.18) 45%,
+    rgba(74, 222, 128, 0.18) 100%
+  );
   border-radius: 22px;
   padding: 26px;
   margin: 26px auto;
   max-width: 1400px;
-
   border: 1px solid rgba(34, 211, 238, 0.22);
   box-shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
-  backdrop-filter: blur(10px);
+}
+
+/* backdrop-filter مع fallback */
+@supports (backdrop-filter: blur(10px)) {
+  .bot-management-section {
+    backdrop-filter: blur(10px);
+  }
 }
 
 .bot-management-section .section-header {
@@ -26,7 +37,6 @@
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-
   margin-bottom: 18px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
@@ -41,6 +51,9 @@
   background: linear-gradient(90deg, var(--q-teal), var(--q-blue), var(--q-green));
   -webkit-background-clip: text;
   background-clip: text;
+
+  /* مهم لتجنب تحذيرات/خط أصفر أحيانًا */
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
@@ -48,19 +61,20 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #0f172a;
+  color: var(--q-ink);
   font-weight: 900;
 }
 
-.status-indicator {
+/* ✅ Scoping لتجنب تأثيره على صفحات أخرى */
+.bot-management-section .status-indicator {
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  animation: pulse 2s infinite;
   background: rgba(148, 163, 184, 0.8);
+  animation: pulse 2s infinite;
 }
 
-.status-indicator.active {
+.bot-management-section .status-indicator.active {
   background: var(--q-green);
   box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.14);
 }
@@ -76,7 +90,6 @@
   background: rgba(255, 255, 255, 0.75);
   border-radius: 18px;
   padding: 18px;
-
   border: 1px solid rgba(148, 163, 184, 0.25);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.10);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -103,7 +116,6 @@
   background: rgba(255, 255, 255, 0.70);
   border-radius: 18px;
   padding: 18px;
-
   border: 1px solid rgba(148, 163, 184, 0.25);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.10);
 }
@@ -113,7 +125,7 @@
   text-align: center;
   font-size: 1.05rem;
   font-weight: 950;
-  color: #0f172a;
+  color: var(--q-ink);
 }
 
 .quick-actions-grid {
@@ -126,7 +138,6 @@
   padding: 12px 14px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 16px;
-
   font-weight: 950;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -134,6 +145,11 @@
   text-decoration: none;
   display: block;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
+}
+
+.quick-action-btn:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.35);
+  outline-offset: 2px;
 }
 
 .quick-action-btn.primary {
@@ -148,7 +164,7 @@
 
 .quick-action-btn.secondary {
   background: rgba(15, 23, 42, 0.04);
-  color: #0f172a;
+  color: var(--q-ink);
 }
 
 .quick-action-btn:hover {
@@ -156,7 +172,6 @@
   box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
 }
 
-/* لوحة تحكم البوت المتكاملة */
 .bot-integrated-dashboard {
   padding: 24px;
   max-width: 1400px;
@@ -173,6 +188,7 @@
   background: linear-gradient(90deg, var(--q-teal), var(--q-blue), var(--q-green));
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
@@ -182,7 +198,6 @@
   gap: 18px;
 }
 
-/* تحسينات التجاوب */
 @media (max-width: 768px) {
   .bot-management-section {
     padding: 16px;
@@ -209,6 +224,16 @@
 
   .bot-dashboard-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bot-component-card,
+  .quick-action-btn {
+    transition: none !important;
+  }
+  .bot-management-section .status-indicator {
+    animation: none !important;
   }
 }
 

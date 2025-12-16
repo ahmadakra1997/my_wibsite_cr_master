@@ -1,44 +1,61 @@
-// frontend/src/services/botService.js - نسخة مصححة (بدون كسر)
-// ✅ نفس endpoints والدوال الموجودة، فقط إصلاح Syntax وتحسين handleError
-
+// frontend/src/services/botService.js
 import api from './api';
 
 class BotService {
   constructor() {
-    this.baseURL = '/api/bot';
+    const envBase = (process.env.REACT_APP_BOT_BASE_PATH || '/bot').trim();
+    this.basePath = this.normalizeBasePath(envBase);
+  }
+
+  normalizeBasePath(path) {
+    let p = path || '/bot';
+    if (!p.startsWith('/')) p = `/${p}`;
+    p = p.replace(/\/+$/, ''); // remove trailing slash
+
+    // ✅ لو كتبنا /api/bot بالغلط، نزيل /api لأن api.js أصلاً مضاف فيه /api
+    if (p.startsWith('/api/')) p = p.replace(/^\/api/, '');
+
+    // fallback
+    if (p === '') p = '/bot';
+    return p;
+  }
+
+  url(endpoint) {
+    const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${this.basePath}${ep}`;
   }
 
   // خدمات البوت الأساسية
-  async activateBot() {
+  async activateBot(payload = {}) {
     try {
-      const response = await api.post(`${this.baseURL}/activate`);
+      const response = await api.post(this.url('/activate'), payload);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async deactivateBot() {
+  async deactivateBot(payload = {}) {
     try {
-      const response = await api.post(`${this.baseURL}/deactivate`);
+      const response = await api.post(this.url('/deactivate'), payload);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async restartBot() {
+  async restartBot(payload = {}) {
     try {
-      const response = await api.post(`${this.baseURL}/restart`);
+      const response = await api.post(this.url('/restart'), payload);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async emergencyStop() {
+  async emergencyStop(payload = {}) {
     try {
-      const response = await api.post(`${this.baseURL}/emergency-stop`);
+      const response = await api.post(this.url('/emergency-stop'), payload);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -48,7 +65,7 @@ class BotService {
   // خدمات حالة البوت وأدائه
   async getBotStatus() {
     try {
-      const response = await api.get(`${this.baseURL}/status`);
+      const response = await api.get(this.url('/status'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -58,7 +75,7 @@ class BotService {
   async getPerformanceMetrics(timeframe = '24h') {
     try {
       const tf = encodeURIComponent(timeframe);
-      const response = await api.get(`${this.baseURL}/performance?timeframe=${tf}`);
+      const response = await api.get(this.url(`/performance?timeframe=${tf}`));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -68,7 +85,7 @@ class BotService {
   async getTradingAnalytics(timeframe = '24h') {
     try {
       const tf = encodeURIComponent(timeframe);
-      const response = await api.get(`${this.baseURL}/analytics?timeframe=${tf}`);
+      const response = await api.get(this.url(`/analytics?timeframe=${tf}`));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -77,7 +94,7 @@ class BotService {
 
   async getLiveMetrics() {
     try {
-      const response = await api.get(`${this.baseURL}/metrics`);
+      const response = await api.get(this.url('/metrics'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -88,7 +105,7 @@ class BotService {
   async getTradingHistory(limit = 50, offset = 0) {
     try {
       const response = await api.get(
-        `${this.baseURL}/history?limit=${Number(limit)}&offset=${Number(offset)}`
+        this.url(`/history?limit=${Number(limit)}&offset=${Number(offset)}`)
       );
       return response.data;
     } catch (error) {
@@ -99,7 +116,7 @@ class BotService {
   async getBotLogs(limit = 100, level = 'info') {
     try {
       const lv = encodeURIComponent(level);
-      const response = await api.get(`${this.baseURL}/logs?limit=${Number(limit)}&level=${lv}`);
+      const response = await api.get(this.url(`/logs?limit=${Number(limit)}&level=${lv}`));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -109,7 +126,7 @@ class BotService {
   // ⚙️ خدمات الإعدادات
   async getBotSettings() {
     try {
-      const response = await api.get(`${this.baseURL}/settings`);
+      const response = await api.get(this.url('/settings'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -118,7 +135,7 @@ class BotService {
 
   async updateBotSettings(settings) {
     try {
-      const response = await api.put(`${this.baseURL}/settings`, settings);
+      const response = await api.put(this.url('/settings'), settings);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -127,7 +144,7 @@ class BotService {
 
   async resetBotSettings() {
     try {
-      const response = await api.post(`${this.baseURL}/settings/reset`);
+      const response = await api.post(this.url('/settings/reset'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -136,7 +153,7 @@ class BotService {
 
   async testBotSettings() {
     try {
-      const response = await api.post(`${this.baseURL}/settings/test`);
+      const response = await api.post(this.url('/settings/test'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -146,7 +163,7 @@ class BotService {
   // خدمات الاتصال والاختبار
   async testExchangeConnection() {
     try {
-      const response = await api.post(`${this.baseURL}/test-connection`);
+      const response = await api.post(this.url('/test-connection'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -155,7 +172,7 @@ class BotService {
 
   async getBotHealth() {
     try {
-      const response = await api.get(`${this.baseURL}/health`);
+      const response = await api.get(this.url('/health'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -164,7 +181,7 @@ class BotService {
 
   async validateBotConfig() {
     try {
-      const response = await api.post(`${this.baseURL}/validate`);
+      const response = await api.post(this.url('/validate'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -174,7 +191,7 @@ class BotService {
   // خدمات البيانات الإضافية
   async getTradingPairs() {
     try {
-      const response = await api.get(`${this.baseURL}/pairs`);
+      const response = await api.get(this.url('/pairs'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -183,7 +200,7 @@ class BotService {
 
   async getTradingStrategies() {
     try {
-      const response = await api.get(`${this.baseURL}/strategies`);
+      const response = await api.get(this.url('/strategies'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -192,7 +209,7 @@ class BotService {
 
   async getBotStatistics() {
     try {
-      const response = await api.get(`${this.baseURL}/statistics`);
+      const response = await api.get(this.url('/statistics'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -202,7 +219,7 @@ class BotService {
   // خدمات النسخ الاحتياطي
   async backupBotConfig() {
     try {
-      const response = await api.post(`${this.baseURL}/backup`);
+      const response = await api.post(this.url('/backup'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -211,7 +228,7 @@ class BotService {
 
   async restoreBotConfig(backupId) {
     try {
-      const response = await api.post(`${this.baseURL}/restore`, { backupId });
+      const response = await api.post(this.url('/restore'), { backupId });
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -221,7 +238,7 @@ class BotService {
   // خدمات النظام
   async getBotVersion() {
     try {
-      const response = await api.get(`${this.baseURL}/version`);
+      const response = await api.get(this.url('/version'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -230,14 +247,14 @@ class BotService {
 
   async checkEligibility() {
     try {
-      const response = await api.get(`${this.baseURL}/eligibility`);
+      const response = await api.get(this.url('/eligibility'));
       return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  // ✅ معالج أخطاء مصحح (كان عندك مكسور بسبب newline داخل نص بين quotes) 
+  // ✅ معالج أخطاء
   handleError(error) {
     console.error('BotService Error:', error);
 
@@ -280,6 +297,7 @@ class BotService {
     const winRateScore = wr * 0.6;
     const profitScore = Math.min(tp / 1000, 30);
     const drawdownPenalty = Math.max(0, dd * 2);
+
     return Math.max(0, winRateScore + profitScore - drawdownPenalty);
   }
 }

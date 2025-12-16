@@ -6,9 +6,9 @@
   --q-teal: #22d3ee;
   --q-blue: #38bdf8;
   --q-green: #4ade80;
+
   --q-bg: #020617;
-  --q-card: rgba(15, 23, 42, 0.96);
-  --q-border: rgba(148, 163, 184, 0.30);
+  --q-border: rgba(148, 163, 184, 0.3);
   --q-text: #e5e7eb;
   --q-muted: #9ca3af;
 }
@@ -18,6 +18,7 @@
     radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 55%),
     radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.12), transparent 55%),
     var(--q-bg);
+
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.55);
   box-shadow: 0 22px 60px rgba(15, 23, 42, 0.95);
@@ -81,7 +82,7 @@
 
 .botPerf__btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(34, 211, 238, 0.40);
+  border-color: rgba(34, 211, 238, 0.4);
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.55);
 }
 
@@ -182,7 +183,12 @@
   left: 0;
   right: 0;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(34, 211, 238, 0.9), rgba(56, 189, 248, 0.9), rgba(74, 222, 128, 0.9));
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.9),
+    rgba(56, 189, 248, 0.9),
+    rgba(74, 222, 128, 0.9)
+  );
 }
 
 .botPerf__grid2 {

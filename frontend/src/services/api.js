@@ -3,8 +3,8 @@ import axios from 'axios';
 
 /**
  * هدفنا:
- * - لو REACT_APP_API_BASE_URL = http://localhost:5000  => نخلي baseURL = http://localhost:5000/api
- * - لو REACT_APP_API_BASE_URL = http://localhost:5000/api => نخلي baseURL = http://localhost:5000/api (بدون تكرار)
+ * - لو REACT_APP_API_BASE_URL = http://localhost:5000 => baseURL = http://localhost:5000/api
+ * - لو REACT_APP_API_BASE_URL = http://localhost:5000/api => بدون تكرار
  */
 function resolveApiBaseURL() {
   const raw = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000').trim();
@@ -26,20 +26,20 @@ api.interceptors.request.use(
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => Promise.reject(error)
 );
 
-// ✅ Interceptors للردود (تجهيز لرسائل الخطأ)
+// ✅ Interceptors للردود
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('[API ERROR]', error?.response?.data || error?.message);
     return Promise.reject(error);
-  },
+  }
 );
 
 // ==========================
-// دوال خاصة بالـ Bot (Settings / Status / Performance / History)
+// Bot: Settings / Status / Performance / History
 // ==========================
 export async function getBotSettings(params = {}) {
   const res = await api.get('/bot/settings', { params });
@@ -87,11 +87,17 @@ export async function getTradingHistory(params = {}) {
 }
 
 // ==========================
-// تحكم البوت (بدون تكرار /api)
+// تحكم البوت (Fallback آمن)
 // ==========================
 export async function controlBot(action, payload = {}) {
-  const res = await api.post('/bot/activate', { action, ...payload });
-  return res.data;
+  try {
+    const res = await api.post('/bot/activate', { action, ...payload });
+    return res.data;
+  } catch (e) {
+    // fallback شائع (لا يشتغل إلا إذا فشل الأول)
+    const res = await api.post('/bot/control', { action, ...payload });
+    return res.data;
+  }
 }
 
 export async function activateTradingBot(payload = {}) {
@@ -103,7 +109,9 @@ export async function deactivateTradingBot(payload = {}) {
 }
 
 export async function getTradingAnalytics(timeRange = '24h') {
-  const res = await api.get('/bot/performance/analytics', { params: { range: timeRange } });
+  const res = await api.get('/bot/performance/analytics', {
+    params: { range: timeRange },
+  });
   return res.data;
 }
 

@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBot } from '../../context/BotContext';
 import botService from '../../services/botService';
+import './BotControls.css';
 
 const formatNumber = (value, digits = 2) => {
   const num = Number(value);
@@ -13,26 +14,14 @@ const formatNumber = (value, digits = 2) => {
 const currency = (n) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n || 0));
 
-const MetricPill = ({ label, value }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-      padding: '10px 12px',
-      borderRadius: 12,
-      border: '1px solid rgba(148,163,184,0.35)',
-      background: 'rgba(248,250,252,0.8)',
-      minWidth: 0,
-    }}
-  >
-    <div style={{ color: '#475569', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-      {label}
+const MetricPill = ({ label, value }) => {
+  return (
+    <div className="metric-pill" role="group" aria-label={label}>
+      <div className="metric-pill__label">{label}</div>
+      <div className="metric-pill__value">{value}</div>
     </div>
-    <div style={{ color: '#0f172a', fontWeight: 800, fontSize: 13, whiteSpace: 'nowrap' }}>{value}</div>
-  </div>
-);
+  );
+};
 
 const BotControls = () => {
   const { t } = useTranslation();
@@ -44,7 +33,7 @@ const BotControls = () => {
     error,
     loadBotStatus,
     loadBotPerformance,
-  } = useBot() || {};
+  } = useBot();
 
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
@@ -72,8 +61,10 @@ const BotControls = () => {
 
   const handleToggle = async () => {
     if (isBusy) return;
+
     setLocalError(null);
     setLocalLoading(true);
+
     try {
       if (isActive) await botService.deactivateBot();
       else await botService.activateBot();
@@ -86,9 +77,7 @@ const BotControls = () => {
       setLocalError(msg);
 
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('bot-error', { detail: { source: 'BotControls', error: err } }),
-        );
+        window.dispatchEvent(new CustomEvent('bot-error', { detail: { source: 'BotControls', error: err } }));
       }
     } finally {
       setLocalLoading(false);
@@ -96,96 +85,46 @@ const BotControls = () => {
   };
 
   return (
-    <div
-      style={{
-        borderRadius: 18,
-        border: '1px solid rgba(226,232,240,1)',
-        background: 'white',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-        padding: 22,
-        margin: '18px 0',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+    <section className="bot-controls">
+      <header className="bot-controls__header">
         <div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: '#0f172a' }}>
-            {t('bot.controls.title', 'التحكم السريع في بوت التداول')}
-          </div>
-          <div style={{ marginTop: 6, color: '#64748b', fontWeight: 600, fontSize: 13 }}>
+          <h3 className="bot-controls__title">{t('bot.controls.title', 'التحكم السريع في بوت التداول')}</h3>
+          <p className="bot-controls__subtitle">
             {t('bot.controls.subtitle', 'تشغيل/إيقاف مباشر + مؤشرات أداء سريعة.')}
-          </div>
+          </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleToggle}
-          disabled={isBusy}
-          style={{
-            border: 'none',
-            borderRadius: 12,
-            padding: '12px 16px',
-            fontWeight: 900,
-            cursor: isBusy ? 'not-allowed' : 'pointer',
-            color: 'white',
-            background: isActive
-              ? 'linear-gradient(135deg, #ef4444, #dc2626)'
-              : 'linear-gradient(135deg, #22c55e, #16a34a)',
-            opacity: isBusy ? 0.75 : 1,
-            minWidth: 170,
-          }}
-        >
-          {isBusy
-            ? t('bot.controls.processing', 'جاري التنفيذ...')
-            : isActive
-              ? '⏹ إيقاف البوت'
-              : '▶ تشغيل البوت'}
-        </button>
+        <div className={`status-chip ${isActive ? 'status-chip--active' : ''}`}>
+          <span className="status-chip__dot" aria-hidden="true" />
+          <span className="status-chip__text">{statusLabel}</span>
+        </div>
+      </header>
+
+      <div className="bot-controls__metrics">
+        <MetricPill label={t('bot.controls.metrics.profit', 'الربح الإجمالي')} value={formatted.profit} />
+        <MetricPill label={t('bot.controls.metrics.winRate', 'نسبة الفوز')} value={formatted.winRate} />
+        <MetricPill label={t('bot.controls.metrics.trades', 'عدد الصفقات')} value={formatted.trades} />
       </div>
 
-      <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: 999,
-            background: isActive ? '#22c55e' : '#ef4444',
-            boxShadow: isActive ? '0 0 0 4px rgba(34,197,94,0.15)' : '0 0 0 4px rgba(239,68,68,0.15)',
-          }}
-        />
-        <div style={{ fontWeight: 800, color: '#0f172a' }}>{statusLabel}</div>
-        {isBusy ? <div style={{ color: '#64748b', fontWeight: 700 }}>(جاري التحديث…)</div> : null}
-      </div>
-
-      <div
-        style={{
-          marginTop: 16,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: 12,
-        }}
+      <button
+        type="button"
+        className={`bot-controls__toggleBtn ${isActive ? 'is-active' : ''}`}
+        onClick={handleToggle}
+        disabled={isBusy}
       >
-        <MetricPill label="إجمالي الربح" value={formatted.profit} />
-        <MetricPill label="معدل النجاح" value={formatted.winRate} />
-        <MetricPill label="عدد الصفقات" value={formatted.trades} />
-      </div>
+        {isBusy
+          ? t('bot.controls.processing', 'جاري التنفيذ...')
+          : isActive
+            ? t('bot.controls.stop', '⏹ إيقاف البوت')
+            : t('bot.controls.start', '▶ تشغيل البوت')}
+      </button>
 
       {(error || localError) ? (
-        <div
-          style={{
-            marginTop: 14,
-            padding: '12px 14px',
-            borderRadius: 12,
-            background: 'rgba(254,242,242,1)',
-            border: '1px solid rgba(254,202,202,1)',
-            color: '#991b1b',
-            fontWeight: 800,
-          }}
-          role="alert"
-        >
-          تنبيه: {localError || error}
+        <div className="bot-controls__error">
+          {t('bot.controls.alert', 'تنبيه')}: {localError || error}
         </div>
       ) : null}
-    </div>
+    </section>
   );
 };
 

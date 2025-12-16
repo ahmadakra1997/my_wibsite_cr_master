@@ -8,7 +8,6 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-
 import botService from '../services/botService';
 
 // أنواع الإجراءات
@@ -62,6 +61,7 @@ function botReducer(state, action) {
 
 // إنشاء السياق
 const BotContext = createContext(null);
+BotContext.displayName = 'BotContext';
 
 // Provider للسياق
 export function BotProvider({ children }) {
@@ -75,7 +75,7 @@ export function BotProvider({ children }) {
     };
   }, []);
 
-  // لمنع مشكلة الـ loading عند تشغيل 3 طلبات بالتوازي
+  // لمنع مشكلة الـ loading عند تشغيل طلبات بالتوازي
   const pendingRef = useRef(0);
 
   const safeDispatch = useCallback((action) => {
@@ -105,7 +105,7 @@ export function BotProvider({ children }) {
             : 'حدث خطأ غير متوقع';
       safeDispatch({ type: BOT_ACTION_TYPES.SET_ERROR, payload: msg });
     },
-    [safeDispatch],
+    [safeDispatch]
   );
 
   // تحميل حالة البوت من الـ API
@@ -155,7 +155,6 @@ export function BotProvider({ children }) {
 
   // تحميل مبدئي عند فتح Dashboard
   useEffect(() => {
-    // بالتوازي (ومع pendingRef لن يطفي loading مبكراً)
     loadBotStatus();
     loadBotPerformance();
     loadBotHistory();
@@ -165,7 +164,7 @@ export function BotProvider({ children }) {
     safeDispatch({ type: BOT_ACTION_TYPES.RESET_BOT });
   }, [safeDispatch]);
 
-  const hasActiveBot = Boolean(state.botStatus?.isActive);
+  const hasActiveBot = Boolean(state?.botStatus?.isActive);
 
   const value = useMemo(
     () => ({
@@ -176,16 +175,10 @@ export function BotProvider({ children }) {
       loadBotHistory,
       resetBotState,
     }),
-    [
-      state,
-      hasActiveBot,
-      loadBotStatus,
-      loadBotPerformance,
-      loadBotHistory,
-      resetBotState,
-    ],
+    [state, hasActiveBot, loadBotStatus, loadBotPerformance, loadBotHistory, resetBotState]
   );
 
+  // ✅ الإصلاح الحقيقي هنا
   return <BotContext.Provider value={value}>{children}</BotContext.Provider>;
 }
 

@@ -1,14 +1,12 @@
 // frontend/src/hooks/useWebSocket.js
-// ✅ Hook موحد لاتصال WebSocket (يدعم: useWebSocket('channel') أو useWebSocket({options}))
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 function buildDefaultWsUrl() {
   if (process.env.REACT_APP_WS_BOT_URL) return process.env.REACT_APP_WS_BOT_URL;
 
   const httpBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
-  let url = httpBase.replace(/^http/i, 'ws');
-  url = url.replace(/\/api\/?$/, '');
+  let url = httpBase.replace(/^http/i, 'ws'); // http->ws, https->wss
+  url = url.replace(/\/api\/?$/, ''); // remove trailing /api
   return `${url}/ws/bot`;
 }
 
@@ -36,8 +34,26 @@ export function useWebSocket(arg1 = {}, arg2 = {}) {
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
+  const aliveRef = useRef(true);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
+
   const [status, setStatus] = useState('idle'); // idle | connecting | open | closed | error
-  const [lastMessage, setLastMessage] = useState(null); // { data: string, json: object|null, channel?: string }
+  const [lastMessage, setLastMessage] = useState(null); // { data, json, channel }
+
+  const safeSetStatus = useCallback((s) => {
+    if (!aliveRef.current) return;
+    setStatus(s);
+  }, []);
+
+  const safeSetLastMessage = useCallback((msg) => {
+    if (!aliveRef.current) return;
+    setLastMessage(msg);
+  }, []);
 
   const cleanup = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -51,20 +67,18 @@ export function useWebSocket(arg1 = {}, arg2 = {}) {
       ws.onclose = null;
       ws.onerror = null;
       ws.onmessage = null;
-
       try {
         if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
           ws.close();
         }
       } catch (_) {}
-
       wsRef.current = null;
     }
   }, []);
 
   const connect = useCallback(() => {
     cleanup();
-    setStatus('connecting');
+    safeSetStatus('connecting');
 
     try {
       const finalUrl = channel
@@ -75,9 +89,9 @@ export function useWebSocket(arg1 = {}, arg2 = {}) {
       wsRef.current = socket;
 
       socket.onopen = () => {
-        setStatus('open');
+        safeSetStatus('open');
 
-        // (اختياري) رسالة اشتراك — إذا الباكيند يدعمها
+        // (اختياري) subscribe message لو الباكيند يدعمها
         if (channel) {
           try {
             socket.send(JSON.stringify({ type: 'subscribe', channel }));
@@ -86,32 +100,31 @@ export function useWebSocket(arg1 = {}, arg2 = {}) {
       };
 
       socket.onclose = () => {
-        setStatus('closed');
+        safeSetStatus('closed');
+        if (!aliveRef.current) return;
 
         if (autoReconnect) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            connect();
+            if (aliveRef.current) connect();
           }, reconnectInterval);
         }
       };
 
       socket.onerror = (err) => {
         console.error('[WebSocket error]', err);
-        setStatus('error');
+        safeSetStatus('error');
       };
 
       socket.onmessage = (event) => {
         const raw = event?.data;
         let parsed = null;
-
         try {
           parsed = JSON.parse(raw);
         } catch (_) {
           parsed = null;
         }
 
-        // ✅ نوحّد شكل الرسالة ليصبح lastMessage.data متوفر (كما تتوقع BotSettings/BotActivation)
-        setLastMessage({
+        safeSetLastMessage({
           data: typeof raw === 'string' ? raw : String(raw),
           json: parsed,
           channel: channel || null,
@@ -119,13 +132,13 @@ export function useWebSocket(arg1 = {}, arg2 = {}) {
       };
     } catch (error) {
       console.error('[WebSocket connect error]', error);
-      setStatus('error');
+      safeSetStatus('error');
     }
-  }, [autoReconnect, channel, cleanup, reconnectInterval, url]);
+  }, [autoReconnect, channel, cleanup, reconnectInterval, safeSetLastMessage, safeSetStatus, url]);
 
   useEffect(() => {
     connect();
-    return () => cleanup(); // ✅ دائمًا نغلق الاتصال عند unmount
+    return () => cleanup();
   }, [connect, cleanup]);
 
   const sendJson = useCallback((payload) => {
