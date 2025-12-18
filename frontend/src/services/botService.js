@@ -1,307 +1,97 @@
 // frontend/src/services/botService.js
-import api from './api';
+import axios from 'axios';
+
+const normalizeBase = (raw) => String(raw || '').trim().replace(/\/+$/, '');
+const ensureApiSuffix = (base) => (/\/api(\/v\d+)?$/.test(base) ? base : `${base}/api`);
+
+const BASE =
+  process.env.REACT_APP_API_BASE_URL ||
+  process.env.REACT_APP_API_URL ||
+  'http://localhost:5000';
+
+const API_URL = ensureApiSuffix(normalizeBase(BASE));
+
+const unwrap = (res) => {
+  const data = res?.data;
+  if (data && typeof data === 'object' && 'success' in data) {
+    if (data.success) return data.data;
+    throw new Error(data.message || 'Request failed');
+  }
+  return data;
+};
+
+const fail = (err) => {
+  const msg =
+    err?.response?.data?.message ||
+    err?.message ||
+    'Network request failed';
+  throw new Error(msg);
+};
 
 class BotService {
-  constructor() {
-    const envBase = (process.env.REACT_APP_BOT_BASE_PATH || '/bot').trim();
-    this.basePath = this.normalizeBasePath(envBase);
-  }
-
-  normalizeBasePath(path) {
-    let p = path || '/bot';
-    if (!p.startsWith('/')) p = `/${p}`;
-    p = p.replace(/\/+$/, ''); // remove trailing slash
-
-    // ✅ لو كتبنا /api/bot بالغلط، نزيل /api لأن api.js أصلاً مضاف فيه /api
-    if (p.startsWith('/api/')) p = p.replace(/^\/api/, '');
-
-    // fallback
-    if (p === '') p = '/bot';
-    return p;
-  }
-
-  url(endpoint) {
-    const ep = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return `${this.basePath}${ep}`;
-  }
-
-  // خدمات البوت الأساسية
-  async activateBot(payload = {}) {
-    try {
-      const response = await api.post(this.url('/activate'), payload);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async deactivateBot(payload = {}) {
-    try {
-      const response = await api.post(this.url('/deactivate'), payload);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async restartBot(payload = {}) {
-    try {
-      const response = await api.post(this.url('/restart'), payload);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async emergencyStop(payload = {}) {
-    try {
-      const response = await api.post(this.url('/emergency-stop'), payload);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // خدمات حالة البوت وأدائه
   async getBotStatus() {
     try {
-      const response = await api.get(this.url('/status'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.get(`${API_URL}/bot/status`));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  async getPerformanceMetrics(timeframe = '24h') {
+  async getPerformanceMetrics(params = {}) {
     try {
-      const tf = encodeURIComponent(timeframe);
-      const response = await api.get(this.url(`/performance?timeframe=${tf}`));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.get(`${API_URL}/bot/metrics`, { params }));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  async getTradingAnalytics(timeframe = '24h') {
+  async getTradingHistory(params = {}) {
     try {
-      const tf = encodeURIComponent(timeframe);
-      const response = await api.get(this.url(`/analytics?timeframe=${tf}`));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.get(`${API_URL}/bot/history`, { params }));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  async getLiveMetrics() {
-    try {
-      const response = await api.get(this.url('/metrics'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // خدمات السجل والتاريخ
-  async getTradingHistory(limit = 50, offset = 0) {
-    try {
-      const response = await api.get(
-        this.url(`/history?limit=${Number(limit)}&offset=${Number(offset)}`)
-      );
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getBotLogs(limit = 100, level = 'info') {
-    try {
-      const lv = encodeURIComponent(level);
-      const response = await api.get(this.url(`/logs?limit=${Number(limit)}&level=${lv}`));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // ⚙️ خدمات الإعدادات
   async getBotSettings() {
     try {
-      const response = await api.get(this.url('/settings'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.get(`${API_URL}/bot/settings`));
+    } catch (e) {
+      fail(e);
     }
   }
 
   async updateBotSettings(settings) {
     try {
-      const response = await api.put(this.url('/settings'), settings);
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.put(`${API_URL}/bot/settings`, settings));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  async resetBotSettings() {
+  async activateBot(payload = {}) {
     try {
-      const response = await api.post(this.url('/settings/reset'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.post(`${API_URL}/bot/activate`, payload));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  async testBotSettings() {
+  async deactivateBot(payload = {}) {
     try {
-      const response = await api.post(this.url('/settings/test'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.post(`${API_URL}/bot/deactivate`, payload));
+    } catch (e) {
+      fail(e);
     }
   }
 
-  // خدمات الاتصال والاختبار
-  async testExchangeConnection() {
+  async controlBot(action, payload = {}) {
     try {
-      const response = await api.post(this.url('/test-connection'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
+      return unwrap(await axios.post(`${API_URL}/bot/control`, { action, ...payload }));
+    } catch (e) {
+      fail(e);
     }
-  }
-
-  async getBotHealth() {
-    try {
-      const response = await api.get(this.url('/health'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async validateBotConfig() {
-    try {
-      const response = await api.post(this.url('/validate'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // خدمات البيانات الإضافية
-  async getTradingPairs() {
-    try {
-      const response = await api.get(this.url('/pairs'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getTradingStrategies() {
-    try {
-      const response = await api.get(this.url('/strategies'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async getBotStatistics() {
-    try {
-      const response = await api.get(this.url('/statistics'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // خدمات النسخ الاحتياطي
-  async backupBotConfig() {
-    try {
-      const response = await api.post(this.url('/backup'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async restoreBotConfig(backupId) {
-    try {
-      const response = await api.post(this.url('/restore'), { backupId });
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // خدمات النظام
-  async getBotVersion() {
-    try {
-      const response = await api.get(this.url('/version'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  async checkEligibility() {
-    try {
-      const response = await api.get(this.url('/eligibility'));
-      return response.data;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // ✅ معالج أخطاء
-  handleError(error) {
-    console.error('BotService Error:', error);
-
-    if (error?.response?.data) {
-      const serverError = error.response.data;
-      return new Error(serverError.message || serverError.error || 'حدث خطأ في الخادم');
-    }
-
-    if (error?.request) {
-      return new Error('فشل في الاتصال بالخادم.\nيرجى التحقق من اتصال الشبكة.');
-    }
-
-    return new Error(error?.message || 'حدث خطأ غير متوقع');
-  }
-
-  // دوال مساعدة (كما هي)
-  getStatusColor(status) {
-    const statusColors = {
-      active: 'success',
-      inactive: 'secondary',
-      paused: 'warning',
-      error: 'danger',
-      initializing: 'info',
-    };
-    return statusColors[status] || 'secondary';
-  }
-
-  formatProfitLoss(value) {
-    const num = Number(value) || 0;
-    const absValue = Math.abs(num);
-    const sign = num >= 0 ? '+' : '-';
-    return `${sign} $${absValue.toFixed(2)}`;
-  }
-
-  calculateEfficiency(winRate, totalProfit, maxDrawdown) {
-    const wr = Number(winRate) || 0;
-    const tp = Number(totalProfit) || 0;
-    const dd = Number(maxDrawdown) || 0;
-
-    const winRateScore = wr * 0.6;
-    const profitScore = Math.min(tp / 1000, 30);
-    const drawdownPenalty = Math.max(0, dd * 2);
-
-    return Math.max(0, winRateScore + profitScore - drawdownPenalty);
   }
 }
 
-const botService = new BotService();
-export { BotService };
-export default botService;
+export default new BotService();

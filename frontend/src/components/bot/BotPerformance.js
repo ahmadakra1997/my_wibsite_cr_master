@@ -1,163 +1,137 @@
 // frontend/src/components/bot/BotPerformance.js
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { getPerformanceMetrics, getTradingAnalytics } from '../../services/api';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import useBotData from '../../hooks/useBotData';
 import './BotPerformance.css';
+import { getPerformanceMetrics, getTradingAnalytics } from '../../services/api';
 
-const safeParse = (x) => {
-  try {
-    if (!x) return null;
-    if (typeof x === 'object') return x;
-    return JSON.parse(x);
-  } catch {
-    return null;
-  }
+const unwrap = (res) => {
+  if (res && typeof res === 'object' && 'success' in res) return res.success ? res.data : null;
+  return res;
 };
-const unwrap = (res) =>
-  res && typeof res === 'object' && 'success' in res ? (res.success ? res.data : null) : res;
 
-const toNum = (v) => {
+const toNum = (v, fallback = 0) => {
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  return Number.isFinite(n) ? n : fallback;
 };
 
-const toPct = (v) => {
-  const n = toNum(v);
-  // لو الباكيند يرسل 0.62 أو 62، نطبّعها
-  return n <= 1 ? n * 100 : n;
+const toPct = (v, fallback = 0) => {
+  const n = toNum(v, fallback);
+  return n;
 };
+
+const formatMoney = (v) => {
+  const n = toNum(v, 0);
+  return `${n >= 0 ? '+' : '-'}${Math.abs(n).toFixed(2)}`;
+};
+
+function computeEfficiency({ winRatePct, net, maxDD }) {
+  // مؤشر بسيط: نجاح + ربح - عقوبة drawdown
+  const wr = toNum(winRatePct, 0);
+  const profitScore = Math.min(Math.max(net, -50), 50) + 50; // normalize-ish
+  const ddPenalty = Math.min(toNum(maxDD, 0) * 3, 30);
+  const score = wr * 0.6 + (profitScore / 100) * 40 - ddPenalty;
+  return Math.max(0, Math.min(100, score));
+}
 
 export default function BotPerformance() {
-  const { metrics } = useBotData();
-  const { lastMessage } = useWebSocket('performance-updates');
-
   const [timeRange, setTimeRange] = useState('24h');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [perf, setPerf] = useState({
-    totalProfit: 0,
-    dailyProfit: 0,
-    weeklyProfit: 0,
-    monthlyProfit: 0,
-    winRate: 0,
-    totalTrades: 0,
-    successfulTrades: 0,
-    failedTrades: 0,
-    avgTradeDuration: 0,
-    maxDrawdown: 0,
-    sharpeRatio: 0,
-    volatility: 0,
-  });
+  const [perf, setPerf] = useState({});
+  const [analytics, setAnalytics] = useState(null);
 
-  const [analytics, setAnalytics] = useState({
-    hourlyPerformance: [],
-    dailyPerformance: [],
-    tradeDistribution: [],
-    riskMetrics: {},
-  });
-
-  // دمج PnL القادم من useBotData (بدون تغيير منطقك)
-  useEffect(() => {
-    const pnl = metrics?.pnl || {};
-    setPerf((prev) => ({
-      ...prev,
-      dailyProfit: toNum(pnl.daily ?? prev.dailyProfit),
-      weeklyProfit: toNum(pnl.weekly ?? prev.weeklyProfit),
-      monthlyProfit: toNum(pnl.monthly ?? prev.monthlyProfit),
-    }));
-  }, [metrics?.pnl]);
-
-  // WS updates (عرض فقط)
-  useEffect(() => {
-    if (!lastMessage) return;
-    const data = safeParse(lastMessage?.data ?? lastMessage);
-    if (!data) return;
-
-    if ((data.type === 'performance_update' || data.type === 'performance') && data.metrics) {
-      setPerf((prev) => ({ ...prev, ...data.metrics }));
-    }
-  }, [lastMessage]);
-
-  const fetchAll = useCallback(async () => {
+  const load = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const perfPromise = Promise.resolve(getPerformanceMetrics({ range: timeRange }))
-        .catch(() => Promise.resolve(getPerformanceMetrics(timeRange)));
+    setError(null);
 
-      const [perfRes, analyticsRes] = await Promise.all([
-        perfPromise,
-        Promise.resolve(getTradingAnalytics(timeRange)).catch(() => null),
+    try {
+      const [pRes, aRes] = await Promise.allSettled([
+        getPerformanceMetrics({ range: timeRange }),
+        getTradingAnalytics(timeRange),
       ]);
 
-      const p = unwrap(perfRes);
-      const a = unwrap(analyticsRes);
+      const p = pRes.status === 'fulfilled' ? unwrap(pRes.value) : null;
+      const a = aRes.status === 'fulfilled' ? unwrap(aRes.value) : null;
 
-      if (p) setPerf((prev) => ({ ...prev, ...p }));
-      if (a) setAnalytics((prev) => ({ ...prev, ...a }));
+      setPerf(p || {});
+      setAnalytics(a || null);
     } catch (e) {
-      console.error('[BotPerformance] fetchAll error:', e);
+      setError(e?.message || 'فشل تحميل أداء البوت');
     } finally {
       setIsLoading(false);
     }
   }, [timeRange]);
 
   useEffect(() => {
-    fetchAll();
-    const id = setInterval(fetchAll, 60000);
-    return () => clearInterval(id);
-  }, [fetchAll]);
+    load();
+  }, [load]);
 
   const derived = useMemo(() => {
-    const net = toNum(perf.totalProfit);
-    const totalTrades = toNum(perf.totalTrades);
-    const winRatePct = toPct(perf.winRate);
+    const total = toNum(perf?.totalProfit ?? perf?.profit ?? perf?.pnl?.total, 0);
+    const losses = toNum(perf?.totalLoss ?? perf?.loss ?? perf?.pnl?.loss, 0);
+    const net = toNum(perf?.netProfit ?? perf?.net ?? (total - Math.abs(losses)), total - Math.abs(losses));
+
+    const successful = toNum(perf?.successfulTrades ?? perf?.wins ?? perf?.winTrades, 0);
+    const failed = toNum(perf?.failedTrades ?? perf?.lossTrades ?? perf?.lossesCount, 0);
+    const totalTrades = toNum(perf?.totalTrades ?? perf?.trades ?? (successful + failed), successful + failed);
+
+    const winRatePct =
+      totalTrades > 0 ? (successful / totalTrades) * 100 : toNum(perf?.winRatePct ?? perf?.winRate, 0);
+
+    const maxDD = toPct(perf?.maxDrawdown ?? perf?.drawdown ?? 0, 0);
+    const profitFactor =
+      Math.abs(toNum(losses, 0)) > 0 ? Math.abs(toNum(total, 0)) / Math.abs(toNum(losses, 0)) : toNum(perf?.profitFactor, 0);
 
     const avg = totalTrades > 0 ? net / totalTrades : 0;
-    const maxDD = toPct(perf.maxDrawdown);
+    const efficiency = computeEfficiency({ winRatePct, net, maxDD });
 
-    const efficiency = Math.min(100, Math.max(0, winRatePct + (net > 0 ? 20 : 0) - maxDD));
-    const profitFactor =
-      toNum(perf.failedTrades) > 0
-        ? (toNum(perf.successfulTrades) + 1) / (toNum(perf.failedTrades) + 1)
-        : toNum(perf.successfulTrades) > 0
-          ? 3.5
-          : 0;
+    // Bars (من analytics لو موجود، وإلا شكل مبسط)
+    const series =
+      analytics?.profitCurve ||
+      analytics?.equityCurve ||
+      analytics?.series ||
+      analytics?.bars ||
+      null;
 
-    return { net, totalTrades, winRatePct, avg, efficiency, profitFactor, maxDD };
-  }, [perf]);
+    const values = Array.isArray(series)
+      ? series.map((x) => toNum(x?.value ?? x?.pnl ?? x, 0))
+      : [
+          toNum(perf?.dailyProfit ?? perf?.pnl?.daily, 0),
+          toNum(perf?.weeklyProfit ?? perf?.pnl?.weekly, 0),
+          toNum(perf?.monthlyProfit ?? perf?.pnl?.monthly, 0),
+        ];
 
-  const bars = useMemo(() => {
-    const arr = Array.isArray(analytics.hourlyPerformance)
-      ? analytics.hourlyPerformance
-      : Array.isArray(analytics.dailyPerformance)
-        ? analytics.dailyPerformance
-        : [];
+    const bars = (values.length >= 10 ? values.slice(0, 10) : [...values, ...Array(10 - values.length).fill(0)]).slice(0, 10);
+    const maxAbs = Math.max(1, ...bars.map((x) => Math.abs(x)));
 
-    const values = arr
-      .map((x) => toNum(x?.value ?? x?.profit ?? x))
-      .filter((n) => Number.isFinite(n))
-      .slice(-10);
-
-    if (values.length) {
-      const max = Math.max(...values.map((v) => Math.abs(v))) || 1;
-      return values.map((v) => Math.round((Math.abs(v) / max) * 92) + 8);
-    }
-    return [55, 80, 40, 90, 75, 86, 60, 72, 66, 84];
-  }, [analytics]);
-
-  const formatMoney = (v) =>
-    new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(toNum(v)) + ' USDT';
+    return {
+      total,
+      losses,
+      net,
+      successful,
+      failed,
+      totalTrades,
+      winRatePct,
+      maxDD,
+      profitFactor: Number.isFinite(profitFactor) ? profitFactor : 0,
+      avg,
+      efficiency,
+      bars,
+      maxAbs,
+      sharpe: toNum(perf?.sharpeRatio ?? perf?.sharpe ?? 0, 0),
+      volatility: toPct(perf?.volatility ?? 0, 0),
+    };
+  }, [perf, analytics]);
 
   const tone =
     derived.efficiency >= 80 ? 'excellent' : derived.efficiency >= 60 ? 'good' : derived.efficiency >= 40 ? 'average' : 'poor';
 
   return (
-    <section className="botPerf">
+    <div className="botPerf">
       <div className="botPerf__header">
         <div>
           <h3 className="botPerf__title">أداء البوت</h3>
-          <p className="botPerf__subtitle">لوحة أداء احترافية (عرض فقط) — بدون المساس بمنطق التداول.</p>
+          <div className="botPerf__subtitle">لوحة تحليلات احترافية (عرض فقط) — دون المساس بمنطق التداول.</div>
         </div>
 
         <div className="botPerf__tools">
@@ -169,14 +143,20 @@ export default function BotPerformance() {
             <option value="90d">آخر 90 يوم</option>
           </select>
 
-          <button className="botPerf__btn" type="button" onClick={fetchAll} disabled={isLoading}>
+          <button className="botPerf__btn" onClick={load} disabled={isLoading}>
             {isLoading ? 'جاري التحديث...' : 'تحديث'}
           </button>
         </div>
       </div>
 
+      {error ? (
+        <div className="botPerf__panel" style={{ borderColor: 'rgba(251, 113, 133, 0.55)' }}>
+          <b>⚠️</b> <span style={{ marginInlineStart: 8 }}>{error}</span>
+        </div>
+      ) : null}
+
       <div className="botPerf__cards">
-        <div className="botPerf__card">
+        <div className={`botPerf__card tone-${tone}`}>
           <div className="botPerf__label">صافي الربح</div>
           <div className={`botPerf__value mono ${derived.net >= 0 ? 'profit' : 'loss'}`}>
             {derived.net >= 0 ? '▲ ' : '▼ '} {formatMoney(derived.net)}
@@ -186,21 +166,21 @@ export default function BotPerformance() {
 
         <div className="botPerf__card">
           <div className="botPerf__label">معدل النجاح</div>
-          <div className="botPerf__value">{derived.winRatePct.toFixed(1)}%</div>
+          <div className="botPerf__value mono">{derived.winRatePct.toFixed(1)}%</div>
           <div className="botPerf__hint">
-            ناجحة: {toNum(perf.successfulTrades)} | فاشلة: {toNum(perf.failedTrades)}
+            ناجحة: {derived.successful} | فاشلة: {derived.failed}
           </div>
         </div>
 
         <div className="botPerf__card">
           <div className="botPerf__label">إجمالي الصفقات</div>
-          <div className="botPerf__value">{toNum(perf.totalTrades)}</div>
-          <div className="botPerf__hint">متوسط مدة الصفقة: {toNum(perf.avgTradeDuration)} دقيقة</div>
+          <div className="botPerf__value mono">{derived.totalTrades}</div>
+          <div className="botPerf__hint">متوسط الربح/صفقة: {derived.avg.toFixed(2)}</div>
         </div>
 
         <div className={`botPerf__card tone-${tone}`}>
           <div className="botPerf__label">كفاءة البوت</div>
-          <div className="botPerf__value">{derived.efficiency.toFixed(1)}%</div>
+          <div className="botPerf__value mono">{derived.efficiency.toFixed(1)}%</div>
           <div className="botPerf__hint">مؤشر مركّب (نجاح + ربح - خسارة قصوى)</div>
         </div>
       </div>
@@ -212,32 +192,35 @@ export default function BotPerformance() {
         </div>
 
         <div className="botPerf__bars">
-          {bars.map((h, idx) => (
-            <div className="botPerf__bar" key={idx}>
-              <div className="botPerf__barFill" style={{ height: `${h}%` }} />
-            </div>
-          ))}
+          {derived.bars.map((v, idx) => {
+            const h = Math.max(6, Math.round((Math.abs(v) / derived.maxAbs) * 100));
+            return (
+              <div key={idx} className="botPerf__bar" title={String(v)}>
+                <div className="botPerf__barFill" style={{ height: `${h}%` }} />
+              </div>
+            );
+          })}
         </div>
 
         <div className="botPerf__grid2">
           <div className="botPerf__mini">
             <div className="botPerf__miniLabel">ربحية اليوم</div>
-            <div className={`botPerf__miniVal mono ${toNum(perf.dailyProfit) >= 0 ? 'profit' : 'loss'}`}>
-              {formatMoney(perf.dailyProfit)}
+            <div className={`botPerf__miniVal mono ${toNum(perf?.dailyProfit ?? perf?.pnl?.daily, 0) >= 0 ? 'profit' : 'loss'}`}>
+              {formatMoney(perf?.dailyProfit ?? perf?.pnl?.daily)}
             </div>
           </div>
 
           <div className="botPerf__mini">
             <div className="botPerf__miniLabel">ربحية الأسبوع</div>
-            <div className={`botPerf__miniVal mono ${toNum(perf.weeklyProfit) >= 0 ? 'profit' : 'loss'}`}>
-              {formatMoney(perf.weeklyProfit)}
+            <div className={`botPerf__miniVal mono ${toNum(perf?.weeklyProfit ?? perf?.pnl?.weekly, 0) >= 0 ? 'profit' : 'loss'}`}>
+              {formatMoney(perf?.weeklyProfit ?? perf?.pnl?.weekly)}
             </div>
           </div>
 
           <div className="botPerf__mini">
             <div className="botPerf__miniLabel">ربحية الشهر</div>
-            <div className={`botPerf__miniVal mono ${toNum(perf.monthlyProfit) >= 0 ? 'profit' : 'loss'}`}>
-              {formatMoney(perf.monthlyProfit)}
+            <div className={`botPerf__miniVal mono ${toNum(perf?.monthlyProfit ?? perf?.pnl?.monthly, 0) >= 0 ? 'profit' : 'loss'}`}>
+              {formatMoney(perf?.monthlyProfit ?? perf?.pnl?.monthly)}
             </div>
           </div>
 
@@ -254,25 +237,36 @@ export default function BotPerformance() {
           </div>
           <div className="botPerf__riskRow">
             <span>معدل شارب</span>
-            <span className="mono">{toNum(perf.sharpeRatio).toFixed(2)}</span>
+            <span className="mono">{derived.sharpe.toFixed(2)}</span>
           </div>
           <div className="botPerf__riskRow">
             <span>التقلب</span>
-            <span className="mono">{toPct(perf.volatility).toFixed(2)}%</span>
+            <span className="mono">{derived.volatility.toFixed(2)}%</span>
           </div>
         </div>
 
         <div className="botPerf__tips">
           <h4>توصيات تحسين الأداء</h4>
           <ul>
-            {derived.efficiency < 60 && <li>تحسين معدل النجاح: قلّل الأزواج أو شدّد شروط الدخول.</li>}
-            {derived.maxDD > 5 && <li>إدارة المخاطرة: الخسارة القصوى مرتفعة — راجع حجم الصفقة ووقف الخسارة.</li>}
-            {Math.abs(derived.avg) < 0.5 && <li>تحسين الربحية: متوسط الربح/صفقة منخفض — راجع takeProfit وفلترة الإشارات.</li>}
-            {derived.efficiency >= 80 && <li>أداء ممتاز: استمر مع مراقبة دورية للـ drawdown والاتصال.</li>}
-            {derived.efficiency >= 60 && derived.efficiency < 80 && <li>أداء جيد: ركّز على تخفيف التقلب ورفع نسبة الصفقات الرابحة.</li>}
+            {derived.efficiency < 60 ? (
+              <li>تحسين معدل النجاح: قلّل الأزواج أو شدّد شروط الدخول.</li>
+            ) : null}
+            {derived.maxDD > 5 ? (
+              <li>إدارة المخاطرة: الخسارة القصوى مرتفعة — راجع حجم الصفقة ووقف الخسارة.</li>
+            ) : null}
+            {Math.abs(derived.avg) < 0.5 ? (
+              <li>تحسين الربحية: متوسط الربح/صفقة منخفض — راجع takeProfit وفلترة الإشارات.</li>
+            ) : null}
+            {derived.efficiency >= 80 ? <li>أداء ممتاز: استمر مع مراقبة دورية للـ drawdown والاتصال.</li> : null}
+            {derived.efficiency >= 60 && derived.efficiency < 80 ? (
+              <li>أداء جيد: ركّز على تخفيف التقلب ورفع نسبة الصفقات الرابحة.</li>
+            ) : null}
+            {derived.efficiency >= 40 && derived.efficiency < 60 ? (
+              <li>أداء متوسط: راقب الأزواج الضعيفة وفعّل تنبيهات المخاطرة.</li>
+            ) : null}
           </ul>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

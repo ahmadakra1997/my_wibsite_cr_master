@@ -1,17 +1,56 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+// frontend/src/components/bot/BotDashboard.jsx
+import React, { useMemo, useState } from 'react';
 import './BotDashboard.css';
-import { useBotData } from '../../hooks/useBotData';
+
+import useBotData from '../../hooks/useBotData';
 import { useToast } from '../common/ToastProvider';
 
-/**
- * BotDashboard
- * واجهة احترافية لإدارة بوتات التداول — متصلة فعليًا بـ useBotData (API + Metrics)
- * بدون تغيير منطق التشغيل: start/pause/stop/emergency/updateSettings كما هو
- */
-const BotDashboard = () => {
-  const botData = useBotData?.() || {};
+const safeArr = (v) => (Array.isArray(v) ? v : []);
+
+const fmtMoney = (v) => {
+  const n = Number(v);
+  if (Number.isNaN(n)) return '—';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
+};
+
+const fmtPct = (v) => {
+  const n = Number(v);
+  if (Number.isNaN(n)) return '—';
+  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n)}%`;
+};
+
+const fmtTime = (v) => {
+  if (!v) return '—';
+  try {
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    return d.toLocaleString();
+  } catch {
+    return String(v);
+  }
+};
+
+function getStatusMeta(status) {
+  const s = String(status || 'unknown').toLowerCase();
+
+  if (s === 'active' || s === 'running' || s === 'started') {
+    return { label: 'RUNNING', cls: 'is-running', hint: 'البوت يعمل حالياً' };
+  }
+  if (s === 'paused' || s === 'idle') {
+    return { label: 'PAUSED', cls: 'is-paused', hint: 'البوت في وضع إيقاف مؤقت' };
+  }
+  if (s === 'stopped' || s === 'inactive') {
+    return { label: 'STOPPED', cls: 'is-stopped', hint: 'البوت متوقف' };
+  }
+  if (s === 'emergency') {
+    return { label: 'EMERGENCY', cls: 'is-emergency', hint: 'إيقاف طوارئ' };
+  }
+  return { label: 'UNKNOWN', cls: 'is-unknown', hint: 'الحالة غير معروفة' };
+}
+
+export default function BotDashboard() {
   const {
-    bots = [],
+    bots,
     selectedBotId,
     setSelectedBotId,
     metrics,
@@ -24,210 +63,139 @@ const BotDashboard = () => {
     stopBot,
     emergencyStop,
     updateSettings,
-  } = botData;
+  } = useBotData();
 
-  const toast = useToast?.() || {};
-  const addToast = toast.addToast || (() => {});
+  // Toast (بدون كسر لو ToastProvider غير ملفوف)
+  let toastApi = null;
+  try {
+    toastApi = useToast();
+  } catch {
+    toastApi = null;
+  }
+  const notify = (type, message) => {
+    if (toastApi?.addToast) toastApi.addToast(type, message);
+  };
 
-  const selectedBot = useMemo(() => {
-    const id = String(selectedBotId ?? '');
-    return (bots || []).find((b) => String(b?._id ?? b?.id ?? '') === id) || null;
-  }, [bots, selectedBotId]);
+  const [localRiskMode, setLocalRiskMode] = useState('medium');
 
-  const engineStatus = metrics?.engineStatus || null;
-  const recentTrades = Array.isArray(metrics?.recentTrades) ? metrics.recentTrades : [];
+  const engineStatus = metrics?.engineStatus || {};
+  const pnl = metrics?.pnl || { daily: 0, weekly: 0, monthly: 0 };
+  const trades = safeArr(metrics?.recentTrades);
 
-  const status = useMemo(() => {
-    if (engineStatus?.status) return engineStatus.status;
-    if (selectedBot?.status) return selectedBot.status;
-    return 'unknown';
-  }, [engineStatus, selectedBot]);
-
-  const statusMeta = useMemo(() => getStatusMeta(status), [status]);
-
-  const runtimeLabel = useMemo(
-    () => formatRuntime(engineStatus?.runtimeSeconds),
-    [engineStatus?.runtimeSeconds]
+  const statusMeta = useMemo(
+    () => getStatusMeta(engineStatus?.status),
+    [engineStatus?.status]
   );
 
-  const pnlPercentNum = Number(engineStatus?.pnlPercent);
-  const maxDrawdownNum = Number(engineStatus?.maxDrawdownPercent);
+  const activePairsCount = safeArr(engineStatus?.activePairs).length;
 
-  const pnlValue =
-    Number.isFinite(pnlPercentNum) ? `${safeNumber(pnlPercentNum)}%` : '—';
-  const ddValue =
-    Number.isFinite(maxDrawdownNum) ? `${safeNumber(maxDrawdownNum)}%` : '—';
+  const totalPnlToday = Number(pnl?.daily || 0);
+  const pnlTrendCls = totalPnlToday >= 0 ? 'metric--up' : 'metric--down';
 
-  const pnlTone =
-    !Number.isFinite(pnlPercentNum) ? 'neutral' : pnlPercentNum >= 0 ? 'up' : 'down';
+  const canAct = !pendingAction && !loadingBots && !loadingMetrics;
 
-  const ddTone =
-    !Number.isFinite(maxDrawdownNum) ? 'neutral' : maxDrawdownNum <= 10 ? 'up' : 'down';
-
-  const [localRiskMode, setLocalRiskMode] = useState('balanced');
-
-  // ✅ مزامنة الوضع المختار عند تغيير البوت/البيانات (بدون تغيير منطق API)
-  useEffect(() => {
-    const incoming =
-      selectedBot?.riskMode ||
-      selectedBot?.settings?.riskMode ||
-      engineStatus?.riskMode ||
-      'balanced';
-
-    const norm = String(incoming).toLowerCase();
-    if (['conservative', 'balanced', 'aggressive'].includes(norm)) {
-      setLocalRiskMode(norm);
+  const onSetRisk = async (mode) => {
+    setLocalRiskMode(mode);
+    // نحاول نحفظها بالباك-إند بأمان (إذا schema عندك مختلف، سنعدّلها عندما نراجع BotSettings.js)
+    try {
+      if (typeof updateSettings === 'function') {
+        await updateSettings({ riskMode: mode });
+        notify('success', `تم ضبط مستوى المخاطر: ${mode}`);
+      }
+    } catch {
+      // لا نكسر الواجهة لو endpoint رفض
     }
-  }, [selectedBotId, selectedBot, engineStatus?.riskMode]);
+  };
 
-  const isActionDisabled = useCallback(
-    (action) => {
-      if (!selectedBotId) return true;
-      if (pendingAction && pendingAction !== action) return true;
-      return false;
-    },
-    [pendingAction, selectedBotId]
-  );
+  const onStart = async () => {
+    try {
+      await startBot();
+      notify('success', 'تم تشغيل البوت');
+    } catch (e) {
+      notify('error', e?.message || 'فشل تشغيل البوت');
+    }
+  };
 
-  const handleAction = useCallback(
-    async (action) => {
-      if (!selectedBotId || !selectedBot) return;
+  const onPause = async () => {
+    try {
+      await pauseBot();
+      notify('info', 'تم إيقاف البوت مؤقتاً');
+    } catch (e) {
+      notify('error', e?.message || 'فشل الإيقاف المؤقت');
+    }
+  };
 
-      try {
-        if (action === 'start') await startBot?.(selectedBotId, {});
-        else if (action === 'pause') await pauseBot?.(selectedBotId);
-        else if (action === 'stop') await stopBot?.(selectedBotId);
-        else if (action === 'emergency') await emergencyStop?.(selectedBotId);
+  const onStop = async () => {
+    try {
+      await stopBot();
+      notify('info', 'تم إيقاف البوت');
+    } catch (e) {
+      notify('error', e?.message || 'فشل الإيقاف');
+    }
+  };
 
-        addToast({
-          title: 'Bot action executed',
-          description: `Bot "${selectedBot.name || selectedBotId}" → ${action}`,
-          type: 'success',
-        });
-      } catch (err) {
-        addToast({
-          title: `Failed to ${action} bot`,
-          description: err?.message || 'Unexpected error',
-          type: 'error',
-        });
-      }
-    },
-    [addToast, emergencyStop, pauseBot, selectedBot, selectedBotId, startBot, stopBot]
-  );
-
-  const handleRiskModeChange = useCallback(
-    async (mode) => {
-      setLocalRiskMode(mode);
-      if (!selectedBotId || !selectedBot) return;
-
-      try {
-        await updateSettings?.(selectedBotId, { riskMode: mode });
-
-        addToast({
-          title: 'Risk mode updated',
-          description: `Bot "${selectedBot.name || selectedBotId}" risk mode set to ${mode}`,
-          type: 'success',
-        });
-      } catch (err) {
-        addToast({
-          title: 'Failed to update risk mode',
-          description: err?.message || 'Unexpected error',
-          type: 'error',
-        });
-      }
-    },
-    [addToast, selectedBot, selectedBotId, updateSettings]
-  );
-
-  const topTrades = useMemo(() => recentTrades.slice(0, 10), [recentTrades]);
+  const onEmergency = async () => {
+    try {
+      await emergencyStop();
+      notify('error', 'تم تنفيذ إيقاف طوارئ');
+    } catch (e) {
+      notify('error', e?.message || 'فشل إيقاف الطوارئ');
+    }
+  };
 
   return (
-    <div className="bot-dashboard bot-page">
+    <div className="bot-dashboard">
       {/* Header */}
       <div className="bot-dashboard__header">
         <div>
-          <h1 className="bot-dashboard__title">
-            <span className="q-gradient-text">Quantum</span> AI Trading Bot
-          </h1>
+          <h1 className="bot-dashboard__title">Quantum AI Trading Bot</h1>
           <p className="bot-dashboard__subtitle">
-            تحكّم بالبوتات، راقب الأداء، وغيّر وضع المخاطرة من لوحة واحدة — بنفس هوية (تركوازي/أزرق/أخضر).
+            لوحة تحكم احترافية لإدارة البوت ومراقبة الأداء — بنفس هوية التركوازي/الأزرق/الأخضر.
           </p>
         </div>
 
-        <div className={`bot-statusBadge is-${statusMeta.key}`}>
+        <div className={`bot-statusBadge ${statusMeta.cls}`}>
           <div className="bot-statusBadge__label">{statusMeta.label}</div>
-          <div className="bot-statusBadge__meta">Runtime: {runtimeLabel}</div>
+          <div className="bot-statusBadge__meta">
+            {statusMeta.hint} • آخر تحديث: {fmtTime(engineStatus?.lastUpdate)}
+          </div>
         </div>
       </div>
 
       {/* Toolbar */}
       <div className="bot-dashboard__toolbar">
         <div className="bot-select">
-          <label className="bot-select__label">Active Bot</label>
-
+          <div className="bot-select__label">Bot Selection</div>
           <select
             className="bot-select__control"
-            value={selectedBotId ?? ''}
-            onChange={(e) => setSelectedBotId?.(e.target.value)}
-            disabled={Boolean(loadingBots) || !(bots?.length > 0)}
+            value={selectedBotId}
+            onChange={(e) => setSelectedBotId(e.target.value)}
+            disabled={loadingBots}
           >
-            <option value="">
-              {loadingBots ? 'Loading bots…' : bots?.length ? 'Select a bot…' : 'No bots found'}
-            </option>
-
-            {(bots || []).map((bot) => {
-              const id = String(bot?._id ?? bot?.id ?? '');
-              return (
-                <option key={id} value={id}>
-                  {bot?.name || 'Bot'} — {bot?.symbol || '—'} @ {bot?.exchange || '—'}
-                </option>
-              );
-            })}
+            {safeArr(bots).map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name || b.id}
+              </option>
+            ))}
           </select>
-
-          {!loadingBots && (!bots || bots.length === 0) && (
-            <div className="bot-select__hint">
-              لا يوجد بوتات حالياً. أنشئ بوت من الباك-إند/لوحة الإدارة ثم ارجع هنا.
-            </div>
-          )}
+          <div className="bot-select__hint">
+            اختر البوت الذي تريد التحكم به (حالياً عادة بوت واحد).
+          </div>
         </div>
 
         <div className="bot-actions">
-          <div className="bot-actions__label">Controls</div>
+          <div className="bot-actions__label">Bot Actions</div>
           <div className="bot-actions__buttons">
-            <button
-              className="btn btn--primary"
-              type="button"
-              onClick={() => handleAction('start')}
-              disabled={isActionDisabled('start')}
-            >
+            <button className="btn btn--primary" onClick={onStart} disabled={!canAct}>
               {pendingAction === 'start' ? 'Starting…' : 'Start'}
             </button>
-
-            <button
-              className="btn"
-              type="button"
-              onClick={() => handleAction('pause')}
-              disabled={isActionDisabled('pause')}
-            >
+            <button className="btn" onClick={onPause} disabled={!canAct}>
               {pendingAction === 'pause' ? 'Pausing…' : 'Pause'}
             </button>
-
-            <button
-              className="btn"
-              type="button"
-              onClick={() => handleAction('stop')}
-              disabled={isActionDisabled('stop')}
-            >
+            <button className="btn" onClick={onStop} disabled={!canAct}>
               {pendingAction === 'stop' ? 'Stopping…' : 'Stop'}
             </button>
-
-            <button
-              className="btn btn--danger"
-              type="button"
-              onClick={() => handleAction('emergency')}
-              disabled={isActionDisabled('emergency')}
-            >
+            <button className="btn btn--danger" onClick={onEmergency} disabled={!canAct}>
               {pendingAction === 'emergency' ? 'Emergency…' : 'Emergency Stop'}
             </button>
           </div>
@@ -235,182 +203,133 @@ const BotDashboard = () => {
 
         <div className="bot-risk">
           <div className="bot-risk__label">Risk Mode</div>
-
           <div className="segmented" role="tablist" aria-label="Risk mode">
-            {[
-              { key: 'conservative', label: 'Conservative' },
-              { key: 'balanced', label: 'Balanced' },
-              { key: 'aggressive', label: 'Aggressive' },
-            ].map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                className={`segmented__btn ${localRiskMode === m.key ? 'is-active' : ''}`}
-                onClick={() => handleRiskModeChange(m.key)}
-                disabled={!selectedBotId}
-              >
-                {m.label}
-              </button>
-            ))}
+            <button
+              type="button"
+              className={`segmented__btn ${localRiskMode === 'low' ? 'is-active' : ''}`}
+              onClick={() => onSetRisk('low')}
+              disabled={!canAct}
+            >
+              Low
+            </button>
+            <button
+              type="button"
+              className={`segmented__btn ${localRiskMode === 'medium' ? 'is-active' : ''}`}
+              onClick={() => onSetRisk('medium')}
+              disabled={!canAct}
+            >
+              Medium
+            </button>
+            <button
+              type="button"
+              className={`segmented__btn ${localRiskMode === 'high' ? 'is-active' : ''}`}
+              onClick={() => onSetRisk('high')}
+              disabled={!canAct}
+            >
+              High
+            </button>
           </div>
         </div>
       </div>
 
       {/* Error */}
-      {error && (
-        <div className="bot-alert">
-          <div className="bot-alert__title">API Error</div>
-          <div className="bot-alert__desc">{error?.message || String(error)}</div>
+      {!!error && (
+        <div className="bot-alert" role="alert">
+          <div className="bot-alert__title">تنبيه</div>
+          <div className="bot-alert__desc">{String(error)}</div>
         </div>
       )}
 
-      {/* Metrics cards */}
+      {/* Metrics */}
       <div className="bot-cards">
-        <MetricCard
-          title="Status"
-          value={statusMeta.label}
-          hint={selectedBot?.name ? `Bot: ${selectedBot.name}` : '—'}
-          tone={statusMeta.key === 'running' ? 'up' : statusMeta.key === 'emergency' ? 'down' : 'neutral'}
-          loading={Boolean(loadingMetrics)}
-        />
+        <div className="metric">
+          <div className="metric__title">Balance</div>
+          <div className="metric__value">{fmtMoney(engineStatus?.balance)}</div>
+          <div className="metric__hint">الرصيد الحالي</div>
+        </div>
 
-        <MetricCard
-          title="PnL"
-          value={pnlValue}
-          hint="Profit / Loss (percent)"
-          tone={pnlTone}
-          loading={Boolean(loadingMetrics)}
-        />
+        <div className={`metric ${pnlTrendCls}`}>
+          <div className="metric__title">Daily PnL</div>
+          <div className="metric__value">{fmtMoney(pnl?.daily)}</div>
+          <div className="metric__hint">أداء آخر 24 ساعة</div>
+        </div>
 
-        <MetricCard
-          title="Max Drawdown"
-          value={ddValue}
-          hint="Peak-to-trough drawdown"
-          tone={ddTone}
-          loading={Boolean(loadingMetrics)}
-        />
+        <div className="metric metric--up">
+          <div className="metric__title">Weekly PnL</div>
+          <div className="metric__value">{fmtMoney(pnl?.weekly)}</div>
+          <div className="metric__hint">أداء أسبوعي</div>
+        </div>
 
-        <MetricCard
-          title="Trades"
-          value={`${recentTrades.length}`}
-          hint="Recent trade records"
-          tone="neutral"
-          loading={Boolean(loadingMetrics)}
-        />
+        <div className="metric">
+          <div className="metric__title">Active Pairs</div>
+          <div className="metric__value">{activePairsCount}</div>
+          <div className="metric__hint">عدد الأزواج الفعّالة</div>
+        </div>
       </div>
 
-      {/* Recent trades */}
+      {/* Trades Panel */}
       <div className="bot-panel">
         <div className="bot-panel__head">
           <div>
-            <div className="bot-panel__title">Recent trades</div>
-            <div className="bot-panel__sub">{recentTrades.length} records</div>
+            <div className="bot-panel__title">Recent Trades</div>
+            <div className="bot-panel__sub">آخر عمليات التداول الواردة من الباك-إند</div>
+          </div>
+          <div className="muted">
+            {loadingMetrics ? 'Loading…' : `${trades.length} trades`}
           </div>
         </div>
 
-        {loadingMetrics && <div className="bot-panel__empty">Loading metrics…</div>}
-
-        {!loadingMetrics && topTrades.length === 0 && (
-          <div className="bot-panel__empty">
-            No trades yet. Once the bot trades, you’ll see them here.
-          </div>
-        )}
-
-        {!loadingMetrics && topTrades.length > 0 && (
-          <div className="bot-table">
+        {trades.length === 0 ? (
+          <div className="bot-panel__empty">لا توجد صفقات حالياً.</div>
+        ) : (
+          <>
             <div className="bot-table__head">
-              <div>Market</div>
+              <div>Pair</div>
               <div>Side</div>
               <div>Price</div>
-              <div>Qty</div>
+              <div>Volume</div>
               <div>PnL</div>
               <div>Time</div>
             </div>
 
             <div className="bot-table__body">
-              {topTrades.map((t, idx) => {
-                const market = t?.symbol || t?.pair || t?.market || '—';
-                const side = (t?.side || t?.type || '—').toString();
-                const price = safeNumber(t?.price);
-                const qty = safeNumber(t?.qty ?? t?.quantity ?? t?.amount);
-                const pnl = safeNumber(t?.pnl ?? t?.profit);
-                const time = formatTime(t?.time ?? t?.timestamp ?? t?.createdAt);
-                const pnlToneRow =
-                  pnl == null ? '' : Number(pnl) >= 0 ? 'is-up' : 'is-down';
+              {trades.map((t, idx) => {
+                const side = String(t?.side || t?.type || '').toLowerCase();
+                const isBuy = side === 'buy' || side === 'long';
+                const pnlVal = Number(t?.pnl ?? t?.profit ?? t?.pl ?? 0);
 
                 return (
-                  <div className="bot-table__row" key={`${market}-${idx}`}>
-                    <div className="mono">{market}</div>
+                  <div className="bot-table__row" key={t?.id || t?._id || idx}>
                     <div>
-                      <span className={`pill ${side.toLowerCase().includes('buy') ? 'is-buy' : side.toLowerCase().includes('sell') ? 'is-sell' : ''}`}>
-                        {side}
+                      <div style={{ fontWeight: 900 }}>
+                        {t?.pair || t?.symbol || t?.market || '—'}
+                      </div>
+                      <div className="muted mono">
+                        {t?.strategy ? `Strategy: ${t.strategy}` : ''}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className={`pill ${isBuy ? 'is-buy' : 'is-sell'}`}>
+                        {isBuy ? 'BUY' : 'SELL'}
                       </span>
                     </div>
-                    <div className="mono">{price == null ? '—' : price}</div>
-                    <div className="mono">{qty == null ? '—' : qty}</div>
-                    <div className={`mono ${pnlToneRow}`}>{pnl == null ? '—' : pnl}</div>
-                    <div className="muted">{time}</div>
+
+                    <div className="mono">{fmtMoney(t?.price)}</div>
+                    <div className="mono">{fmtMoney(t?.volume ?? t?.qty ?? t?.amount)}</div>
+
+                    <div className={`mono ${pnlVal >= 0 ? 'is-up' : 'is-down'}`}>
+                      {fmtMoney(pnlVal)}
+                    </div>
+
+                    <div className="muted">{fmtTime(t?.time || t?.timestamp || t?.createdAt)}</div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
   );
-};
-
-const MetricCard = ({ title, value, hint, tone = 'neutral', loading }) => {
-  return (
-    <div className={`metric metric--${tone}`}>
-      <div className="metric__title">{title}</div>
-      <div className="metric__value">{loading ? '—' : value}</div>
-      <div className="metric__hint">{hint}</div>
-    </div>
-  );
-};
-
-function getStatusMeta(status) {
-  switch (String(status || '').toLowerCase()) {
-    case 'running':
-      return { key: 'running', label: 'RUNNING' };
-    case 'paused':
-      return { key: 'paused', label: 'PAUSED' };
-    case 'stopped':
-      return { key: 'stopped', label: 'STOPPED' };
-    case 'emergency-stopped':
-    case 'emergency':
-      return { key: 'emergency', label: 'EMERGENCY STOP' };
-    default:
-      return { key: 'unknown', label: 'UNKNOWN' };
-  }
 }
-
-function formatRuntime(seconds) {
-  const s = Number(seconds);
-  if (!Number.isFinite(s) || s <= 0) return '00:00:00';
-  const h = String(Math.floor(s / 3600)).padStart(2, '0');
-  const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-  const r = String(Math.floor(s % 60)).padStart(2, '0');
-  return `${h}:${m}:${r}`;
-}
-
-function safeNumber(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return null;
-  return Math.abs(n) >= 1000 ? n.toFixed(0) : n.toFixed(4).replace(/\.?0+$/, '');
-}
-
-function formatTime(value) {
-  if (!value) return '—';
-  try {
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleString();
-  } catch {
-    return String(value);
-  }
-}
-
-export default BotDashboard;

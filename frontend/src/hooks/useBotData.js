@@ -1,5 +1,5 @@
 // frontend/src/hooks/useBotData.js
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import api, {
   activateTradingBot,
   controlBot,
@@ -13,9 +13,24 @@ import api, {
 import { useWebSocket } from './useWebSocket';
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
-const unwrap = (res) => (res && typeof res === 'object' && 'success' in res ? (res.success ? res.data : null) : res);
+const unwrap = (res) =>
+  res && typeof res === 'object' && 'success' in res
+    ? (res.success ? res.data : null)
+    : res;
 
-export default function useBotData() {
+const resolveBotIdAndPayload = (selectedBotId, first, second) => {
+  // يدعم:
+  // fn()
+  // fn(botId)
+  // fn(botId, payload)
+  // fn(payload)
+  if (typeof first === 'string') return [first, second ?? {}];
+  return [selectedBotId, first ?? {}];
+};
+
+export function useBotData() {
+  const mountedRef = useRef(true);
+
   const [bots, setBots] = useState([{ id: 'default', name: 'Trading Bot', status: 'unknown' }]);
   const [selectedBotId, setSelectedBotId] = useState('default');
 
@@ -32,13 +47,16 @@ export default function useBotData() {
   const [pendingAction, setPendingAction] = useState(null);
   const [error, setError] = useState(null);
 
-  // ✅ قناة WS (لو موجودة عندك)
   const { lastMessage } = useWebSocket('bot-status');
 
+  const safeSet = (setter) => (value) => {
+    if (mountedRef.current) setter(value);
+  };
+
   const refreshAll = useCallback(async () => {
-    setError(null);
-    setLoadingBots(true);
-    setLoadingMetrics(true);
+    safeSet(setError)(null);
+    safeSet(setLoadingBots)(true);
+    safeSet(setLoadingMetrics)(true);
 
     try {
       const [statusRes, perfRes, historyRes, settingsRes] = await Promise.allSettled([
@@ -53,11 +71,17 @@ export default function useBotData() {
       const history = historyRes.status === 'fulfilled' ? unwrap(historyRes.value) : null;
       const settings = settingsRes.status === 'fulfilled' ? unwrap(settingsRes.value) : null;
 
-      // Bots list (عندك غالباً بوت واحد)
       const isActive = !!status?.isActive;
-      setBots([{ id: 'default', name: settings?.general?.botName || 'Trading Bot', status: isActive ? 'active' : 'paused' }]);
 
-      setMetrics((prev) => ({
+      safeSet(setBots)([
+        {
+          id: 'default',
+          name: settings?.general?.botName || 'Trading Bot',
+          status: isActive ? 'active' : 'paused',
+        },
+      ]);
+
+      safeSet(setMetrics)((prev) => ({
         ...prev,
         engineStatus: {
           status: isActive ? 'active' : 'paused',
@@ -75,18 +99,21 @@ export default function useBotData() {
       }));
     } catch (e) {
       console.error('[useBotData] refreshAll error:', e);
-      setError(e?.message || 'فشل تحميل بيانات البوت');
+      safeSet(setError)(e?.message || 'فشل تحميل بيانات البوت');
     } finally {
-      setLoadingBots(false);
-      setLoadingMetrics(false);
+      safeSet(setLoadingBots)(false);
+      safeSet(setLoadingMetrics)(false);
     }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     refreshAll();
+    return () => {
+      mountedRef.current = false;
+    };
   }, [refreshAll]);
 
-  // ✅ WebSocket updates (اختياري — لا يكسر لو الرسائل غير موجودة)
   useEffect(() => {
     if (!lastMessage) return;
 
@@ -100,7 +127,7 @@ export default function useBotData() {
     if (!data) return;
 
     if (data.type === 'status_update' || data.type === 'bot_status') {
-      setMetrics((prev) => ({
+      safeSet(setMetrics)((prev) => ({
         ...prev,
         engineStatus: {
           ...prev.engineStatus,
@@ -113,96 +140,102 @@ export default function useBotData() {
     }
 
     if (data.type === 'trade_executed' && data.trade) {
-      setMetrics((prev) => ({
+      safeSet(setMetrics)((prev) => ({
         ...prev,
         recentTrades: [data.trade, ...safeArray(prev.recentTrades)].slice(0, 20),
       }));
     }
   }, [lastMessage]);
 
-  const startBot = useCallback(async () => {
-    setPendingAction('start');
-    setError(null);
+  const startBot = useCallback(async (botIdOrPayload, maybePayload) => {
+    const [botId, payload] = resolveBotIdAndPayload(selectedBotId, botIdOrPayload, maybePayload);
+    safeSet(setPendingAction)('start');
+    safeSet(setError)(null);
     try {
-      await activateTradingBot({ botId: selectedBotId });
+      await activateTradingBot({ botId, ...payload });
       await refreshAll();
     } catch (e) {
-      setError(e?.message || 'فشل تشغيل البوت');
+      safeSet(setError)(e?.message || 'فشل تشغيل البوت');
     } finally {
-      setPendingAction(null);
+      safeSet(setPendingAction)(null);
     }
   }, [refreshAll, selectedBotId]);
 
-  const pauseBot = useCallback(async () => {
-    setPendingAction('pause');
-    setError(null);
+  const pauseBot = useCallback(async (botIdOrPayload, maybePayload) => {
+    const [botId, payload] = resolveBotIdAndPayload(selectedBotId, botIdOrPayload, maybePayload);
+    safeSet(setPendingAction)('pause');
+    safeSet(setError)(null);
     try {
-      // لو الباكيند ما يدعم pause، ما رح نكسر. جرّبنا بأمان.
-      await controlBot('pause', { botId: selectedBotId });
+      await controlBot('pause', { botId, ...payload });
       await refreshAll();
     } catch (e) {
-      // fallback: stop
       try {
-        await deactivateTradingBot({ botId: selectedBotId });
+        await deactivateTradingBot({ botId });
         await refreshAll();
       } catch (e2) {
-        setError(e2?.message || e?.message || 'فشل إيقاف/إيقاف مؤقت');
+        safeSet(setError)(e2?.message || e?.message || 'فشل إيقاف/إيقاف مؤقت');
       }
     } finally {
-      setPendingAction(null);
+      safeSet(setPendingAction)(null);
     }
   }, [refreshAll, selectedBotId]);
 
-  const stopBot = useCallback(async () => {
-    setPendingAction('stop');
-    setError(null);
+  const stopBot = useCallback(async (botIdOrPayload, maybePayload) => {
+    const [botId] = resolveBotIdAndPayload(selectedBotId, botIdOrPayload, maybePayload);
+    safeSet(setPendingAction)('stop');
+    safeSet(setError)(null);
     try {
-      await deactivateTradingBot({ botId: selectedBotId });
+      await deactivateTradingBot({ botId });
       await refreshAll();
     } catch (e) {
-      setError(e?.message || 'فشل إيقاف البوت');
+      safeSet(setError)(e?.message || 'فشل إيقاف البوت');
     } finally {
-      setPendingAction(null);
+      safeSet(setPendingAction)(null);
     }
   }, [refreshAll, selectedBotId]);
 
-  const emergencyStop = useCallback(async () => {
-    setPendingAction('emergency');
-    setError(null);
+  const emergencyStop = useCallback(async (botIdOrPayload, maybePayload) => {
+    const [botId] = resolveBotIdAndPayload(selectedBotId, botIdOrPayload, maybePayload);
+    safeSet(setPendingAction)('emergency');
+    safeSet(setError)(null);
     try {
-      // محاولة endpoint “طوارئ” لو موجود:
-      const res = await api.post('/bot/emergency-stop', { botId: selectedBotId });
+      const res = await api.post('/bot/emergency-stop', { botId });
       if (res?.data?.success === false) throw new Error(res.data.message || 'Emergency stop failed');
       await refreshAll();
     } catch (e) {
-      // fallback: stop
       try {
-        await deactivateTradingBot({ botId: selectedBotId });
+        await deactivateTradingBot({ botId });
         await refreshAll();
       } catch (e2) {
-        setError(e2?.message || e?.message || 'فشل إيقاف الطوارئ');
+        safeSet(setError)(e2?.message || e?.message || 'فشل إيقاف الطوارئ');
       }
     } finally {
-      setPendingAction(null);
+      safeSet(setPendingAction)(null);
     }
   }, [refreshAll, selectedBotId]);
 
-  const updateSettingsSafe = useCallback(async (patch) => {
-    setPendingAction('settings');
-    setError(null);
+  const updateSettings = useCallback(async (botIdOrPatch, maybePatch) => {
+    const botId = typeof botIdOrPatch === 'string' ? botIdOrPatch : selectedBotId;
+    const patch = typeof botIdOrPatch === 'string' ? maybePatch : botIdOrPatch;
+
+    if (!patch || typeof patch !== 'object') return;
+
+    safeSet(setPendingAction)('settings');
+    safeSet(setError)(null);
+
     try {
       const current = metrics.settings || (await unwrap(await getBotSettings())) || {};
-      const merged = { ...current, ...patch };
+      const merged = { ...current, ...patch, botId };
       await updateBotSettings(merged);
       await refreshAll();
     } catch (e) {
-      setError(e?.message || 'فشل تحديث الإعدادات');
+      safeSet(setError)(e?.message || 'فشل تحديث الإعدادات');
     } finally {
-      setPendingAction(null);
+      safeSet(setPendingAction)(null);
     }
-  }, [metrics.settings, refreshAll]);
+  }, [metrics.settings, refreshAll, selectedBotId]);
 
-  const computed = useMemo(() => ({
+  return useMemo(() => ({
     bots,
     selectedBotId,
     setSelectedBotId,
@@ -215,8 +248,23 @@ export default function useBotData() {
     pauseBot,
     stopBot,
     emergencyStop,
-    updateSettings: updateSettingsSafe,
-  }), [bots, selectedBotId, metrics, loadingBots, loadingMetrics, pendingAction, error, startBot, pauseBot, stopBot, emergencyStop, updateSettingsSafe]);
-
-  return computed;
+    updateSettings,
+    refreshAll,
+  }), [
+    bots,
+    selectedBotId,
+    metrics,
+    loadingBots,
+    loadingMetrics,
+    pendingAction,
+    error,
+    startBot,
+    pauseBot,
+    stopBot,
+    emergencyStop,
+    updateSettings,
+    refreshAll,
+  ]);
 }
+
+export default useBotData;

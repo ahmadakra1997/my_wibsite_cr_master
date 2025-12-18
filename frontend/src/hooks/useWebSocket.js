@@ -1,165 +1,86 @@
 // frontend/src/hooks/useWebSocket.js
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-function buildDefaultWsUrl() {
-  if (process.env.REACT_APP_WS_BOT_URL) return process.env.REACT_APP_WS_BOT_URL;
+const normalizeBase = (raw) => String(raw || '').trim().replace(/\/+$/, '');
 
-  const httpBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
-  let url = httpBase.replace(/^http/i, 'ws'); // http->ws, https->wss
-  url = url.replace(/\/api\/?$/, ''); // remove trailing /api
-  return `${url}/ws/bot`;
-}
-
-const DEFAULT_WS_URL = buildDefaultWsUrl();
-
-function normalizeArgs(arg1, arg2) {
-  // useWebSocket('bot-status', { ... })
-  if (typeof arg1 === 'string') {
-    return { channel: arg1, ...(arg2 || {}) };
-  }
-  // useWebSocket({ ... })
-  return { ...(arg1 || {}) };
-}
-
-export function useWebSocket(arg1 = {}, arg2 = {}) {
-  const opts = useMemo(() => normalizeArgs(arg1, arg2), [arg1, arg2]);
-
-  const {
-    url = DEFAULT_WS_URL,
-    channel = null,
-    autoReconnect = true,
-    reconnectInterval = 5000,
-  } = opts;
-
-  const wsRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-
+export function useWebSocket(channel) {
+  const socketRef = useRef(null);
   const aliveRef = useRef(true);
-  useEffect(() => {
-    aliveRef.current = true;
-    return () => {
-      aliveRef.current = false;
-    };
-  }, []);
 
-  const [status, setStatus] = useState('idle'); // idle | connecting | open | closed | error
-  const [lastMessage, setLastMessage] = useState(null); // { data, json, channel }
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastMessage, setLastMessage] = useState(null);
+  const [error, setError] = useState(null);
 
-  const safeSetStatus = useCallback((s) => {
-    if (!aliveRef.current) return;
-    setStatus(s);
-  }, []);
-
-  const safeSetLastMessage = useCallback((msg) => {
-    if (!aliveRef.current) return;
-    setLastMessage(msg);
-  }, []);
-
-  const cleanup = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-
-    const ws = wsRef.current;
-    if (ws) {
-      ws.onopen = null;
-      ws.onclose = null;
-      ws.onerror = null;
-      ws.onmessage = null;
-      try {
-        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-          ws.close();
-        }
-      } catch (_) {}
-      wsRef.current = null;
-    }
-  }, []);
+  const base = normalizeBase(process.env.REACT_APP_WS_URL || 'ws://localhost:8000');
+  const url = useMemo(() => `${base}/ws/${channel}`, [base, channel]);
 
   const connect = useCallback(() => {
-    cleanup();
-    safeSetStatus('connecting');
-
     try {
-      const finalUrl = channel
-        ? `${url}${url.includes('?') ? '&' : '?'}channel=${encodeURIComponent(channel)}`
-        : url;
+      setError(null);
 
-      const socket = new WebSocket(finalUrl);
-      wsRef.current = socket;
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) return;
 
-      socket.onopen = () => {
-        safeSetStatus('open');
+      const ws = new WebSocket(url);
+      socketRef.current = ws;
 
-        // (اختياري) subscribe message لو الباكيند يدعمها
-        if (channel) {
-          try {
-            socket.send(JSON.stringify({ type: 'subscribe', channel }));
-          } catch (_) {}
-        }
-      };
-
-      socket.onclose = () => {
-        safeSetStatus('closed');
+      ws.onopen = () => {
         if (!aliveRef.current) return;
-
-        if (autoReconnect) {
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (aliveRef.current) connect();
-          }, reconnectInterval);
-        }
+        setIsConnected(true);
       };
 
-      socket.onerror = (err) => {
-        console.error('[WebSocket error]', err);
-        safeSetStatus('error');
+      ws.onmessage = (event) => {
+        if (!aliveRef.current) return;
+        setLastMessage(event);
       };
 
-      socket.onmessage = (event) => {
-        const raw = event?.data;
-        let parsed = null;
-        try {
-          parsed = JSON.parse(raw);
-        } catch (_) {
-          parsed = null;
-        }
-
-        safeSetLastMessage({
-          data: typeof raw === 'string' ? raw : String(raw),
-          json: parsed,
-          channel: channel || null,
-        });
+      ws.onerror = () => {
+        if (!aliveRef.current) return;
+        setError('WebSocket error');
       };
-    } catch (error) {
-      console.error('[WebSocket connect error]', error);
-      safeSetStatus('error');
+
+      ws.onclose = () => {
+        if (!aliveRef.current) return;
+        setIsConnected(false);
+      };
+    } catch (e) {
+      setError(e?.message || 'Failed to connect');
     }
-  }, [autoReconnect, channel, cleanup, reconnectInterval, safeSetLastMessage, safeSetStatus, url]);
+  }, [url]);
 
-  useEffect(() => {
-    connect();
-    return () => cleanup();
-  }, [connect, cleanup]);
-
-  const sendJson = useCallback((payload) => {
-    const ws = wsRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      console.warn('[WebSocket] محاولة إرسال والاتصال غير مفتوح');
-      return false;
-    }
+  const disconnect = useCallback(() => {
+    const ws = socketRef.current;
+    if (!ws) return;
     try {
-      ws.send(JSON.stringify(payload));
+      ws.close();
+    } catch {
+      // ignore
+    } finally {
+      socketRef.current = null;
+    }
+  }, []);
+
+  const sendMessage = useCallback((message) => {
+    const ws = socketRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+
+    try {
+      ws.send(typeof message === 'string' ? message : JSON.stringify(message));
       return true;
-    } catch (error) {
-      console.error('[WebSocket send error]', error);
+    } catch (e) {
+      setError(e?.message || 'Send failed');
       return false;
     }
   }, []);
 
-  return {
-    status,
-    lastMessage, // { data, json, channel }
-    sendJson,
-    reconnect: connect,
-  };
+  useEffect(() => {
+    aliveRef.current = true;
+    connect();
+
+    return () => {
+      aliveRef.current = false;
+      disconnect();
+    };
+  }, [connect, disconnect]);
+
+  return { isConnected, lastMessage, error, sendMessage, disconnect };
 }

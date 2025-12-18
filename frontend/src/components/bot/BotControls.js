@@ -1,131 +1,122 @@
 // frontend/src/components/bot/BotControls.js
-import React, { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useBot } from '../../context/BotContext';
-import botService from '../../services/botService';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './BotControls.css';
+import { activateTradingBot, deactivateTradingBot, getBotStatus, getPerformanceMetrics } from '../../services/api';
 
-const formatNumber = (value, digits = 2) => {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return 0;
-  return Number(num.toFixed(digits));
+const unwrap = (res) => {
+  if (res && typeof res === 'object' && 'success' in res) return res.success ? res.data : null;
+  return res;
+};
+const toNum = (v, fallback = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 };
 
-const currency = (n) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(n || 0));
-
-const MetricPill = ({ label, value }) => {
+function MetricPill({ label, value, tone = 'info' }) {
   return (
-    <div className="metric-pill" role="group" aria-label={label}>
-      <div className="metric-pill__label">{label}</div>
-      <div className="metric-pill__value">{value}</div>
+    <div className={`bot-controls__pill is-${tone}`}>
+      <div className="bot-controls__pillLabel">{label}</div>
+      <div className="bot-controls__pillValue">{value}</div>
     </div>
   );
-};
+}
 
-const BotControls = () => {
-  const { t } = useTranslation();
-  const {
-    botStatus = {},
-    botPerformance = {},
-    hasActiveBot,
-    loading,
-    error,
-    loadBotStatus,
-    loadBotPerformance,
-  } = useBot();
+export default function BotControls() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [localLoading, setLocalLoading] = useState(false);
-  const [localError, setLocalError] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [perf, setPerf] = useState(null);
 
-  const isActive = botStatus?.isActive ?? hasActiveBot ?? false;
-  const isBusy = Boolean(loading) || localLoading;
+  const isActive = !!(status?.isActive || status?.active || status?.status === 'active');
+  const statusLabel = isActive ? 'نشط' : 'متوقف/مؤقت';
 
-  const totalProfit = botPerformance?.totalProfit ?? 0;
-  const winRate = botPerformance?.winRate ?? 0;
-  const totalTrades = botPerformance?.totalTrades ?? 0;
-
-  const formatted = useMemo(() => {
-    const wr = formatNumber(Number(winRate) * 100, 1);
-    const tt = Number.isFinite(Number(totalTrades)) ? Number(totalTrades) : 0;
-    return {
-      profit: currency(totalProfit),
-      winRate: `${wr}%`,
-      trades: String(tt),
-    };
-  }, [totalProfit, totalTrades, winRate]);
-
-  const statusLabel = isActive
-    ? t('bot.status.active', 'البوت مفعل')
-    : t('bot.status.inactive', 'البوت متوقف');
-
-  const handleToggle = async () => {
-    if (isBusy) return;
-
-    setLocalError(null);
-    setLocalLoading(true);
-
+  const load = useCallback(async () => {
+    setError(null);
     try {
-      if (isActive) await botService.deactivateBot();
-      else await botService.activateBot();
+      const [sRes, pRes] = await Promise.allSettled([
+        getBotStatus(),
+        getPerformanceMetrics({ range: '24h' }),
+      ]);
 
-      if (typeof loadBotStatus === 'function') await loadBotStatus();
-      if (typeof loadBotPerformance === 'function') await loadBotPerformance();
-    } catch (err) {
-      console.error('❌ Error toggling bot:', err);
-      const msg = err?.message || t('bot.errors.generic', 'حدث خطأ أثناء تحديث حالة البوت.');
-      setLocalError(msg);
+      const s = sRes.status === 'fulfilled' ? unwrap(sRes.value) : null;
+      const p = pRes.status === 'fulfilled' ? unwrap(pRes.value) : null;
 
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('bot-error', { detail: { source: 'BotControls', error: err } }));
+      setStatus(s);
+      setPerf(p);
+    } catch (e) {
+      setError(e?.message || 'فشل تحميل بيانات البوت');
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      if (isActive) {
+        await deactivateTradingBot();
+      } else {
+        await activateTradingBot();
       }
+      await load();
+    } catch (e) {
+      setError(e?.message || 'فشل تنفيذ الأمر');
     } finally {
-      setLocalLoading(false);
+      setBusy(false);
     }
   };
 
+  const daily = toNum(perf?.pnl?.daily ?? perf?.dailyProfit ?? perf?.dailyPnl, 0);
+  const winRate = toNum(perf?.winRate ?? perf?.winRatePct ?? perf?.successRate, 0);
+  const trades = toNum(perf?.totalTrades ?? perf?.trades ?? perf?.count, 0);
+
   return (
-    <section className="bot-controls">
-      <header className="bot-controls__header">
+    <div className="bot-controls">
+      <div className="bot-controls__header">
         <div>
-          <h3 className="bot-controls__title">{t('bot.controls.title', 'التحكم السريع في بوت التداول')}</h3>
-          <p className="bot-controls__subtitle">
-            {t('bot.controls.subtitle', 'تشغيل/إيقاف مباشر + مؤشرات أداء سريعة.')}
-          </p>
+          <h3 className="bot-controls__title">تحكم البوت</h3>
+          <div className="bot-controls__subtitle">تشغيل/إيقاف + مؤشرات سريعة — بدون تغيير منطق التداول.</div>
         </div>
 
-        <div className={`status-chip ${isActive ? 'status-chip--active' : ''}`}>
-          <span className="status-chip__dot" aria-hidden="true" />
-          <span className="status-chip__text">{statusLabel}</span>
+        <div className={`bot-controls__status ${isActive ? 'is-active' : 'is-inactive'}`}>
+          <span className="bot-controls__statusDot" />
+          {statusLabel}
+          {busy ? <span className="bot-controls__statusBusy"> • جاري التنفيذ…</span> : null}
         </div>
-      </header>
-
-      <div className="bot-controls__metrics">
-        <MetricPill label={t('bot.controls.metrics.profit', 'الربح الإجمالي')} value={formatted.profit} />
-        <MetricPill label={t('bot.controls.metrics.winRate', 'نسبة الفوز')} value={formatted.winRate} />
-        <MetricPill label={t('bot.controls.metrics.trades', 'عدد الصفقات')} value={formatted.trades} />
       </div>
 
-      <button
-        type="button"
-        className={`bot-controls__toggleBtn ${isActive ? 'is-active' : ''}`}
-        onClick={handleToggle}
-        disabled={isBusy}
-      >
-        {isBusy
-          ? t('bot.controls.processing', 'جاري التنفيذ...')
-          : isActive
-            ? t('bot.controls.stop', '⏹ إيقاف البوت')
-            : t('bot.controls.start', '▶ تشغيل البوت')}
-      </button>
+      <div className="bot-controls__body">
+        <button
+          type="button"
+          className={`bot-controls__primaryBtn ${isActive ? 'is-stop' : 'is-start'}`}
+          onClick={toggle}
+          disabled={busy}
+        >
+          <span className="bot-controls__primaryIcon">{isActive ? '⏹️' : '▶️'}</span>
+          {isActive ? 'إيقاف البوت' : 'تشغيل البوت'}
+        </button>
 
-      {(error || localError) ? (
-        <div className="bot-controls__error">
-          {t('bot.controls.alert', 'تنبيه')}: {localError || error}
+        <div className="bot-controls__metrics">
+          <MetricPill
+            label="ربحية اليوم"
+            value={`${daily >= 0 ? '▲' : '▼'} ${daily.toFixed(2)}`}
+            tone={daily >= 0 ? 'success' : 'danger'}
+          />
+          <MetricPill label="معدل النجاح" value={`${winRate.toFixed(1)}%`} tone="info" />
+          <MetricPill label="إجمالي الصفقات" value={`${trades}`} tone="primary" />
         </div>
-      ) : null}
-    </section>
-  );
-};
 
-export default BotControls;
+        {error ? (
+          <div className="bot-controls__error">
+            <span>⚠️</span>
+            <div>{error}</div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}

@@ -1,22 +1,21 @@
 // frontend/src/store/store.js
-
 import { configureStore } from '@reduxjs/toolkit';
 import tradingReducer from './tradingSlice';
 
-// لو عندك Slices أخرى (auth, ui, settings...) أضفها هنا
-// import authReducer from './authSlice';
-// import uiReducer from './uiSlice';
+// Factory مفيد للاختبارات / SSR (وما يكسر الاستخدام الحالي)
+export const createAppStore = (preloadedState) =>
+  configureStore({
+    reducer: {
+      trading: tradingReducer,
+    },
+    preloadedState,
+    devTools: process.env.NODE_ENV !== 'production',
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+        immutableCheck: false,
+      }),
+  });
 
-const store = configureStore({
-  reducer: {
-    trading: tradingReducer,
-    // auth: authReducer,
-    // ui: uiReducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false, // مفيد لو عندك بيانات غير قابلة للتسلسل 100%
-    }),
-});
-
+const store = createAppStore();
 export default store;

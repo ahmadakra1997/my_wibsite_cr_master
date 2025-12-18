@@ -1,176 +1,229 @@
 // frontend/src/components/bot/BotHistory.js
-import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import useBotData from '../../hooks/useBotData';
+import React, { useMemo, useState } from 'react';
 import './BotHistory.css';
 
-const safeArray = (v) => (Array.isArray(v) ? v : []);
-const toNum = (v) => {
+import useBotData from '../../hooks/useBotData';
+import { useTranslation } from 'react-i18next';
+
+const safeArr = (v) => (Array.isArray(v) ? v : []);
+
+const fmtMoney = (v) => {
   const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+  if (Number.isNaN(n)) return '—';
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
+};
+
+const fmtTime = (v) => {
+  if (!v) return '—';
+  try {
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    return d.toLocaleString();
+  } catch {
+    return String(v);
+  }
 };
 
 export default function BotHistory() {
   const { t } = useTranslation();
+
   const { metrics, loadingMetrics, error } = useBotData();
+  const trades = safeArr(metrics?.recentTrades);
 
-  const trades = useMemo(() => safeArray(metrics?.recentTrades).slice(0, 50), [metrics?.recentTrades]);
+  const [query, setQuery] = useState('');
+  const [sideFilter, setSideFilter] = useState('all');
 
-  const summary = useMemo(() => {
-    const totalTrades = trades.length;
-    const totalProfit = trades.reduce((acc, tr) => acc + toNum(tr?.profit ?? tr?.pnl ?? tr?.realizedPnl), 0);
-    const wins = trades.filter((tr) => toNum(tr?.profit ?? tr?.pnl ?? tr?.realizedPnl) > 0).length;
-    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+  const computed = useMemo(() => {
+    const normalized = trades.map((x) => {
+      const side = String(x?.side || x?.type || '').toLowerCase();
+      const pnl = Number(x?.pnl ?? x?.profit ?? x?.pl ?? 0);
+      return { ...x, __side: side, __pnl: Number.isNaN(pnl) ? 0 : pnl };
+    });
 
-    return { totalTrades, totalProfit, winRate };
-  }, [trades]);
+    const filtered = normalized.filter((x) => {
+      const pair = String(x?.pair || x?.symbol || x?.market || '').toLowerCase();
+      const matchesQuery = !query || pair.includes(query.toLowerCase());
 
-  const isLoading = Boolean(loadingMetrics) && trades.length === 0;
+      const isBuy = x.__side === 'buy' || x.__side === 'long';
+      const isSell = x.__side === 'sell' || x.__side === 'short';
+      const matchesSide =
+        sideFilter === 'all' ||
+        (sideFilter === 'buy' && isBuy) ||
+        (sideFilter === 'sell' && isSell);
+
+      return matchesQuery && matchesSide;
+    });
+
+    const total = filtered.length;
+    const pnlSum = filtered.reduce((acc, x) => acc + (x.__pnl || 0), 0);
+    const wins = filtered.filter((x) => x.__pnl > 0).length;
+    const winRate = total > 0 ? (wins / total) * 100 : 0;
+
+    return { filtered, total, pnlSum, winRate };
+  }, [trades, query, sideFilter]);
 
   return (
-    <section className="bot-history">
+    <div className="bot-history">
       <div className="bot-history__header">
         <div>
-          <h3 className="bot-history__title">
-            {t('bot.history.title', 'سجل الصفقات الأخيرة')}
-          </h3>
+          <h3 className="bot-history__title">{t?.('bot.history.title') || 'Bot Trade History'}</h3>
           <p className="bot-history__subtitle">
-            {t(
-              'bot.history.subtitle',
-              'مراجعة آخر عمليات التنفيذ تساعدك على تقييم الاستراتيجية وتحسين إدارة المخاطر بدون تغيير منطق التداول.'
-            )}
+            {t?.('bot.history.subtitle') ||
+              'سجل الصفقات — عرض احترافي مع بحث/فلترة بدون كسر أي منطق.'}
           </p>
         </div>
 
         <div className="bot-history__stats">
           <div className="bot-history__chip is-info">
-            <div className="bot-history__chipLabel">{t('bot.history.chip.trades', 'عدد الصفقات')}</div>
-            <div className="bot-history__chipValue">{summary.totalTrades}</div>
+            <div className="bot-history__chipLabel">TRADES</div>
+            <div className="bot-history__chipValue">{computed.total}</div>
           </div>
 
           <div className="bot-history__chip is-success">
-            <div className="bot-history__chipLabel">{t('bot.history.chip.winRate', 'معدل الفوز')}</div>
-            <div className="bot-history__chipValue">{summary.winRate.toFixed(1)}%</div>
+            <div className="bot-history__chipLabel">WIN RATE</div>
+            <div className="bot-history__chipValue">{fmtMoney(computed.winRate)}%</div>
           </div>
 
           <div className="bot-history__chip">
-            <div className="bot-history__chipLabel">{t('bot.history.chip.pnl', 'صافي الربح')}</div>
-            <div
-              className={
-                'bot-history__chipValue ' +
-                (summary.totalProfit >= 0 ? 'profit' : 'loss')
-              }
-            >
-              {summary.totalProfit >= 0 ? '+' : '-'}
-              {Math.abs(summary.totalProfit).toFixed(2)} USDT
+            <div className="bot-history__chipLabel">PNL</div>
+            <div className={`bot-history__chipValue ${computed.pnlSum >= 0 ? 'profit' : 'loss'}`}>
+              {fmtMoney(computed.pnlSum)}
             </div>
           </div>
         </div>
       </div>
 
-      {isLoading && (
+      {/* أدوات بحث/فلترة (بدون CSS إضافي — نعتمد على الستايل العام) */}
+      <div className="bot-history__state" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search pair (e.g. BTC/USDT)…"
+            style={{
+              borderRadius: 12,
+              border: '1px solid rgba(148, 163, 184, 0.25)',
+              background: 'rgba(2, 6, 23, 0.35)',
+              color: '#e5e7eb',
+              padding: '10px 12px',
+              minWidth: 240,
+              fontWeight: 800,
+              outline: 'none',
+            }}
+          />
+
+          <select
+            value={sideFilter}
+            onChange={(e) => setSideFilter(e.target.value)}
+            style={{
+              borderRadius: 12,
+              border: '1px solid rgba(148, 163, 184, 0.25)',
+              background: 'rgba(2, 6, 23, 0.35)',
+              color: '#e5e7eb',
+              padding: '10px 12px',
+              fontWeight: 900,
+              outline: 'none',
+            }}
+          >
+            <option value="all">All</option>
+            <option value="buy">Buy/Long</option>
+            <option value="sell">Sell/Short</option>
+          </select>
+        </div>
+
+        <div style={{ fontWeight: 900, color: '#9ca3af' }}>
+          {loadingMetrics ? 'Loading…' : `Showing ${computed.filtered.length}`}
+        </div>
+      </div>
+
+      {loadingMetrics && (
         <div className="bot-history__state">
-          <span className="bot-history__spinner" />
-          {t('bot.history.loading', 'جاري تحميل السجل...')}
+          <div className="bot-history__spinner" />
+          Loading history…
         </div>
       )}
 
-      {!isLoading && error && (
+      {!!error && !loadingMetrics && (
         <div className="bot-history__error">
-          <span>⚠️</span>
-          <div>
-            {t('bot.history.errorTitle', 'تعذر تحميل السجل:')} {String(error)}
-          </div>
+          <div>⚠</div>
+          <div>{String(error)}</div>
         </div>
       )}
 
-      {!isLoading && !error && trades.length === 0 && (
+      {!loadingMetrics && !error && computed.filtered.length === 0 && (
         <div className="bot-history__empty">
-          <div className="bot-history__emptyIcon">🗒️</div>
-          <div className="bot-history__emptyTitle">
-            {t('bot.history.emptyTitle', 'لا توجد بيانات بعد')}
-          </div>
-          <div className="bot-history__emptyText">
-            {t('bot.history.emptyText', 'ستظهر الصفقات هنا بعد بدء تشغيل البوت وتنفيذ أوامر.')}
-          </div>
+          <div className="bot-history__emptyIcon">🗂</div>
+          <div className="bot-history__emptyTitle">No trades</div>
+          <div className="bot-history__emptyText">لا يوجد سجل مطابق للبحث/الفلترة.</div>
         </div>
       )}
 
-      {!isLoading && !error && trades.length > 0 && (
+      {!loadingMetrics && !error && computed.filtered.length > 0 && (
         <div className="bot-history__tableWrap">
           <table className="bot-history__table">
             <thead>
               <tr>
-                <th>{t('bot.history.th.asset', 'الأصل')}</th>
-                <th>{t('bot.history.th.side', 'النوع')}</th>
-                <th>{t('bot.history.th.qty', 'الكمية')}</th>
-                <th>{t('bot.history.th.price', 'السعر')}</th>
-                <th>{t('bot.history.th.pnl', 'الربح')}</th>
-                <th>{t('bot.history.th.time', 'الوقت')}</th>
-                <th>{t('bot.history.th.status', 'الحالة')}</th>
-                <th>{t('bot.history.th.reason', 'ملاحظة')}</th>
+                <th>Pair</th>
+                <th>Side</th>
+                <th>Price</th>
+                <th>Volume</th>
+                <th>PnL</th>
+                <th>Time</th>
+                <th>Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {trades.map((tr, idx) => {
-                const pair = tr?.pair ?? tr?.symbol ?? tr?.market ?? '—';
-                const sideRaw = (tr?.type ?? tr?.side ?? '').toString().toLowerCase();
-                const side = sideRaw.includes('buy') ? 'buy' : sideRaw.includes('sell') ? 'sell' : '—';
+              {computed.filtered.map((x, idx) => {
+                const side = x.__side;
+                const isBuy = side === 'buy' || side === 'long';
+                const pnl = x.__pnl;
 
-                const qty = tr?.volume ?? tr?.qty ?? tr?.amount ?? '—';
-                const price = tr?.price ?? tr?.entryPrice ?? tr?.fillPrice ?? '—';
-
-                const pnl = toNum(tr?.profit ?? tr?.pnl ?? tr?.realizedPnl);
-                const pnlCls = pnl > 0 ? 'is-profit' : pnl < 0 ? 'is-loss' : '';
-
-                const status = (tr?.status ?? (pnl > 0 ? 'active' : pnl < 0 ? 'error' : 'stopped')).toString();
-                const statusCfg = getStatusConfig(status);
-
-                const timeValue = tr?.timestamp ?? tr?.time ?? tr?.createdAt ?? tr?.date;
-                const timeLabel = formatDate(timeValue);
-
-                const reason = tr?.reason ?? tr?.note ?? tr?.message ?? '—';
-                const id = tr?.id ?? tr?._id ?? tr?.tradeId ?? null;
+                const status = String(x?.status || (isBuy ? 'active' : 'active')).toLowerCase();
+                const badgeClass =
+                  status === 'active'
+                    ? 'is-active'
+                    : status === 'paused'
+                    ? 'is-paused'
+                    : status === 'error'
+                    ? 'is-error'
+                    : status === 'stopped'
+                    ? 'is-stopped'
+                    : 'is-unknown';
 
                 return (
-                  <tr className="bot-history__row" key={id ?? `${pair}-${idx}`}>
+                  <tr className="bot-history__row" key={x?.id || x?._id || idx}>
                     <td>
-                      <div className="bot-history__nameMain">{pair}</div>
+                      <div className="bot-history__nameMain">
+                        {x?.pair || x?.symbol || x?.market || '—'}
+                      </div>
                       <div className="bot-history__nameSub">
-                        {id ? `ID: ${id}` : '—'}
+                        {x?.strategy ? `strategy: ${x.strategy}` : ''}
                       </div>
                     </td>
 
                     <td>
-                      <span
-                        className={
-                          'bot-history__badge ' +
-                          (side === 'buy' ? 'is-active' : side === 'sell' ? 'is-paused' : 'is-unknown')
-                        }
-                      >
+                      <span className={`bot-history__badge ${isBuy ? 'is-active' : 'is-paused'}`}>
                         <span className="bot-history__badgeDot" />
-                        {side === 'buy' ? 'شراء' : side === 'sell' ? 'بيع' : '—'}
+                        {isBuy ? 'BUY' : 'SELL'}
                       </span>
                     </td>
 
-                    <td className="bot-history__mono">{String(qty)}</td>
-                    <td className="bot-history__mono">{String(price)}</td>
+                    <td className="bot-history__mono">{fmtMoney(x?.price)}</td>
+                    <td className="bot-history__mono">{fmtMoney(x?.volume ?? x?.qty ?? x?.amount)}</td>
 
-                    <td className={`bot-history__mono ${pnlCls}`}>
-                      {(pnl >= 0 ? '+' : '-') + Math.abs(pnl).toFixed(2)}
+                    <td className={`bot-history__mono ${pnl >= 0 ? 'is-profit' : 'is-loss'}`}>
+                      {fmtMoney(pnl)}
                     </td>
 
-                    <td className="bot-history__mono">{timeLabel}</td>
+                    <td>{fmtTime(x?.time || x?.timestamp || x?.createdAt)}</td>
 
                     <td>
-                      <span className={`bot-history__badge ${statusCfg.className}`}>
+                      <span className={`bot-history__badge ${badgeClass}`}>
                         <span className="bot-history__badgeDot" />
-                        {statusCfg.label}
+                        {status.toUpperCase()}
                       </span>
                     </td>
-
-                    <td className="bot-history__reason">{String(reason)}</td>
                   </tr>
                 );
               })}
@@ -178,26 +231,6 @@ export default function BotHistory() {
           </table>
         </div>
       )}
-    </section>
+    </div>
   );
-}
-
-function getStatusConfig(status) {
-  const s = (status || '').toString().toLowerCase();
-  if (s.includes('active') || s.includes('filled') || s.includes('done')) return { label: 'منفذ', className: 'is-active' };
-  if (s.includes('paused') || s.includes('pending')) return { label: 'معلق', className: 'is-paused' };
-  if (s.includes('stop') || s.includes('cancel')) return { label: 'ملغي', className: 'is-stopped' };
-  if (s.includes('error') || s.includes('fail') || s.includes('reject')) return { label: 'خطأ', className: 'is-error' };
-  return { label: 'غير معروف', className: 'is-unknown' };
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  try {
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return `${d.toLocaleDateString('ar-SA')} · ${d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}`;
-  } catch {
-    return String(value);
-  }
 }

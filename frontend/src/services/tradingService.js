@@ -1,89 +1,96 @@
 // frontend/src/services/tradingService.js
+import api from './api';
 
-import api, { tradingAPI } from './api';
-
-/**
- * TradingService
- * طبقة خدمة للتعامل مع عمليات التداول من الواجهة الأمامية.
- * تُستخدم في مكون PositionManager وغيرها لإدارة المراكز.
- */
 class TradingService {
   constructor() {
-    this.baseURL = '/trading';
+    this.api = api;
   }
 
-  /**
-   * جلب جميع المراكز من الخادم
-   */
+  _unwrap(res) {
+    // يدعم:
+    // axios => res.data
+    // { success, data, message }
+    const data = res?.data ?? res;
+    if (data && typeof data === 'object' && 'success' in data) {
+      if (data.success) return data.data;
+      const msg = data.message || 'Request failed';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  _handleError(error, context = '') {
+    const msg =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      'خطأ غير معروف';
+
+    console.error(`[TradingService] ${context} error:`, error);
+    return { success: false, error: msg };
+  }
+
   async getPositions() {
     try {
-      // نستخدم tradingAPI إن وجد، أو نسقط إلى endpoint مباشر
-      const response =
-        typeof tradingAPI?.getPositions === 'function'
-          ? await tradingAPI.getPositions()
-          : await api.get(`${this.baseURL}/positions`);
-
-      return response.data;
+      const res = await this.api.get('/trading/positions');
+      const data = this._unwrap(res);
+      return { success: true, data };
     } catch (error) {
-      throw this._handleError(error, 'فشل في جلب المراكز');
+      return this._handleError(error, 'getPositions');
     }
   }
 
-  /**
-   * إغلاق مركز محدد
-   * @param {string|number} positionId
-   * @param {object} closeData
-   */
-  async closePosition(positionId, closeData = {}) {
-    if (!positionId) {
-      throw new Error('positionId is required to close a position');
-    }
-
+  async closePosition(positionId) {
     try {
-      const path = `${this.baseURL}/positions/${encodeURIComponent(
-        positionId
-      )}/close`;
-
-      const response = await api.post(path, closeData);
-      return response.data;
+      const res = await this.api.post(`/trading/positions/${positionId}/close`);
+      const data = this._unwrap(res);
+      return { success: true, data };
     } catch (error) {
-      throw this._handleError(error, 'فشل في إغلاق المركز');
+      return this._handleError(error, 'closePosition');
     }
   }
 
-  /**
-   * تعديل مركز (مثل تعديل وقف الخسارة أو جني الأرباح)
-   * @param {string|number} positionId
-   * @param {object} modificationData
-   */
-  async modifyPosition(positionId, modificationData = {}) {
-    if (!positionId) {
-      throw new Error('positionId is required to modify a position');
-    }
-
+  async modifyPosition(positionId, modifications) {
     try {
-      const path = `${this.baseURL}/positions/${encodeURIComponent(positionId)}`;
-      const response = await api.put(path, modificationData);
-      return response.data;
+      const res = await this.api.put(`/trading/positions/${positionId}`, modifications);
+      const data = this._unwrap(res);
+      return { success: true, data };
     } catch (error) {
-      throw this._handleError(error, 'فشل في تعديل المركز');
+      return this._handleError(error, 'modifyPosition');
     }
   }
 
-  /**
-   * معالج أخطاء موحد للخدمة
-   */
-  _handleError(error, fallbackMessage) {
-    const message =
-      error?.data?.message ||
-      error?.message ||
-      fallbackMessage ||
-      'خطأ غير متوقع في خدمة التداول';
+  // ✅ إضافات توافق (اختيارية) — لا تكسر شيء حتى لو الباكيند ما يدعمها
+  async getOrderBook(symbol) {
+    try {
+      const res = await this.api.get('/trading/orderbook', { params: { symbol } });
+      const data = this._unwrap(res);
+      return { success: true, data };
+    } catch (error) {
+      return this._handleError(error, 'getOrderBook');
+    }
+  }
 
-    const wrapped = new Error(message);
-    wrapped.originalError = error;
-    return wrapped;
+  async getTradeHistory(params = {}) {
+    try {
+      const res = await this.api.get('/trading/history', { params });
+      const data = this._unwrap(res);
+      return { success: true, data };
+    } catch (error) {
+      return this._handleError(error, 'getTradeHistory');
+    }
+  }
+
+  async getTicker(symbol) {
+    try {
+      const res = await this.api.get('/trading/ticker', { params: { symbol } });
+      const data = this._unwrap(res);
+      return { success: true, data };
+    } catch (error) {
+      return this._handleError(error, 'getTicker');
+    }
   }
 }
 
-export default TradingService;
+const tradingService = new TradingService();
+export default tradingService;

@@ -1,88 +1,94 @@
 // frontend/src/hooks/useTrading.js
-
 import { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  setChartLoading,
-  setOrderBookLoading,
-  setPositionsLoading,
-  updateChartData,
-  updateOrderBook,
-  updatePositions,
+  setActivePair,
+  setChartData,
+  setConnectionStatus,
   setMarketData,
-  closePosition,
-  resetTradingState,
-  setTradingError,
+  setOrderBook,
+  setRiskMetrics,
+  setTimeframe,
+  setTradeHistory,
+  setPositions,
+  setLoading,
+  setError,
 } from '../store/tradingSlice';
 
-/**
- * هوك موحد للتعامل مع حالة التداول في Redux
- * لا يستبدل استخدام useSelector/useDispatch في المكونات القائمة،
- * لكنه يوفر واجهة مريحة ومركزية للتعامل مع نفس الحالة.
- */
-const useTrading = () => {
-  const tradingState = useSelector((state) => state.trading);
+const isClosedPosition = (p) => {
+  if (!p || typeof p !== 'object') return false;
+  const status = String(p.status ?? '').toLowerCase();
+  return Boolean(p.isClosed || p.closed || status === 'closed' || status === 'close');
+};
+
+const safeArray = (v) => (Array.isArray(v) ? v : []);
+const safeObject = (v) => (v && typeof v === 'object' ? v : {});
+
+export default function useTrading() {
   const dispatch = useDispatch();
+  const tradingState = useSelector((state) => safeObject(state?.trading));
 
-  // مشتقات بسيطة من الحالة
-  const derived = useMemo(() => {
-    const openPositions = Array.isArray(tradingState.positions)
-      ? tradingState.positions.filter((p) => !p.isClosed && !p.closed)
-      : [];
+  const positions = safeArray(tradingState.positions);
+  const openPositions = useMemo(() => positions.filter((p) => !isClosedPosition(p)), [positions]);
+  const closedPositions = useMemo(() => positions.filter((p) => isClosedPosition(p)), [positions]);
 
-    const closedPositions = Array.isArray(tradingState.positions)
-      ? tradingState.positions.filter((p) => p.isClosed || p.closed)
-      : [];
-
-    return {
-      openPositions,
-      closedPositions,
-      positionsCount: tradingState.positions?.length || 0,
-      hasOpenPositions: openPositions.length > 0,
-    };
-  }, [tradingState.positions]);
-
-  // أكشنات مغلفة
   const actions = useMemo(
     () => ({
-      setChartLoading: (value) => dispatch(setChartLoading(value)),
-      setOrderBookLoading: (value) => dispatch(setOrderBookLoading(value)),
-      setPositionsLoading: (value) => dispatch(setPositionsLoading(value)),
-
-      updateChartData: (data) => dispatch(updateChartData(data)),
-      updateOrderBook: (data) => dispatch(updateOrderBook(data)),
-      updatePositions: (positions) => dispatch(updatePositions(positions)),
+      setActivePair: (pair) => dispatch(setActivePair(pair)),
+      setTimeframe: (timeframe) => dispatch(setTimeframe(timeframe)),
       setMarketData: (data) => dispatch(setMarketData(data)),
-
-      closePosition: (positionId) => dispatch(closePosition(positionId)),
-      resetTradingState: () => dispatch(resetTradingState()),
-      setTradingError: (error) => dispatch(setTradingError(error)),
+      setOrderBook: (data) => dispatch(setOrderBook(data)),
+      setTradeHistory: (data) => dispatch(setTradeHistory(data)),
+      setRiskMetrics: (data) => dispatch(setRiskMetrics(data)),
+      setChartData: (data) => dispatch(setChartData(data)),
+      setPositions: (data) => dispatch(setPositions(data)),
+      setLoading: (loading) => dispatch(setLoading(loading)),
+      setError: (error) => dispatch(setError(error)),
+      setConnectionStatus: (status) => dispatch(setConnectionStatus(status)),
     }),
     [dispatch]
   );
 
-  // دوال مساعدة اختيارية (للإستخدام المستقبلي)
-  const helpers = {
-    // مثال: تحديث شامل للحالة من payload واحد
-    applySnapshot: useCallback(
-      (snapshot) => {
-        if (!snapshot || typeof snapshot !== 'object') return;
+  // ✅ Apply a snapshot safely (e.g. WS payload or REST payload)
+  const applySnapshot = useCallback(
+    (snapshot = {}) => {
+      if (!snapshot || typeof snapshot !== 'object') return;
 
-        if (snapshot.chartData) actions.updateChartData(snapshot.chartData);
-        if (snapshot.orderBook) actions.updateOrderBook(snapshot.orderBook);
-        if (snapshot.positions) actions.updatePositions(snapshot.positions);
-        if (snapshot.marketData) actions.setMarketData(snapshot.marketData);
-      },
-      [actions]
-    ),
-  };
+      if (snapshot.marketData != null) actions.setMarketData(snapshot.marketData);
+      if (snapshot.orderBook != null) actions.setOrderBook(snapshot.orderBook);
+      if (snapshot.tradeHistory != null) actions.setTradeHistory(snapshot.tradeHistory);
+      if (snapshot.riskMetrics != null) actions.setRiskMetrics(snapshot.riskMetrics);
+      if (snapshot.chartData != null) actions.setChartData(snapshot.chartData);
+      if (snapshot.positions != null) actions.setPositions(snapshot.positions);
 
-  return {
-    ...tradingState,
-    ...derived,
-    ...actions,
-    ...helpers,
-  };
-};
+      if (snapshot.activePair != null) actions.setActivePair(snapshot.activePair);
+      if (snapshot.timeframe != null) actions.setTimeframe(snapshot.timeframe);
 
-export default useTrading;
+      if (snapshot.isConnected != null) actions.setConnectionStatus(snapshot.isConnected ? 'connected' : 'disconnected');
+      if (snapshot.connectionStatus != null) actions.setConnectionStatus(snapshot.connectionStatus);
+
+      if (snapshot.loading != null) actions.setLoading(Boolean(snapshot.loading));
+      if (snapshot.error != null) actions.setError(snapshot.error);
+    },
+    [actions]
+  );
+
+  return useMemo(
+    () => ({
+      ...tradingState,
+      marketData: safeObject(tradingState.marketData),
+      orderBook: safeObject(tradingState.orderBook),
+      tradeHistory: safeArray(tradingState.tradeHistory),
+      riskMetrics: safeObject(tradingState.riskMetrics),
+      chartData: safeArray(tradingState.chartData),
+      positions,
+
+      openPositions,
+      closedPositions,
+
+      actions,
+      helpers: { applySnapshot },
+    }),
+    [tradingState, positions, openPositions, closedPositions, actions, applySnapshot]
+  );
+}
