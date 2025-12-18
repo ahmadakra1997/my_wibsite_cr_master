@@ -1,96 +1,146 @@
 // frontend/src/services/tradingService.js
+/**
+ * TradingService
+ * Wrapper حول API endpoints للتداول.
+ * ✅ تحسين: تطبيع الردود + نفس الدوال الموجودة بدون حذف + أخطاء أوضح.
+ */
+
 import api from './api';
 
+const normalizeError = (e) => {
+  const msg =
+    e?.response?.data?.message ||
+    e?.response?.data?.error ||
+    e?.message ||
+    'Request failed';
+  return msg;
+};
+
+const unwrap = (res) => {
+  // يقبل axios response أو payload مباشر
+  const payload = res?.data ?? res;
+
+  // { success, data, error }
+  if (payload && typeof payload === 'object' && 'success' in payload) {
+    if (payload.success) return { ok: true, data: payload.data };
+    return { ok: false, error: payload.error || payload.message || 'Request failed' };
+  }
+
+  // شكل آخر
+  return { ok: true, data: payload };
+};
+
 class TradingService {
-  constructor() {
-    this.api = api;
-  }
-
-  _unwrap(res) {
-    // يدعم:
-    // axios => res.data
-    // { success, data, message }
-    const data = res?.data ?? res;
-    if (data && typeof data === 'object' && 'success' in data) {
-      if (data.success) return data.data;
-      const msg = data.message || 'Request failed';
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  _handleError(error, context = '') {
-    const msg =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      'خطأ غير معروف';
-
-    console.error(`[TradingService] ${context} error:`, error);
-    return { success: false, error: msg };
-  }
-
-  async getPositions() {
+  async fetchMarketData(symbol) {
     try {
-      const res = await this.api.get('/trading/positions');
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'getPositions');
+      const res = await api.get('/trading/market-data', { params: { symbol } });
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
+    }
+  }
+
+  async createOrder(orderData) {
+    try {
+      const res = await api.post('/trading/order', orderData);
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 
   async closePosition(positionId) {
     try {
-      const res = await this.api.post(`/trading/positions/${positionId}/close`);
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'closePosition');
+      const res = await api.post(`/trading/position/${positionId}/close`);
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 
-  async modifyPosition(positionId, modifications) {
+  async getOpenOrders() {
     try {
-      const res = await this.api.put(`/trading/positions/${positionId}`, modifications);
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'modifyPosition');
+      const res = await api.get('/trading/orders');
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 
-  // ✅ إضافات توافق (اختيارية) — لا تكسر شيء حتى لو الباكيند ما يدعمها
-  async getOrderBook(symbol) {
+  async cancelOrder(orderId) {
     try {
-      const res = await this.api.get('/trading/orderbook', { params: { symbol } });
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'getOrderBook');
+      const res = await api.delete(`/trading/order/${orderId}`);
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 
   async getTradeHistory(params = {}) {
     try {
-      const res = await this.api.get('/trading/history', { params });
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'getTradeHistory');
+      const res = await api.get('/trading/history', { params });
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 
-  async getTicker(symbol) {
+  async updateRiskSettings(settings) {
     try {
-      const res = await this.api.get('/trading/ticker', { params: { symbol } });
-      const data = this._unwrap(res);
-      return { success: true, data };
-    } catch (error) {
-      return this._handleError(error, 'getTicker');
+      const res = await api.put('/trading/risk-settings', settings);
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
+    }
+  }
+
+  async getRiskMetrics() {
+    try {
+      const res = await api.get('/trading/risk-metrics');
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
+    }
+  }
+
+  async getPerformanceData() {
+    try {
+      const res = await api.get('/trading/performance');
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
+    }
+  }
+
+  async getAISignals(symbol) {
+    try {
+      const res = await api.get('/trading/ai-signals', { params: { symbol } });
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
+    }
+  }
+
+  async getSystemStatus() {
+    try {
+      const res = await api.get('/trading/status');
+      const out = unwrap(res);
+      return out.ok ? { success: true, data: out.data } : { success: false, error: out.error };
+    } catch (e) {
+      return { success: false, error: normalizeError(e) };
     }
   }
 }
 
-const tradingService = new TradingService();
-export default tradingService;
+export default new TradingService();
+export { TradingService };

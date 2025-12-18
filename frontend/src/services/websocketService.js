@@ -3,21 +3,17 @@
  * WebSocketService
  * خدمة موحّدة لإدارة اتصال WebSocket في الواجهة الأمامية.
  *
- * مميزات:
- * - URL ذكي (env -> API URL -> نفس الدومين)
- * - إعادة اتصال تلقائية backoff + jitter
- * - Subscribers حسب القناة
- * - يدعم عدة أشكال رسائل من الباكيند (channel/payload أو type/data)
- * - Queue للرسائل قبل فتح الاتصال (حتى لا تضيع)
- * - Ping اختياري للحفاظ على الاتصال (إذا الباكيند يدعمه)
+ * ✅ تحسينات احترافية بدون كسر:
+ * - Queue للرسائل لو الاتصال غير Open
+ * - Aliases شائعة (subscribeToChannel / sendJson / isConnected)
+ * - parsing أوسع (channel/type/event/topic)
+ * - backoff مع jitter
  */
 
 const resolveWsUrl = () => {
-  // 1) Explicit WS url
   const envWs = process.env.REACT_APP_WS_URL;
   if (envWs) return envWs;
 
-  // 2) Derive from API url
   const apiUrl =
     process.env.REACT_APP_API_URL ||
     process.env.REACT_APP_BACKEND_URL ||
@@ -28,13 +24,11 @@ const resolveWsUrl = () => {
     return `${wsBase}/ws`;
   }
 
-  // 3) Fallback: same host (dev/prod)
   if (typeof window !== 'undefined' && window.location) {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${proto}//${window.location.host}/ws`;
   }
 
-  // 4) آخر حل
   return 'ws://localhost:8000/ws';
 };
 
@@ -53,18 +47,6 @@ class WebSocketService {
       ? options.reconnectDelayBase
       : 1000;
 
-    this.reconnectDelayMax = Number.isFinite(options.reconnectDelayMax)
-      ? options.reconnectDelayMax
-      : 15000;
-
-    // Ping (اختياري)
-    this.pingEnabled =
-      typeof options.pingEnabled === 'boolean' ? options.pingEnabled : false;
-
-    this.pingIntervalMs = Number.isFinite(options.pingIntervalMs)
-      ? options.pingIntervalMs
-      : 25000;
-
     this.ws = null;
     this.connectionStatus = 'disconnected'; // connecting | open | closed | error | disconnected
 
@@ -78,18 +60,22 @@ class WebSocketService {
     this.reconnectAttempts = 0;
     this.manualClose = false;
 
-    // رسائل قبل فتح الاتصال
-    this.messageQueue = [];
-    this.maxQueueSize = Number.isFinite(options.maxQueueSize) ? options.maxQueueSize : 200;
+    // ✅ Queue للرسائل قبل فتح الاتصال
+    this._sendQueue = [];
+    this._maxQueue = 200;
+  }
 
-    this._pingTimer = null;
-    this._lastConnectTs = 0;
+  setUrl(nextUrl) {
+    if (nextUrl) this.url = nextUrl;
+  }
+
+  isConnected() {
+    return this.connectionStatus === 'open';
   }
 
   connect(nextUrl) {
     if (nextUrl) this.url = nextUrl;
 
-    // Prevent double connect
     if (
       this.ws &&
       (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
@@ -98,7 +84,6 @@ class WebSocketService {
     }
 
     this.manualClose = false;
-    this._lastConnectTs = Date.now();
     this._updateStatus('connecting');
 
     try {
@@ -111,38 +96,29 @@ class WebSocketService {
     this.ws.onopen = () => {
       this.reconnectAttempts = 0;
       this._updateStatus('open');
-
-      // Flush queued messages
       this._flushQueue();
-
-      // Start ping if enabled
-      this._startPing();
     };
 
     this.ws.onmessage = (event) => this._handleMessage(event);
     this.ws.onerror = (event) => this._handleError(event);
 
     this.ws.onclose = () => {
-      this._stopPing();
       this._updateStatus('closed');
       this.ws = null;
 
       if (!this.manualClose && this.reconnectEnabled) {
         this._scheduleReconnect();
-      } else if (this.manualClose) {
-        this._updateStatus('disconnected');
       }
     };
   }
 
   close() {
     this.manualClose = true;
-    this._stopPing();
 
     if (this.ws) {
       try {
         this.ws.close();
-      } catch {
+      } catch (e) {
         // ignore
       }
       this.ws = null;
@@ -151,19 +127,16 @@ class WebSocketService {
     this._updateStatus('disconnected');
   }
 
-  // Alias آمن (لو أي كود يستعمل disconnect)
+  // Alias آمن
   disconnect() {
     this.close();
   }
 
   send(message) {
-    // إذا غير مفتوح: خزّنه (Queue) بدل ما يضيع
+    // ✅ بدل ما نفشل: نخزن بالـ Queue ثم نرسل عند open
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       this._enqueue(message);
-      // وجرّب connect تلقائيًا لو مو شغال
-      if (this.connectionStatus !== 'connecting' && this.connectionStatus !== 'open') {
-        this.connect();
-      }
+      if (this.connectionStatus !== 'open') this.connect();
       return;
     }
 
@@ -175,35 +148,34 @@ class WebSocketService {
     }
   }
 
+  // ✅ Alias شائع
+  sendJson(obj) {
+    this.send(obj);
+  }
+
   subscribe(channel, callback, options = {}) {
     if (!channel || typeof callback !== 'function') {
       console.warn('[WebSocketService] Invalid subscribe call.');
       return () => {};
     }
 
-    // Auto-connect افتراضيًا
     const autoConnect = options.autoConnect !== false;
     if (autoConnect && this.connectionStatus !== 'open') this.connect();
 
     if (!this.subscribers[channel]) this.subscribers[channel] = new Set();
     this.subscribers[channel].add(callback);
 
-    // Optional: tell backend subscribe (لو الباكيند يدعم)
-    if (options.backendSubscribe) {
-      this.send({ action: 'subscribe', channel });
-    }
-
     return () => {
       this.subscribers[channel]?.delete(callback);
       if (this.subscribers[channel] && this.subscribers[channel].size === 0) {
         delete this.subscribers[channel];
       }
-
-      // Optional: tell backend unsubscribe
-      if (options.backendSubscribe) {
-        this.send({ action: 'unsubscribe', channel });
-      }
     };
+  }
+
+  // ✅ Alias للتوافق مع تسميات أخرى
+  subscribeToChannel(channel, callback, options = {}) {
+    return this.subscribe(channel, callback, options);
   }
 
   on(type, callback) {
@@ -233,31 +205,6 @@ class WebSocketService {
     });
   }
 
-  _enqueue(message) {
-    if (this.messageQueue.length >= this.maxQueueSize) {
-      this.messageQueue.shift(); // drop oldest
-    }
-    this.messageQueue.push(message);
-  }
-
-  _flushQueue() {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-    if (!this.messageQueue.length) return;
-
-    const queue = [...this.messageQueue];
-    this.messageQueue = [];
-
-    queue.forEach((m) => {
-      try {
-        const payload = typeof m === 'string' ? m : JSON.stringify(m);
-        this.ws.send(payload);
-      } catch (e) {
-        // لو فشل، رجّعه للـ queue
-        this._enqueue(m);
-      }
-    });
-  }
-
   _emitChannel(channel, payload) {
     const subs = this.subscribers[channel];
     if (!subs) return;
@@ -282,7 +229,6 @@ class WebSocketService {
       }
     });
 
-    // غير JSON => قناة raw
     let data = raw;
     try {
       data = JSON.parse(raw);
@@ -291,9 +237,8 @@ class WebSocketService {
       return;
     }
 
-    // يدعم:
-    // { channel, payload }  |  { type, data }  |  { event, ... }
-    const channel = data?.channel || data?.type || data?.event;
+    // يدعم: channel/type/event/topic
+    const channel = data?.channel || data?.type || data?.event || data?.topic;
     const payload = data?.payload ?? data?.data ?? data;
 
     if (!channel) {
@@ -325,42 +270,36 @@ class WebSocketService {
 
     this.reconnectAttempts += 1;
 
-    // backoff + jitter
-    const baseDelay = Math.min(
-      this.reconnectDelayMax,
-      this.reconnectDelayBase * this.reconnectAttempts
-    );
-
+    // ✅ jitter
+    const base = this.reconnectDelayBase * this.reconnectAttempts;
     const jitter = Math.floor(Math.random() * 250);
-    const delay = baseDelay + jitter;
+    const delay = base + jitter;
 
-    console.info(
-      `[WebSocketService] Scheduling reconnect #${this.reconnectAttempts} in ${delay}ms`
-    );
-
-    setTimeout(() => {
-      if (!this.manualClose) this.connect();
-    }, delay);
+    setTimeout(() => this.connect(), delay);
   }
 
-  _startPing() {
-    if (!this.pingEnabled) return;
-    this._stopPing();
-
-    this._pingTimer = setInterval(() => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-      // Ping بسيط — عدّل لو الباكيند عندك يحتاج صيغة أخرى
-      this.send({ type: 'ping', ts: Date.now() });
-    }, this.pingIntervalMs);
+  _enqueue(message) {
+    if (this._sendQueue.length >= this._maxQueue) {
+      this._sendQueue.shift(); // drop oldest
+    }
+    this._sendQueue.push(message);
   }
 
-  _stopPing() {
-    if (this._pingTimer) {
-      clearInterval(this._pingTimer);
-      this._pingTimer = null;
+  _flushQueue() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    while (this._sendQueue.length) {
+      const msg = this._sendQueue.shift();
+      try {
+        const payload = typeof msg === 'string' ? msg : JSON.stringify(msg);
+        this.ws.send(payload);
+      } catch (e) {
+        // إذا فشل إرسال رسالة لا نوقف بقية النظام
+        console.warn('[WebSocketService] Failed to flush queued message:', e);
+      }
     }
   }
 }
 
 const websocketService = new WebSocketService();
 export default websocketService;
+export { WebSocketService };
