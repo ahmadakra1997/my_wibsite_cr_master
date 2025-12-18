@@ -10,22 +10,33 @@ import tradingService from '../services/tradingService';
  */
 
 const initialState = {
+  // Connection
   connectionStatus: 'disconnected',
 
-  marketData: {},     // ticker/market snapshot
-  ticker: null,       // optional convenience
+  // Preferences (كانت ناقصة عندك)
+  activePair: null,
+  timeframe: '1m',
 
+  // Market snapshot
+  marketData: {},
+  ticker: null,
+
+  // Core datasets
   orderBook: { bids: [], asks: [], symbol: null, timestamp: null },
   tradeHistory: [],
   positions: [],
   chartData: [],
 
+  // Analytics
+  riskMetrics: null,          // ✅ جديد (للواجهة)
+  riskAssessment: null,       // ✅ موجود سابقاً (نحافظ عليه)
   aiSignals: [],
   performanceMetrics: null,
-  riskAssessment: null,
 
+  // Limits
   maxTrades: 50,
 
+  // Loading/Error (scoped)
   loading: {
     global: false,
     orderBook: false,
@@ -34,7 +45,6 @@ const initialState = {
     chart: false,
     positions: false,
   },
-
   error: {
     global: null,
     orderBook: null,
@@ -43,7 +53,6 @@ const initialState = {
     chart: null,
     positions: null,
   },
-
   lastUpdated: {
     orderBook: null,
     trades: null,
@@ -62,7 +71,6 @@ export const closePosition = createAsyncThunk(
   'trading/closePosition',
   async (positionId, { rejectWithValue }) => {
     try {
-      // لو أضفتها لاحقًا في tradingService رح تشتغل مباشرة
       if (typeof tradingService?.closePosition === 'function') {
         await tradingService.closePosition(positionId);
       }
@@ -82,12 +90,28 @@ const tradingSlice = createSlice({
       state.connectionStatus = action.payload || 'disconnected';
     },
 
+    // --------- Preferences (مطلوبة لتكامل الواجهة) ---------
+    setActivePair(state, action) {
+      state.activePair = action.payload ?? state.activePair;
+    },
+    setTimeframe(state, action) {
+      state.timeframe = action.payload ?? state.timeframe;
+    },
+
     // --------- Market / Ticker ---------
     updateMarketData(state, action) {
       const payload = action.payload || {};
       state.marketData = typeof payload === 'object' ? payload : state.marketData;
       state.lastUpdated.market = new Date().toISOString();
     },
+
+    // ✅ اسم متوقع من useTrading
+    setMarketData(state, action) {
+      const payload = action.payload || {};
+      state.marketData = typeof payload === 'object' ? payload : state.marketData;
+      state.lastUpdated.market = new Date().toISOString();
+    },
+
     tickerUpdated(state, action) {
       state.ticker = action.payload ?? state.ticker;
       state.loading.ticker = false;
@@ -109,6 +133,13 @@ const tradingSlice = createSlice({
       state.error.orderBook = null;
       state.lastUpdated.orderBook = new Date().toISOString();
     },
+
+    // ✅ اسم متوقع من useTrading
+    setOrderBook(state, action) {
+      state.orderBook = action.payload || state.orderBook;
+      state.lastUpdated.orderBook = new Date().toISOString();
+    },
+
     orderBookLoading(state, action) {
       state.loading.orderBook = !!action.payload;
     },
@@ -125,6 +156,12 @@ const tradingSlice = createSlice({
       state.error.trades = null;
       state.lastUpdated.trades = new Date().toISOString();
     },
+    // ✅ اسم متوقع
+    setTradeHistory(state, action) {
+      state.tradeHistory = Array.isArray(action.payload) ? action.payload : state.tradeHistory;
+      state.lastUpdated.trades = new Date().toISOString();
+    },
+
     tradesLoading(state, action) {
       state.loading.trades = !!action.payload;
     },
@@ -141,6 +178,14 @@ const tradingSlice = createSlice({
       state.error.chart = null;
       state.lastUpdated.chart = new Date().toISOString();
     },
+
+    // ✅ اسم متوقع
+    setChartData(state, action) {
+      const items = action.payload;
+      state.chartData = Array.isArray(items) ? items : state.chartData;
+      state.lastUpdated.chart = new Date().toISOString();
+    },
+
     chartLoading(state, action) {
       state.loading.chart = !!action.payload;
     },
@@ -157,6 +202,14 @@ const tradingSlice = createSlice({
       state.error.positions = null;
       state.lastUpdated.positions = new Date().toISOString();
     },
+
+    // ✅ اسم متوقع
+    setPositions(state, action) {
+      const items = action.payload;
+      state.positions = Array.isArray(items) ? items : state.positions;
+      state.lastUpdated.positions = new Date().toISOString();
+    },
+
     positionsLoading(state, action) {
       state.loading.positions = !!action.payload;
     },
@@ -165,41 +218,52 @@ const tradingSlice = createSlice({
       state.loading.positions = false;
     },
 
-    // --------- Trade execution / Position update (older names in your logs) ---------
+    // --------- Risk metrics (Front UI) ---------
+    setRiskMetrics(state, action) {
+      state.riskMetrics = action.payload ?? state.riskMetrics;
+    },
+
+    // --------- Trade execution / Position update (older names) ---------
     tradeExecuted(state, action) {
       const trade = action.payload;
       if (!trade) return;
-
       state.tradeHistory = [trade, ...state.tradeHistory].slice(0, state.maxTrades);
       state.lastUpdated.trades = new Date().toISOString();
     },
-
     positionUpdated(state, action) {
       const pos = action.payload;
       if (!pos) return;
 
-      const idx = state.positions.findIndex((p) => (p?.id != null && p.id === pos.id) || (p?.symbol && pos?.symbol && p.symbol === pos.symbol));
+      const idx = state.positions.findIndex(
+        (p) =>
+          (p?.id != null && p.id === pos.id) ||
+          (p?.symbol && pos?.symbol && p.symbol === pos.symbol)
+      );
+
       if (idx >= 0) state.positions[idx] = { ...state.positions[idx], ...pos };
       else state.positions.unshift(pos);
 
       state.lastUpdated.positions = new Date().toISOString();
     },
-
     updatePosition(state, action) {
-      // alias of positionUpdated (يحافظ على imports القديمة)
+      // alias of positionUpdated
       const pos = action.payload;
       if (!pos) return;
 
-      const idx = state.positions.findIndex((p) => (p?.id != null && p.id === pos.id) || (p?.symbol && pos?.symbol && p.symbol === pos.symbol));
+      const idx = state.positions.findIndex(
+        (p) =>
+          (p?.id != null && p.id === pos.id) ||
+          (p?.symbol && pos?.symbol && p.symbol === pos.symbol)
+      );
+
       if (idx >= 0) state.positions[idx] = { ...state.positions[idx], ...pos };
       else state.positions.unshift(pos);
 
       state.lastUpdated.positions = new Date().toISOString();
     },
 
-    // --------- Generic (older API in your errors list) ---------
+    // --------- Generic (backward compatible) ---------
     setLoading(state, action) {
-      // supports: boolean OR { scope: 'orderBook'|'trades'|..., value: boolean }
       if (typeof action.payload === 'boolean') {
         state.loading.global = action.payload;
         return;
@@ -210,7 +274,6 @@ const tradingSlice = createSlice({
     },
 
     setError(state, action) {
-      // supports: string OR { scope, error }
       if (typeof action.payload === 'string') {
         state.error.global = action.payload;
         return;
@@ -223,37 +286,34 @@ const tradingSlice = createSlice({
     clearError(state, action) {
       const scope = action.payload;
       if (scope && scope in state.error) state.error[scope] = null;
-      else {
-        Object.keys(state.error).forEach((k) => (state.error[k] = null));
-      }
+      else Object.keys(state.error).forEach((k) => (state.error[k] = null));
     },
 
-    setTradeHistory(state, action) {
-      state.tradeHistory = Array.isArray(action.payload) ? action.payload : state.tradeHistory;
-    },
-
+    // bulk setter
     setTradingData(state, action) {
-      // bulk setter (يحافظ على وظائف قديمة)
       const p = action.payload || {};
       if (p.marketData) state.marketData = p.marketData;
       if (p.orderBook) state.orderBook = p.orderBook;
       if (Array.isArray(p.tradeHistory)) state.tradeHistory = p.tradeHistory;
       if (Array.isArray(p.positions)) state.positions = p.positions;
       if (Array.isArray(p.chartData)) state.chartData = p.chartData;
+
+      if (p.activePair != null) state.activePair = p.activePair;
+      if (p.timeframe != null) state.timeframe = p.timeframe;
+      if (p.riskMetrics != null) state.riskMetrics = p.riskMetrics;
+
+      state.lastUpdated.market = new Date().toISOString();
     },
 
     setAISignals(state, action) {
       state.aiSignals = Array.isArray(action.payload) ? action.payload : state.aiSignals;
     },
-
     setPerformanceMetrics(state, action) {
       state.performanceMetrics = action.payload ?? state.performanceMetrics;
     },
-
     setRiskAssessment(state, action) {
       state.riskAssessment = action.payload ?? state.riskAssessment;
     },
-
     setMaxTrades(state, action) {
       const n = Number(action.payload);
       if (Number.isFinite(n) && n > 0) state.maxTrades = n;
@@ -272,37 +332,48 @@ const tradingSlice = createSlice({
         state.positions = state.positions.filter((p) => p?.id !== id);
       })
       .addCase(closePosition.rejected, (state, action) => {
-        state.error.global = action.payload || action.error.message || 'Failed to close position';
+        state.error.global =
+          action.payload || action.error.message || 'Failed to close position';
       });
   },
 });
 
 export default tradingSlice.reducer;
 
-// -------------------- Actions (new names) --------------------
 export const {
   setConnectionStatus,
 
+  setActivePair,
+  setTimeframe,
+
   updateMarketData,
+  setMarketData,
+
   tickerUpdated,
   tickerLoading,
   tickerError,
 
   orderBookUpdated,
+  setOrderBook,
   orderBookLoading,
   orderBookError,
 
   tradesUpdated,
+  setTradeHistory,
   tradesLoading,
   tradesError,
 
   chartUpdated,
+  setChartData,
   chartLoading,
   chartError,
 
   positionsUpdated,
+  setPositions,
   positionsLoading,
   positionsError,
+
+  setRiskMetrics,
 
   tradeExecuted,
   positionUpdated,
@@ -312,7 +383,6 @@ export const {
   setError,
   clearError,
 
-  setTradeHistory,
   setTradingData,
   setAISignals,
   setMaxTrades,
@@ -322,23 +392,11 @@ export const {
   resetTradingState,
 } = tradingSlice.actions;
 
-// -------------------- Compatibility Aliases (الأسماء التي يتوقعها useTrading.js) --------------------
-export const setMarketData = updateMarketData;
-
-export const updateOrderBook = orderBookUpdated;
-export const setOrderBookLoading = orderBookLoading;
-
-export const updateChartData = chartUpdated;
-export const setChartLoading = chartLoading;
-
-export const updatePositions = positionsUpdated;
-export const setPositionsLoading = positionsLoading;
-
-export const setTradingError = (msg) => setError({ scope: 'global', error: msg });
-
-// -------------------- Selectors (الأسماء التي ظهرت عندك بقائمة possible exports) --------------------
+// -------------------- Selectors --------------------
 export const selectTrading = (state) => state.trading;
 export const selectConnectionStatus = (state) => state.trading.connectionStatus;
 export const selectOrderBook = (state) => state.trading.orderBook;
 export const selectTradeHistory = (state) => state.trading.tradeHistory;
 export const selectPositions = (state) => state.trading.positions;
+export const selectActivePair = (state) => state.trading.activePair;
+export const selectTimeframe = (state) => state.trading.timeframe;

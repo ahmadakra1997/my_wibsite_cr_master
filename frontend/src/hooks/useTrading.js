@@ -2,17 +2,18 @@
 import { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  // ✅ نضمن وجود هذه من tradingSlice (بنضيفها/نثبتها بالملف التالي)
   setActivePair,
-  setChartData,
-  setConnectionStatus,
+  setTimeframe,
   setMarketData,
   setOrderBook,
-  setRiskMetrics,
-  setTimeframe,
   setTradeHistory,
   setPositions,
+  setChartData,
+  setRiskMetrics,
   setLoading,
   setError,
+  setConnectionStatus,
 } from '../store/tradingSlice';
 
 const isClosedPosition = (p) => {
@@ -26,9 +27,10 @@ const safeObject = (v) => (v && typeof v === 'object' ? v : {});
 
 export default function useTrading() {
   const dispatch = useDispatch();
-  const tradingState = useSelector((state) => safeObject(state?.trading));
 
+  const tradingState = useSelector((state) => safeObject(state?.trading));
   const positions = safeArray(tradingState.positions);
+
   const openPositions = useMemo(() => positions.filter((p) => !isClosedPosition(p)), [positions]);
   const closedPositions = useMemo(() => positions.filter((p) => isClosedPosition(p)), [positions]);
 
@@ -36,12 +38,14 @@ export default function useTrading() {
     () => ({
       setActivePair: (pair) => dispatch(setActivePair(pair)),
       setTimeframe: (timeframe) => dispatch(setTimeframe(timeframe)),
+
       setMarketData: (data) => dispatch(setMarketData(data)),
       setOrderBook: (data) => dispatch(setOrderBook(data)),
       setTradeHistory: (data) => dispatch(setTradeHistory(data)),
-      setRiskMetrics: (data) => dispatch(setRiskMetrics(data)),
-      setChartData: (data) => dispatch(setChartData(data)),
       setPositions: (data) => dispatch(setPositions(data)),
+      setChartData: (data) => dispatch(setChartData(data)),
+      setRiskMetrics: (data) => dispatch(setRiskMetrics(data)),
+
       setLoading: (loading) => dispatch(setLoading(loading)),
       setError: (error) => dispatch(setError(error)),
       setConnectionStatus: (status) => dispatch(setConnectionStatus(status)),
@@ -49,7 +53,7 @@ export default function useTrading() {
     [dispatch]
   );
 
-  // ✅ Apply a snapshot safely (e.g. WS payload or REST payload)
+  // ✅ Apply a snapshot safely (WS payload or REST payload)
   const applySnapshot = useCallback(
     (snapshot = {}) => {
       if (!snapshot || typeof snapshot !== 'object') return;
@@ -57,14 +61,16 @@ export default function useTrading() {
       if (snapshot.marketData != null) actions.setMarketData(snapshot.marketData);
       if (snapshot.orderBook != null) actions.setOrderBook(snapshot.orderBook);
       if (snapshot.tradeHistory != null) actions.setTradeHistory(snapshot.tradeHistory);
-      if (snapshot.riskMetrics != null) actions.setRiskMetrics(snapshot.riskMetrics);
-      if (snapshot.chartData != null) actions.setChartData(snapshot.chartData);
       if (snapshot.positions != null) actions.setPositions(snapshot.positions);
+      if (snapshot.chartData != null) actions.setChartData(snapshot.chartData);
+      if (snapshot.riskMetrics != null) actions.setRiskMetrics(snapshot.riskMetrics);
 
       if (snapshot.activePair != null) actions.setActivePair(snapshot.activePair);
       if (snapshot.timeframe != null) actions.setTimeframe(snapshot.timeframe);
 
-      if (snapshot.isConnected != null) actions.setConnectionStatus(snapshot.isConnected ? 'connected' : 'disconnected');
+      if (snapshot.isConnected != null) {
+        actions.setConnectionStatus(snapshot.isConnected ? 'connected' : 'disconnected');
+      }
       if (snapshot.connectionStatus != null) actions.setConnectionStatus(snapshot.connectionStatus);
 
       if (snapshot.loading != null) actions.setLoading(Boolean(snapshot.loading));
@@ -81,8 +87,8 @@ export default function useTrading() {
       tradeHistory: safeArray(tradingState.tradeHistory),
       riskMetrics: safeObject(tradingState.riskMetrics),
       chartData: safeArray(tradingState.chartData),
-      positions,
 
+      positions,
       openPositions,
       closedPositions,
 
