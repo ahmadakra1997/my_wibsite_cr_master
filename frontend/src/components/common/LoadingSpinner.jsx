@@ -1,11 +1,10 @@
 // frontend/src/components/common/LoadingSpinner.jsx
-import React, { useEffect } from 'react';
+import React from 'react';
 
 /**
  * سبينر بسيط قابل لإعادة الاستخدام.
- * يُستخدم في App.js كـ fallback في React.Suspense.
+ * يُستخدم كـ fallback في Suspense أو داخل صفحات التحميل.
  */
-
 const typeLabels = {
   trading: 'جاري تحميل واجهة التداول المتقدمة...',
   dashboard: 'جاري تحميل لوحة التحكم...',
@@ -13,68 +12,54 @@ const typeLabels = {
   default: 'جاري التحميل...',
 };
 
-const LOADING_SPINNER_STYLES_ID = 'qa-loading-spinner-styles';
-
-const LOADING_SPINNER_STYLES = `
-.qa-loading-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  min-height: 90px;
-  color: var(--qa-text-muted, #9ca3af);
-  font-size: 13px;
-  text-align: center;
-}
-
-.qa-loading-orb {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  border: 3px solid rgba(148, 163, 184, 0.5);
-  border-top-color: var(--qa-primary, #22d3ee);
-  border-right-color: rgba(56, 189, 248, 0.85);
-  border-left-color: rgba(45, 212, 191, 0.7);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
-  animation: qa-loading-spin 0.7s linear infinite;
-}
-
-.qa-loading-text {
-  font-size: 12px;
-  max-width: 260px;
-}
-
-@keyframes qa-loading-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-`;
-
-const ensureSpinnerStyles = () => {
-  if (typeof document === 'undefined') return;
-
-  if (document.getElementById(LOADING_SPINNER_STYLES_ID)) return;
-
-  const style = document.createElement('style');
-  style.id = LOADING_SPINNER_STYLES_ID;
-  style.innerHTML = LOADING_SPINNER_STYLES;
-  document.head.appendChild(style);
-};
-
 const LoadingSpinner = ({ type = 'default', label }) => {
-  useEffect(() => {
-    ensureSpinnerStyles();
-  }, []);
-
   const text = label || typeLabels[type] || typeLabels.default;
 
   return (
-    <div className="qa-loading-spinner" role="status" aria-live="polite">
-      <div className="qa-loading-orb" />
-      <div className="qa-loading-text">{text}</div>
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        width: '100%',
+        display: 'grid',
+        placeItems: 'center',
+        padding: 18,
+      }}
+    >
+      {/* CSS داخلي لتجنب إضافة ملف جديد */}
+      <style>
+        {`
+          @keyframes qa_spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+
+      <div
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: '999px',
+          border: '3px solid rgba(255,255,255,0.10)',
+          borderTopColor: 'rgba(0,229,255,0.85)',
+          borderRightColor: 'rgba(0,245,155,0.70)',
+          animation: 'qa_spin 0.9s linear infinite',
+          boxShadow: '0 0 24px rgba(0,229,255,0.18)',
+        }}
+        aria-hidden="true"
+      />
+
+      <div
+        style={{
+          marginTop: 10,
+          color: 'var(--qa-text-muted, #7b8ca8)',
+          fontSize: 12,
+          textAlign: 'center',
+        }}
+      >
+        {text}
+      </div>
     </div>
   );
 };

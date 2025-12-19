@@ -788,3 +788,42 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* =========================================
+   UX: small-screen scrolling + focus states
+   ========================================= */
+
+.payment-modal-overlay {
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+.payment-modal-panel {
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+}
+
+.payment-close-btn:focus-visible,
+.method-card:focus-visible,
+.network-card:focus-visible,
+.copy-btn:focus-visible,
+.control-btn:focus-visible,
+.confirmation-btn:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.75);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-spinner {
+    animation: none !important;
+  }
+
+  .payment-close-btn,
+  .method-card,
+  .network-card,
+  .copy-btn,
+  .control-btn,
+  .progress-fill {
+    transition: none !important;
+  }
+}

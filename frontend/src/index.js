@@ -13,7 +13,7 @@ if (typeof document !== 'undefined' && document.body) {
   document.body.classList.add('quantum-theme');
 }
 
-const container = document.getElementById('root');
+const container = typeof document !== 'undefined' ? document.getElementById('root') : null;
 
 if (container) {
   const root = ReactDOM.createRoot(container);
@@ -26,4 +26,6 @@ if (container) {
 }
 
 // قياس الأداء (اختياري)
-reportWebVitals();
+if (typeof reportWebVitals === 'function') {
+  reportWebVitals();
+}

@@ -1,3 +1,4 @@
+// frontend/src/components/payment/PaymentModal.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import './PaymentModal.css';
@@ -14,6 +15,9 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
   const [countdown, setCountdown] = useState(900); // 15 minutes
   const [transactionStatus, setTransactionStatus] = useState(null);
 
+  // مرجع ثابت لتحويل sham bank (حتى لا يتغير كل رندر)
+  const [bankReference, setBankReference] = useState(null);
+
   const modalRef = useRef(null);
 
   // أسعار الخطط (كما في الملف الأصلي)
@@ -22,13 +26,14 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
     medium: 99,
     professional: 149,
   };
+
   const amount = planPrices[plan] || 29;
 
   // إغلاق بـ ESC
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape' && isOpen) {
-        onClose();
+        onClose?.();
       }
     };
 
@@ -138,7 +143,9 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
 
       setPaymentInfo(mockPaymentInfo);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to fetch payment info:', err);
+      setError('تعذر تحميل معلومات الدفع. حاول مرة أخرى.');
     }
   };
 
@@ -149,8 +156,23 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
       setCountdown(900);
       setTransactionStatus(null);
       setError(null);
+      setBankReference(null);
     }
   }, [isOpen, plan]);
+
+  // تثبيت مرجع التحويل عند دخول details وطريقة sham_bank
+  useEffect(() => {
+    if (!isOpen) return;
+    if (paymentStep !== 'details') return;
+    if (activeMethod !== 'sham_bank') return;
+
+    // أنشئ مرجع ثابت مرة واحدة فقط
+    setBankReference((prev) => {
+      if (prev) return prev;
+      const prefix = paymentInfo?.shamBankInfo?.referencePrefix || 'AKR';
+      return `${prefix}-${Date.now().toString().slice(-6)}`;
+    });
+  }, [isOpen, paymentStep, activeMethod, paymentInfo]);
 
   const handlePayment = async () => {
     setLoading(true);
@@ -163,12 +185,10 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
         amount,
         plan,
         network: activeMethod === 'usdt' ? selectedNetwork : null,
-        reference:
-          activeMethod === 'sham_bank'
-            ? `AKR-${Date.now().toString().slice(-6)}`
-            : null,
+        reference: activeMethod === 'sham_bank' ? bankReference || `AKR-${Date.now().toString().slice(-6)}` : null,
       };
 
+      // eslint-disable-next-line no-console
       console.log('إرسال بيانات الدفع:', paymentData);
 
       // محاكاة اتصال بالخادم
@@ -194,8 +214,10 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
 
       setTransactionStatus(mockResponse);
       setPaymentStep('confirmation');
+      // eslint-disable-next-line no-console
       console.log('✅ عملية الدفع ناجحة:', mockResponse.data);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('خطأ في معالجة الدفع:', err);
       setError('حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.');
     } finally {
@@ -222,6 +244,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
         }, 2000);
       })
       .catch((err) => {
+        // eslint-disable-next-line no-console
         console.error('Failed to copy:', err);
       });
   };
@@ -229,9 +252,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${secs
-      .toString()
-      .padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getPlanName = () => {
@@ -244,9 +265,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
   };
 
   const getWalletAddress = () => {
-    const network = paymentInfo?.walletInfo?.networks?.find(
-      (n) => n.id === selectedNetwork,
-    );
+    const network = paymentInfo?.walletInfo?.networks?.find((n) => n.id === selectedNetwork);
     return network?.address || 'TJX5m8K9pQ2sR7tN1vW3yZ6xL4dF8gH0j';
   };
 
@@ -284,27 +303,15 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
 
           {/* شريط الخطوات */}
           <div className="payment-steps">
-            <div
-              className={`payment-step ${
-                paymentStep === 'method' ? 'payment-step-active' : ''
-              }`}
-            >
+            <div className={`payment-step ${paymentStep === 'method' ? 'payment-step-active' : ''}`}>
               <span className="payment-step-index">1</span>
               <span className="payment-step-label">اختيار طريقة الدفع</span>
             </div>
-            <div
-              className={`payment-step ${
-                paymentStep === 'details' ? 'payment-step-active' : ''
-              }`}
-            >
+            <div className={`payment-step ${paymentStep === 'details' ? 'payment-step-active' : ''}`}>
               <span className="payment-step-index">2</span>
               <span className="payment-step-label">تفاصيل الدفع</span>
             </div>
-            <div
-              className={`payment-step ${
-                paymentStep === 'confirmation' ? 'payment-step-active' : ''
-              }`}
-            >
+            <div className={`payment-step ${paymentStep === 'confirmation' ? 'payment-step-active' : ''}`}>
               <span className="payment-step-index">3</span>
               <span className="payment-step-label">التأكيد</span>
             </div>
@@ -332,30 +339,22 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                         <button
                           key={method.id}
                           type="button"
-                          className={`method-card ${
-                            activeMethod === method.id ? 'method-active' : ''
-                          } ${method.isTest ? 'method-test' : ''}`}
+                          className={`method-card ${activeMethod === method.id ? 'method-active' : ''} ${method.isTest ? 'method-test' : ''}`}
                           style={{ '--method-color': method.color }}
                           onClick={() => setActiveMethod(method.id)}
                           disabled={loading}
                         >
                           <div className="method-header">
-                            <span className="method-icon">
-                              {method.icon || '💳'}
-                            </span>
+                            <span className="method-icon">{method.icon || '💳'}</span>
                             <span className="method-name">{method.name}</span>
                           </div>
-                          <p className="method-description">
-                            {method.description}
-                          </p>
+                          <p className="method-description">{method.description}</p>
                           <ul className="method-features">
                             {method.features?.map((feature, index) => (
                               <li key={index}>{feature}</li>
                             ))}
                           </ul>
-                          {method.isTest && (
-                            <span className="method-test-badge">وضع تجريبي</span>
-                          )}
+                          {method.isTest && <span className="method-test-badge">وضع تجريبي</span>}
                         </button>
                       ))}
                     </div>
@@ -389,9 +388,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                   <div className="countdown-content">
                     <div className="countdown-label">مهلة الدفع</div>
                     <div className="countdown-time">{formatTime(countdown)}</div>
-                    <p className="countdown-note">
-                      يرجى إتمام الدفع قبل انتهاء الوقت
-                    </p>
+                    <p className="countdown-note">يرجى إتمام الدفع قبل انتهاء الوقت</p>
                   </div>
                 </div>
 
@@ -417,18 +414,14 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                         <button
                           key={network.id}
                           type="button"
-                          className={`network-card ${
-                            selectedNetwork === network.id ? 'network-active' : ''
-                          }`}
+                          className={`network-card ${selectedNetwork === network.id ? 'network-active' : ''}`}
                           style={{ '--network-color': network.color }}
                           onClick={() => setSelectedNetwork(network.id)}
                           disabled={loading}
                         >
                           <div className="network-header">
                             <span className="network-name">{network.name}</span>
-                            {network.popular && (
-                              <span className="network-badge">موصى به</span>
-                            )}
+                            {network.popular && <span className="network-badge">موصى به</span>}
                           </div>
                           <div className="network-meta">
                             <span>رسوم: {network.fee}</span>
@@ -447,18 +440,11 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                       <div className="wallet-row">
                         <span className="wallet-label">عنوان المحفظة:</span>
                         <div className="wallet-value-copy">
-                          <code className="wallet-address">
-                            {getWalletAddress()}
-                          </code>
+                          <code className="wallet-address">{getWalletAddress()}</code>
                           <button
                             type="button"
                             className="copy-btn"
-                            onClick={(e) =>
-                              copyToClipboard(
-                                getWalletAddress(),
-                                e.currentTarget,
-                              )
-                            }
+                            onClick={(e) => copyToClipboard(getWalletAddress(), e.currentTarget)}
                             disabled={loading}
                           >
                             نسخ
@@ -467,20 +453,16 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                       </div>
                       <div className="wallet-row">
                         <span className="wallet-label">المبلغ المطلوب:</span>
-                        <span className="wallet-value">
-                          ${amount} USDT
-                        </span>
+                        <span className="wallet-value">${amount} USDT</span>
                       </div>
                       <div className="wallet-row">
                         <span className="wallet-label">الرسوم التقريبية:</span>
                         <span className="wallet-value">
-                          {usdtNetworks.find((n) => n.id === selectedNetwork)?.fee ||
-                            '1 USDT'}
+                          {usdtNetworks.find((n) => n.id === selectedNetwork)?.fee || '1 USDT'}
                         </span>
                       </div>
                       <p className="wallet-note">
-                        بعد إتمام التحويل، اضغط على زر تأكيد الدفع وسيتم تفعيل
-                        اشتراكك تلقائياً.
+                        بعد إتمام التحويل، اضغط على زر تأكيد الدفع وسيتم تفعيل اشتراكك تلقائياً.
                       </p>
                     </div>
                   </div>
@@ -492,37 +474,29 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                     <div className="bank-grid">
                       <div className="bank-field">
                         <span className="field-label">اسم البنك:</span>
-                        <span className="field-value">
-                          {paymentInfo?.shamBankInfo?.bankName}
-                        </span>
+                        <span className="field-value">{paymentInfo?.shamBankInfo?.bankName}</span>
                       </div>
+
                       <div className="bank-field">
                         <span className="field-label">الحساب التاجر:</span>
                         <div className="field-value-copy">
-                          <code className="wallet-address">
-                            {paymentInfo?.shamBankInfo?.merchantAccount}
-                          </code>
+                          <code className="wallet-address">{paymentInfo?.shamBankInfo?.merchantAccount}</code>
                           <button
                             type="button"
                             className="copy-btn small"
-                            onClick={(e) =>
-                              copyToClipboard(
-                                paymentInfo?.shamBankInfo?.merchantAccount || '',
-                                e.currentTarget,
-                              )
-                            }
+                            onClick={(e) => copyToClipboard(paymentInfo?.shamBankInfo?.merchantAccount || '', e.currentTarget)}
                             disabled={loading}
                           >
                             نسخ
                           </button>
                         </div>
                       </div>
+
                       <div className="bank-field">
                         <span className="field-label">اسم المستفيد:</span>
-                        <span className="field-value">
-                          {paymentInfo?.shamBankInfo?.beneficiary}
-                        </span>
+                        <span className="field-value">{paymentInfo?.shamBankInfo?.beneficiary}</span>
                       </div>
+
                       <div className="bank-field">
                         <span className="field-label">المبلغ:</span>
                         <span className="field-value">${amount}</span>
@@ -538,11 +512,8 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                     </ol>
 
                     <div className="reference-box">
-                      <div className="field-label">رقم المرجع (مثال):</div>
-                      <div className="reference-value">
-                        {paymentInfo?.shamBankInfo?.referencePrefix}-
-                        {Date.now().toString().slice(-6)}
-                      </div>
+                      <div className="field-label">رقم المرجع:</div>
+                      <div className="reference-value">{bankReference || `${paymentInfo?.shamBankInfo?.referencePrefix || 'AKR'}-${Date.now().toString().slice(-6)}`}</div>
                       <p className="reference-note">
                         يرجى كتابة هذا الرقم في وصف التحويل لتسريع عملية التفعيل.
                       </p>
@@ -553,17 +524,14 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                 {activeMethod === 'dev_test' && (
                   <div className="devtest-details">
                     <h4 className="section-subtitle">الدفع التجريبي</h4>
-                    <p>
-                      هذا الوضع مخصص للتطوير والاختبار. لن يتم خصم أي أموال حقيقية.
-                    </p>
+                    <p>هذا الوضع مخصص للتطوير والاختبار. لن يتم خصم أي أموال حقيقية.</p>
                     <ul className="devtest-list">
                       <li>الباقة: {getPlanName()}</li>
                       <li>المدة: 30 يوم</li>
                       <li>السعر: $0 (تجريبي)</li>
                     </ul>
                     <p className="devtest-note">
-                      سيتم تفعيل جميع ميزات الباقة المختارة باستخدام بيانات تجريبية
-                      واقعية.
+                      سيتم تفعيل جميع ميزات الباقة المختارة باستخدام بيانات تجريبية واقعية.
                     </p>
                   </div>
                 )}
@@ -583,7 +551,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                     onClick={handlePayment}
                     disabled={loading}
                   >
-                    {loading ? 'جاري المعالجة...' : '✅ تأكيد الدفع'}
+                    {loading ? (t?.('payment.processing') || 'جاري المعالجة...') : (t?.('payment.confirm') || '✅ تأكيد الدفع')}
                   </button>
                 </div>
               </section>
@@ -600,9 +568,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                 <div className="confirmation-grid">
                   <div className="confirmation-card">
                     <div className="confirmation-label">رقم العملية</div>
-                    <div className="confirmation-value">
-                      {transactionStatus.data.transactionId}
-                    </div>
+                    <div className="confirmation-value">{transactionStatus.data.transactionId}</div>
                   </div>
                   <div className="confirmation-card">
                     <div className="confirmation-label">الباقة</div>
@@ -610,16 +576,12 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                   </div>
                   <div className="confirmation-card">
                     <div className="confirmation-label">تاريخ البدء</div>
-                    <div className="confirmation-value">
-                      {new Date().toLocaleDateString('ar-SA')}
-                    </div>
+                    <div className="confirmation-value">{new Date().toLocaleDateString('ar-SA')}</div>
                   </div>
                   <div className="confirmation-card">
                     <div className="confirmation-label">تاريخ الانتهاء</div>
                     <div className="confirmation-value">
-                      {new Date(
-                        Date.now() + 30 * 24 * 60 * 60 * 1000,
-                      ).toLocaleDateString('ar-SA')}
+                      {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('ar-SA')}
                     </div>
                   </div>
                 </div>
@@ -637,7 +599,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
                   type="button"
                   className="confirmation-btn primary"
                   onClick={() => {
-                    onClose();
+                    onClose?.();
                     window.location.reload();
                   }}
                 >
@@ -661,9 +623,7 @@ const PaymentModal = ({ isOpen, onClose, plan, user }) => {
           {/* معلومات الدعم */}
           <footer className="payment-footer">
             <div className="support-title">بحاجة إلى مساعدة؟</div>
-            <div className="support-text">
-              فريق الدعم متاح 24/7 لمساعدتك في أي استفسار.
-            </div>
+            <div className="support-text">فريق الدعم متاح 24/7 لمساعدتك في أي استفسار.</div>
             <div className="support-contact">
               <span>support@akraa-trade.com</span>
               <span>•</span>

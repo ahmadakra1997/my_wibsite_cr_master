@@ -7,6 +7,8 @@ const ensureApiSuffix = (base) => (/\/api(\/v\d+)?$/.test(base) ? base : `${base
 const BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 const API_BASE_URL = ensureApiSuffix(normalizeBase(BASE));
 
+export { API_BASE_URL };
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 20000,
@@ -15,19 +17,24 @@ const api = axios.create({
 
 const unwrap = (res) => {
   const data = res?.data;
+
+  // يدعم نمط {success, data, message}
   if (data && typeof data === 'object' && 'success' in data) {
-    if (data.success) return data.data;
-    throw new Error(data.message || 'Request failed');
+    if (data.success) return data?.data;
+    throw new Error(data?.message || 'Request failed');
   }
+
   return data;
 };
 
 const toError = (err) => {
+  // Guards قوية على اختلاف أشكال أخطاء axios
   const msg =
     err?.response?.data?.message ||
+    err?.response?.data?.error ||
     err?.message ||
     'Network request failed';
-  return new Error(msg);
+  return new Error(String(msg));
 };
 
 export const getBotStatus = async () => {

@@ -1,118 +1,150 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// frontend/src/context/AuthContext.js
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { authAPI } from '../services/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+const STORAGE_TOKEN_KEY = 'token';
+const STORAGE_USER_KEY = 'user';
+
+function safeWindow() {
+  return typeof window !== 'undefined' ? window : null;
+}
+
+function safeJsonParse(value, fallback = null) {
+  try {
+    if (!value) return fallback;
+    return JSON.parse(value);
+  } catch (_) {
+    return fallback;
+  }
+}
+
+export const AuthProvider = ({ children }) => {
+  const w = safeWindow();
+
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Bootstrap from storage
+  useEffect(() => {
+    try {
+      const storedToken = w?.localStorage?.getItem(STORAGE_TOKEN_KEY) || null;
+      const storedUserRaw = w?.localStorage?.getItem(STORAGE_USER_KEY) || null;
+      const storedUser = safeJsonParse(storedUserRaw, null);
+
+      if (storedToken) setToken(storedToken);
+      if (storedUser) setUser(storedUser);
+    } catch (_) {
+      // ignore storage errors
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const login = useCallback(async (credentials) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authAPI.login(credentials);
+      const data = response?.data || response || {};
+
+      const nextToken = data?.token || data?.accessToken || null;
+      const nextUser = data?.user || data?.profile || null;
+
+      if (nextToken) setToken(nextToken);
+      if (nextUser) setUser(nextUser);
+
+      try {
+        if (nextToken) w?.localStorage?.setItem(STORAGE_TOKEN_KEY, nextToken);
+        if (nextUser) w?.localStorage?.setItem(STORAGE_USER_KEY, JSON.stringify(nextUser));
+      } catch (_) {
+        // ignore
+      }
+
+      return data;
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Login failed';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [w]);
+
+  const register = useCallback(async (userData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authAPI.register(userData);
+      const data = response?.data || response || {};
+
+      // بعض الباك-إند يرجع token مباشرة بعد التسجيل
+      const nextToken = data?.token || data?.accessToken || null;
+      const nextUser = data?.user || data?.profile || null;
+
+      if (nextToken) setToken(nextToken);
+      if (nextUser) setUser(nextUser);
+
+      try {
+        if (nextToken) w?.localStorage?.setItem(STORAGE_TOKEN_KEY, nextToken);
+        if (nextUser) w?.localStorage?.setItem(STORAGE_USER_KEY, JSON.stringify(nextUser));
+      } catch (_) {
+        // ignore
+      }
+
+      return data;
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Registration failed';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [w]);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    setError(null);
+
+    try {
+      w?.localStorage?.removeItem(STORAGE_TOKEN_KEY);
+      w?.localStorage?.removeItem(STORAGE_USER_KEY);
+    } catch (_) {
+      // ignore
+    }
+  }, [w]);
+
+  const value = {
+    user,
+    token,
+    loading,
+    error,
+    isAuthenticated: !!token,
+    login,
+    register,
+    logout,
+    setUser, // لا نحذف أي إمكانيات مستقبلية
+    setToken,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // تحميل بيانات المستخدم عند تحميل التطبيق
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      // التحقق من صحة token
-      checkAuth();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await authAPI.getMe();
-      setUser(response.data);
-      localStorage.setItem('user', JSON.stringify(response.data));
-    } catch (error) {
-      console.error('Authentication check failed:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (email, password) => {
-    try {
-      setError('');
-      setLoading(true);
-      
-      const response = await authAPI.login({ email, password });
-      const { token, user } = response.data;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'فشل تسجيل الدخول';
-      setError(message);
-      return { success: false, message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (name, email, password) => {
-    try {
-      setError('');
-      setLoading(true);
-
-      const response = await authAPI.register({ name, email, password });
-      const { token, user } = response.data;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'فشل إنشاء الحساب';
-      setError(message);
-      return { success: false, message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setError('');
-  };
-
-  const clearError = () => setError('');
-
-  const value = {
-    user,
-    loading,
-    error,
-    login,
-    register,
-    logout,
-    clearError,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin'
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export default AuthContext;
+// لتوافق الاستيراد الموجود عندك: import AuthProvider from './context/AuthContext'
+export default AuthProvider;

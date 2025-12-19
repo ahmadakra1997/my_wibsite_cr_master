@@ -1,242 +1,258 @@
-import React, { useState, useEffect, useRef } from 'react';
+// frontend/src/components/LanguageSwitcher.jsx
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import './LanguageSwitcher.css';
 
-const LanguageSwitcher = () => {
+const DEFAULT_LANGS = [
+  { code: 'ar', name: 'العربية', dir: 'rtl', flag: '🇸🇦' },
+  { code: 'en', name: 'English', dir: 'ltr', flag: '🇺🇸' },
+  { code: 'tr', name: 'Türkçe', dir: 'ltr', flag: '🇹🇷' },
+  { code: 'ru', name: 'Русский', dir: 'ltr', flag: '🇷🇺' },
+  { code: 'zh', name: '中文', dir: 'ltr', flag: '🇨🇳' },
+];
+
+function safeDoc() {
+  if (typeof document === 'undefined') return null;
+  return document;
+}
+
+function normalize(code) {
+  return String(code || 'en')
+    .trim()
+    .split('-')[0]
+    .toLowerCase();
+}
+
+function setHtmlLangDir(code, dir) {
+  const d = safeDoc();
+  if (!d) return;
+
+  const html = d.documentElement;
+  html.setAttribute('lang', code);
+  html.setAttribute('dir', dir);
+  html.setAttribute('data-lang', code);
+}
+
+function updateTitleForLang(code) {
+  const d = safeDoc();
+  if (!d) return;
+
+  const titles = {
+    ar: 'QA TRADER — منصة التداول الكمي',
+    en: 'QA TRADER — Quantum Trading Platform',
+    tr: 'QA TRADER — Kuantum Alım-Satım Platformu',
+    ru: 'QA TRADER — Квантовая торговая платформа',
+    zh: 'QA TRADER — 量化交易平台',
+  };
+
+  d.title = titles[code] || d.title || 'QA TRADER';
+}
+
+export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(i18n.language);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
-  const dropdownRef = useRef(null);
+  const rootRef = React.useRef(null);
 
-  const languages = [
-    { code: 'ar', name: 'العربية', flag: '🇸🇦', dir: 'rtl' },
-    { code: 'en', name: 'English', flag: '🇺🇸', dir: 'ltr' },
-    { code: 'tr', name: 'Türkçe', flag: '🇹🇷', dir: 'ltr' },
-    { code: 'ru', name: 'Русский', flag: '🇷🇺', dir: 'ltr' },
-    { code: 'zh', name: '中文', flag: '🇨🇳', dir: 'ltr' },
-  ];
+  const langs = React.useMemo(() => DEFAULT_LANGS, []);
+  const currentCode = normalize(i18n?.resolvedLanguage || i18n?.language || 'en');
 
-  // إغلاق القائمة عند النقر خارجها
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
+  const currentLang = React.useMemo(() => {
+    return langs.find((l) => l.code === currentCode) || langs.find((l) => l.code === 'en') || langs[0];
+  }, [langs, currentCode]);
+
+  const close = React.useCallback(() => setOpen(false), []);
+  const toggle = React.useCallback(() => setOpen((v) => !v), []);
+
+  const applyLanguage = React.useCallback(
+    async (nextCodeRaw) => {
+      const nextCode = normalize(nextCodeRaw);
+      if (!i18n || !nextCode) {
+        close();
+        return;
       }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () =>
-      document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+      if (nextCode === currentCode) {
+        close();
+        return;
+      }
 
-  // تحديث اللغة الحالية عند التغيير
-  useEffect(() => {
-    setCurrentLang(i18n.language);
-  }, [i18n.language]);
-
-  const getCurrentLanguage = () =>
-    languages.find((lang) => lang.code === currentLang) || languages[0];
-
-  const toggleDropdown = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setIsOpen((prev) => !prev);
-    setTimeout(() => setIsAnimating(false), 300);
-  };
-
-  const updatePageTitle = (lang) => {
-    const titles = {
-      ar: 'QUANTUM AI TRADING PLATFORM - نظام التداول الآلي المتقدم',
-      en: 'QUANTUM AI TRADING PLATFORM - Advanced AI Trading System',
-      tr: 'QUANTUM AI TRADING PLATFORM - Gelişmiş AI Ticaret Sistemi',
-      ru: 'QUANTUM AI TRADING PLATFORM - Продвинутая AI Торговая Система',
-      zh: 'QUANTUM AI TRADING PLATFORM - 高级AI交易系统',
-    };
-
-    document.title = titles[lang] || titles.en;
-  };
-
-  const changeLanguage = async (langCode, dir) => {
-    if (isAnimating || langCode === currentLang) return;
-
-    setIsAnimating(true);
-
-    // تأثير تعتيم سريع
-    document.documentElement.style.opacity = '0.7';
-    document.documentElement.style.transition = 'opacity 0.3s ease';
-
-    try {
-      await i18n.changeLanguage(langCode);
-
-      document.documentElement.dir = dir;
-      document.documentElement.lang = langCode;
-      document.documentElement.setAttribute('data-lang', langCode);
+      const target = langs.find((l) => l.code === nextCode) || { code: nextCode, dir: 'ltr' };
 
       try {
-        localStorage.setItem('qa_lang', langCode);
-      } catch (e) {
-        console.warn('Language localStorage not available', e);
+        setLoading(true);
+
+        const d = safeDoc();
+        if (d) d.documentElement.classList.add('language-loading');
+
+        await i18n.changeLanguage(target.code);
+
+        setHtmlLangDir(target.code, target.dir);
+        updateTitleForLang(target.code);
+
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage?.setItem('qa_lang', target.code);
+          }
+        } catch {
+          // ignore
+        }
+      } finally {
+        const d = safeDoc();
+        if (d) d.documentElement.classList.remove('language-loading');
+
+        setLoading(false);
+        close();
+      }
+    },
+    [i18n, langs, currentCode, close]
+  );
+
+  // Apply stored language (once) + align html lang/dir حتى لو ما في saved
+  React.useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+
+      const saved = normalize(window.localStorage?.getItem('qa_lang'));
+      const target = langs.find((l) => l.code === saved);
+
+      if (saved && target && saved !== currentCode) {
+        setHtmlLangDir(target.code, target.dir);
+        updateTitleForLang(target.code);
+        i18n?.changeLanguage?.(target.code);
+        return;
       }
 
-      updatePageTitle(langCode);
-      setCurrentLang(langCode);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Language change error:', error);
-    } finally {
-      setTimeout(() => {
-        document.documentElement.style.opacity = '1';
-        setIsAnimating(false);
-      }, 300);
+      // no saved: ensure html aligned with current
+      if (currentLang?.code && currentLang?.dir) {
+        setHtmlLangDir(currentLang.code, currentLang.dir);
+        updateTitleForLang(currentLang.code);
+      }
+    } catch {
+      // ignore
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close on outside click + ESC
+  React.useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (e) => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (!root.contains(e.target)) close();
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') close();
+    };
+
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open, close]);
 
   return (
     <>
-      <div
-        className={`language-switcher ${
-          isAnimating ? 'language-loading' : ''
-        }`}
-        ref={dropdownRef}
-      >
-        {/* الزر الرئيسي */}
+      <div className="language-switcher" ref={rootRef}>
         <button
           type="button"
-          className={`language-trigger ${
-            isOpen ? 'language-open' : ''
-          }`}
-          onClick={toggleDropdown}
-          disabled={isAnimating}
+          className={`language-trigger ${open ? 'language-open' : ''}`}
+          onClick={toggle}
           aria-haspopup="listbox"
-          aria-expanded={isOpen}
+          aria-expanded={open}
+          aria-label={t?.('language.switch') || 'Switch language'}
+          disabled={loading}
         >
+          <div className="pulse-effect" aria-hidden="true" />
+          <div className="glow-effect" aria-hidden="true" />
+
           <div className="trigger-content">
-            <span className="trigger-flag">
-              {getCurrentLanguage().flag || '🌐'}
+            <span className="trigger-flag" aria-hidden="true">
+              {currentLang?.flag || '🌐'}
             </span>
-            <span className="trigger-code">
-              {getCurrentLanguage().code.toUpperCase()}
-            </span>
-            <span className="trigger-chevron">
-              <svg
-                className="chevron-icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M7 10l5 5 5-5H7z" />
+            <span className="trigger-code">{String(currentLang?.code || 'en').toUpperCase()}</span>
+            <span className="trigger-chevron" aria-hidden="true">
+              <svg className="chevron-icon" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+                <path d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4z" />
               </svg>
             </span>
           </div>
-
-          {/* تأثيرات الزر */}
-          <span className="pulse-effect" />
-          <span className="glow-effect" />
         </button>
 
-        {/* القائمة المنسدلة */}
-        <div
-          className={`language-dropdown ${
-            isOpen ? 'dropdown-open' : ''
-          }`}
-        >
-          {/* خلفية شفافة للنقر خارج القائمة (محكومة من نفس الـ ref) */}
-          <div className="dropdown-backdrop" />
+        <div className={`language-dropdown ${open ? 'dropdown-open' : ''}`}>
+          {open && <div className="dropdown-backdrop" onClick={close} aria-hidden="true" />}
 
-          <div className="dropdown-content">
-            {/* رأس القائمة */}
+          <div className="dropdown-content" role="listbox" aria-label={t?.('language.select') || 'Select language'}>
             <div className="dropdown-header">
-              <div className="dropdown-title">
-                <span className="title-icon">🌐</span>
-                <span>
-                  {t(
-                    'language.select',
-                    'اختر لغة واجهة المنصة'
-                  )}
+              <p className="dropdown-title">
+                <span className="title-icon" aria-hidden="true">
+                  🌐
                 </span>
-              </div>
-              <div className="dropdown-divider" />
+                {t?.('language.select') || 'Select Language'}
+              </p>
+              <div className="dropdown-divider" aria-hidden="true" />
             </div>
 
-            {/* قائمة اللغات */}
-            <div className="language-list" role="listbox">
-              {languages.map((language) => (
-                <button
-                  key={language.code}
-                  type="button"
-                  onClick={() =>
-                    changeLanguage(language.code, language.dir)
-                  }
-                  disabled={isAnimating}
-                  className={`language-option ${
-                    currentLang === language.code
-                      ? 'language-active'
-                      : ''
-                  }`}
-                  aria-selected={currentLang === language.code}
-                >
-                  <div className="option-content">
-                    <span className="option-flag">
-                      {language.flag || '🌐'}
-                    </span>
-                    <div className="option-text">
-                      <span className="option-name">
-                        {language.name}
+            <div className="language-list">
+              {langs.map((lang) => {
+                const isActive = lang.code === currentLang?.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    className={`language-option ${isActive ? 'language-active' : ''}`}
+                    onClick={() => applyLanguage(lang.code)}
+                    disabled={loading}
+                    aria-selected={isActive}
+                  >
+                    <span className="option-hover-effect" aria-hidden="true" />
+                    <div className="option-content">
+                      <span className="option-flag" aria-hidden="true">
+                        {lang.flag || '🌐'}
                       </span>
-                      <span className="option-code">
-                        {language.code.toUpperCase()}
+                      <span className="option-text">
+                        <span className="option-name">{lang.name}</span>
+                        <span className="option-code">{lang.code.toUpperCase()}</span>
                       </span>
-                    </div>
 
-                    {currentLang === language.code && (
-                      <div className="option-indicator">
-                        <span className="indicator-dot" />
-                        <span className="indicator-text">
-                          {t(
-                            'language.current',
-                            'اللغة الحالية'
-                          )}
+                      {isActive && (
+                        <span className="option-indicator">
+                          <span className="indicator-dot" aria-hidden="true" />
+                          <span className="indicator-text">{t?.('language.active') || 'Active'}</span>
                         </span>
-                      </div>
-                    )}
-                  </div>
-                  <span className="option-hover-effect" />
-                </button>
-              ))}
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* تذييل القائمة */}
             <div className="dropdown-footer">
               <div className="footer-content">
-                <span className="footer-icon">⚡</span>
-                <span className="footer-text">
-                  {t(
-                    'language.realtime',
-                    'تبديل فوري للواجهة بدون إعادة تحميل الصفحة'
-                  )}
+                <span className="footer-icon" aria-hidden="true">
+                  ⚙️
                 </span>
+                <span className="footer-text">{t?.('language.tip') || 'Tip: You can change anytime'}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* مؤشر تحميل عند تغيير اللغة */}
-      {isAnimating && (
+      {loading && (
         <div className="language-loader" role="status" aria-live="polite">
-          <div className="loader-spinner" />
-          <div className="loader-text">
-            {t('language.switching', 'جاري تبديل اللغة...')}
-          </div>
+          <div className="loader-spinner" aria-hidden="true" />
+          <div className="loader-text">{t?.('language.loading') || 'Switching language…'}</div>
         </div>
       )}
     </>
   );
-};
-
-export default LanguageSwitcher;
+}

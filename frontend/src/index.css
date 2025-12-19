@@ -22,6 +22,18 @@ body {
   color: #e5f4ff;
 }
 
+/* روابط افتراضية آمنة */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* تحسين الـ selection */
+::selection {
+  background: rgba(0, 229, 255, 0.22);
+  color: #e5f4ff;
+}
+
 /* متغيرات الثيم على :root كـ fallback (حتى لو ما تم تفعيل .quantum-theme) */
 :root {
   --qa-bg: #020617;
@@ -96,13 +108,14 @@ body.quantum-theme,
   --qa-transition-fast: 150ms ease-out;
   --qa-transition-med: 220ms ease-out;
 
-  background: radial-gradient(
-    circle at top,
-    #020e3b 0,
-    #020617 50%,
-    #000 100%
-  );
+  background: radial-gradient(circle at top, #020e3b 0, #020617 50%, #000 100%);
   color: var(--qa-text-main);
+}
+
+/* Focus ring عام (آمن) */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.55);
+  outline-offset: 2px;
 }
 
 /* سكرول بار أنيق على مستوى التطبيق */
@@ -149,4 +162,16 @@ body.quantum-theme,
 
 .text-down {
   color: var(--qa-danger);
+}
+
+/* Reduced motion عام */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

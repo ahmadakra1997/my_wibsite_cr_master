@@ -1,169 +1,136 @@
 // frontend/src/context/BotContext.js
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import botService from '../services/botService';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { botAPI } from '../services/api';
 
 const BotContext = createContext(null);
 
-const normalizeError = (err) => {
-  if (!err) return 'Unknown error';
-  if (typeof err === 'string') return err;
-  return err?.response?.data?.message || err?.message || 'Request failed';
-};
-
-export function BotProvider({ children }) {
-  const mountedRef = useRef(true);
-
+export const BotProvider = ({ children }) => {
   const [botStatus, setBotStatus] = useState(null);
-  const [botPerformance, setBotPerformance] = useState(null);
   const [botSettings, setBotSettings] = useState(null);
+  const [performance, setPerformance] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const hasActiveBot = useMemo(() => {
-    const s = botStatus;
-    if (!s) return false;
-    return Boolean(s?.isActive ?? s?.active ?? (s?.status === 'active'));
-  }, [botStatus]);
+  const loadBotData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const safeSet = (setter) => (value) => {
-    if (mountedRef.current) setter(value);
-  };
-
-  const loadBotStatus = useCallback(async () => {
     try {
-      const data = await botService.getBotStatus();
-      safeSet(setBotStatus)(data);
-      return data;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return null;
-    }
-  }, []);
+      const hasApi =
+        botAPI &&
+        (typeof botAPI.getStatus === 'function' ||
+          typeof botAPI.getSettings === 'function' ||
+          typeof botAPI.getPerformance === 'function');
 
-  const loadBotPerformance = useCallback(async (params = {}) => {
-    try {
-      const data = await botService.getPerformanceMetrics(params);
-      safeSet(setBotPerformance)(data);
-      return data;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return null;
-    }
-  }, []);
+      if (!hasApi) {
+        // لا نكسر الواجهة: فقط نعرض خطأ مفهوم
+        throw new Error('Bot API is not available (botAPI methods missing).');
+      }
 
-  const loadBotSettings = useCallback(async () => {
-    try {
-      const data = await botService.getBotSettings();
-      safeSet(setBotSettings)(data);
-      return data;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return null;
-    }
-  }, []);
-
-  const refreshAll = useCallback(async () => {
-    safeSet(setError)(null);
-    safeSet(setLoading)(true);
-    try {
-      await Promise.all([
-        loadBotStatus(),
-        loadBotPerformance({ range: '24h' }),
-        loadBotSettings(),
+      const [statusResponse, settingsResponse, performanceResponse] = await Promise.all([
+        typeof botAPI.getStatus === 'function' ? botAPI.getStatus() : Promise.resolve(null),
+        typeof botAPI.getSettings === 'function' ? botAPI.getSettings() : Promise.resolve(null),
+        typeof botAPI.getPerformance === 'function' ? botAPI.getPerformance() : Promise.resolve(null),
       ]);
+
+      setBotStatus(statusResponse?.data ?? statusResponse ?? null);
+      setBotSettings(settingsResponse?.data ?? settingsResponse ?? null);
+      setPerformance(performanceResponse?.data ?? performanceResponse ?? null);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to load bot data';
+      setError(msg);
     } finally {
-      safeSet(setLoading)(false);
+      setLoading(false);
     }
-  }, [loadBotPerformance, loadBotSettings, loadBotStatus]);
-
-  const activateBot = useCallback(async (payload = {}) => {
-    safeSet(setError)(null);
-    try {
-      await botService.activateBot(payload);
-      await refreshAll();
-      return true;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return false;
-    }
-  }, [refreshAll]);
-
-  const deactivateBot = useCallback(async (payload = {}) => {
-    safeSet(setError)(null);
-    try {
-      await botService.deactivateBot(payload);
-      await refreshAll();
-      return true;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return false;
-    }
-  }, [refreshAll]);
-
-  const updateBotSettings = useCallback(async (nextSettings) => {
-    safeSet(setError)(null);
-    try {
-      await botService.updateBotSettings(nextSettings);
-      await loadBotSettings();
-      return true;
-    } catch (e) {
-      safeSet(setError)(normalizeError(e));
-      return false;
-    }
-  }, [loadBotSettings]);
+  }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
-    refreshAll();
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [refreshAll]);
+    loadBotData();
+  }, [loadBotData]);
 
-  const value = useMemo(() => ({
+  const updateSettings = useCallback(async (newSettings) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!botAPI || typeof botAPI.updateSettings !== 'function') {
+        throw new Error('botAPI.updateSettings is not available.');
+      }
+
+      const response = await botAPI.updateSettings(newSettings);
+      setBotSettings(response?.data ?? response ?? newSettings);
+
+      return response?.data ?? response;
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update settings';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const toggleBot = useCallback(async (action) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (!botAPI) throw new Error('Bot API is not available.');
+
+      // نحافظ على نفس فكرة action بدون فرض شكل جديد
+      // إن كان عندك start/stop أو toggleBot في api، ندعمها كلها:
+      const normalized = String(action || '').toLowerCase();
+
+      let response = null;
+
+      if (normalized === 'start' && typeof botAPI.start === 'function') {
+        response = await botAPI.start();
+      } else if (normalized === 'stop' && typeof botAPI.stop === 'function') {
+        response = await botAPI.stop();
+      } else if (typeof botAPI.toggleBot === 'function') {
+        response = await botAPI.toggleBot(action);
+      } else if (typeof botAPI.setStatus === 'function') {
+        response = await botAPI.setStatus(action);
+      } else {
+        throw new Error('No suitable bot control method found in botAPI.');
+      }
+
+      setBotStatus(response?.data ?? response ?? null);
+      return response?.data ?? response;
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to control bot';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const value = {
     botStatus,
-    botPerformance,
     botSettings,
-    hasActiveBot,
+    performance,
     loading,
     error,
+    loadBotData,
+    updateSettings,
+    toggleBot,
+    setBotStatus,
+    setBotSettings,
+    setPerformance,
+  };
 
-    loadBotStatus,
-    loadBotPerformance,
-    loadBotSettings,
-    refreshAll,
+  return <BotContext.Provider value={value}>{children}</BotContext.Provider>;
+};
 
-    activateBot,
-    deactivateBot,
-    updateBotSettings,
-  }), [
-    botStatus,
-    botPerformance,
-    botSettings,
-    hasActiveBot,
-    loading,
-    error,
-    loadBotStatus,
-    loadBotPerformance,
-    loadBotSettings,
-    refreshAll,
-    activateBot,
-    deactivateBot,
-    updateBotSettings,
-  ]);
+export const useBot = () => {
+  const context = useContext(BotContext);
+  if (!context) {
+    throw new Error('useBot must be used within BotProvider');
+  }
+  return context;
+};
 
-  return (
-    <BotContext.Provider value={value}>
-      {children}
-    </BotContext.Provider>
-  );
-}
-
-export function useBot() {
-  const ctx = useContext(BotContext);
-  if (!ctx) throw new Error('useBot must be used within <BotProvider>');
-  return ctx;
-}
-
-export default BotContext;
+// لتوافق الاستيراد الموجود عندك: import BotProvider from './context/BotContext'
+export default BotProvider;

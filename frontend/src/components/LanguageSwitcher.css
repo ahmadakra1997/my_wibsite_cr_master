@@ -1,4 +1,4 @@
-/* LanguageSwitcher.css - Enhanced & Fixed Version */
+/* frontend/src/components/LanguageSwitcher.css - Enhanced & Fixed Version */
 
 .language-switcher {
   position: fixed;
@@ -19,20 +19,21 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px);
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(0, 163, 255, 0.1);
   min-width: 80px;
   overflow: hidden;
   user-select: none;
   outline: none;
+  touch-action: manipulation;
 }
 
 .language-trigger:hover {
   border-color: rgba(0, 163, 255, 0.7);
   background: rgba(42, 52, 71, 0.98);
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 12px 35px rgba(0, 163, 255, 0.25),
     0 0 0 1px rgba(0, 163, 255, 0.2);
 }
@@ -147,6 +148,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 220px;
   z-index: 1001;
+  will-change: transform, opacity;
 }
 
 .language-dropdown.dropdown-open {
@@ -171,12 +173,13 @@
   border: 1.5px solid rgba(0, 163, 255, 0.4);
   border-radius: 16px;
   backdrop-filter: blur(20px);
-  box-shadow: 
+  box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(0, 163, 255, 0.1);
   overflow: hidden;
   position: relative;
   z-index: 10;
+  transform-origin: top center;
 }
 
 /* رأس القائمة */
@@ -243,6 +246,7 @@
   overflow: hidden;
   text-align: left;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .language-option:hover:not(:disabled) {
@@ -317,12 +321,12 @@
 }
 
 @keyframes indicator-pulse {
-  0%, 100% { 
-    opacity: 1; 
+  0%, 100% {
+    opacity: 1;
     transform: scale(1);
   }
-  50% { 
-    opacity: 0.7; 
+  50% {
+    opacity: 0.7;
     transform: scale(1.2);
   }
 }
@@ -482,26 +486,26 @@
     top: 1rem;
     right: 1rem;
   }
-  
+
   [dir="rtl"] .language-switcher {
     right: auto;
     left: 1rem;
   }
-  
+
   .language-trigger {
     padding: 0.6rem 0.8rem;
     min-width: 70px;
     border-radius: 14px;
   }
-  
+
   .trigger-code {
     font-size: 0.8rem;
   }
-  
+
   .dropdown-content {
     min-width: 180px;
   }
-  
+
   .language-loader {
     padding: 1rem 1.5rem;
   }
@@ -512,45 +516,45 @@
     top: 0.75rem;
     right: 0.75rem;
   }
-  
+
   [dir="rtl"] .language-switcher {
     right: auto;
     left: 0.75rem;
   }
-  
+
   .language-trigger {
     padding: 0.5rem 0.7rem;
     border-radius: 12px;
     min-width: 60px;
   }
-  
+
   .trigger-flag {
     font-size: 1.1rem;
   }
-  
+
   .trigger-code {
     font-size: 0.75rem;
   }
-  
+
   .chevron-icon {
     width: 14px;
     height: 14px;
   }
-  
+
   .dropdown-content {
     min-width: 160px;
     border-radius: 14px;
   }
-  
+
   .language-option {
     padding: 0.6rem 0.8rem;
     border-radius: 10px;
   }
-  
+
   .option-flag {
     font-size: 1.3rem;
   }
-  
+
   .option-name {
     font-size: 0.85rem;
   }
@@ -562,12 +566,12 @@
     transform: none;
     border-color: rgba(0, 163, 255, 0.4);
   }
-  
+
   .language-option:hover:not(:disabled) {
     transform: none;
     background: transparent;
   }
-  
+
   .language-active {
     background: rgba(0, 163, 255, 0.15) !important;
   }
@@ -579,32 +583,14 @@
     padding: 0.85rem 1.1rem;
     min-width: 85px;
   }
-  
+
   .language-option {
     padding: 0.9rem 1.1rem;
     min-height: 54px;
   }
-  
+
   .dropdown-content {
     min-width: 200px;
-  }
-}
-
-/* دعم نظام الألوان المظلمة */
-@media (prefers-color-scheme: dark) {
-  .language-switcher {
-    /* الألوان معدة مسبقاً للنظام المظلم */
-  }
-}
-
-/* تحسينات للأجهزة عالية الدقة */
-@media (min-resolution: 2dppx) {
-  .language-trigger {
-    border-width: 1px;
-  }
-  
-  .dropdown-content {
-    border-width: 1px;
   }
 }
 
@@ -624,13 +610,8 @@
   box-sizing: border-box;
 }
 
-/* تأثيرات انتقال سلسة */
 .language-switcher {
   perspective: 1000px;
-}
-
-.dropdown-content {
-  transform-origin: top center;
 }
 
 /* تحسينات للرسوم المتحركة */
@@ -649,12 +630,6 @@
   animation: slideInDown 0.3s ease;
 }
 
-/* تحسينات للوضوح والقراءة */
-.language-switcher {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* دعم متصفحات محددة */
 @supports not (backdrop-filter: blur(20px)) {
   .language-trigger,
@@ -671,20 +646,6 @@
   }
 }
 
-/* تحسينات للتفاعل */
-.language-trigger {
-  touch-action: manipulation;
-}
-
-.language-option {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* تحسينات للشبكات البطيئة */
-.language-switcher {
-  will-change: transform, opacity;
-}
-
 /* تأثيرات تحميل متقدمة */
 .language-loading .language-trigger {
   pointer-events: none;
@@ -698,4 +659,36 @@
 @keyframes flag-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
+}
+
+/* =========================================
+   Accessibility + Motion preferences
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .language-trigger,
+  .language-dropdown,
+  .dropdown-open .dropdown-content,
+  .language-loader,
+  .indicator-dot,
+  .footer-icon,
+  .language-loading .trigger-flag {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .pulse-effect,
+  .glow-effect,
+  .option-hover-effect {
+    transition: none !important;
+  }
+}
+
+/* Performance: apply will-change only where it helps */
+.language-switcher {
+  will-change: auto;
+}
+
+.language-trigger {
+  will-change: transform;
 }

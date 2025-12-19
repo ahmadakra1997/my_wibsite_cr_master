@@ -1,400 +1,239 @@
-// frontend/src/components/FeaturesSection.jsx
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './FeaturesSection.css';
 
-const FeaturesSection = () => {
-  const { t } = useTranslation();
+const FEATURES = [
+  {
+    id: 'signals',
+    color: '#22d3ee',
+    icon: '📡',
+    title: 'Quantum Signals',
+    description: 'إشارات لحظية مع فلترة ضوضاء السوق بذكاء.',
+    specs: ['Real-time', 'Noise filter', 'Multi-source'],
+    details: ['تجميع من عدة مصادر', 'تنبيهات قابلة للتخصيص', 'إحصائيات لحظية'],
+  },
+  {
+    id: 'risk',
+    color: '#4ade80',
+    icon: '🛡️',
+    title: 'Risk Shield',
+    description: 'مراقبة المخاطر وإدارة Exposure بشكل واضح.',
+    specs: ['Exposure', 'Stops', 'Limits'],
+    details: ['قواعد حماية تلقائية', 'تنبيهات تجاوز', 'قراءة سريعة للمخاطر'],
+  },
+  {
+    id: 'speed',
+    color: '#60a5fa',
+    icon: '⚡',
+    title: 'Execution Speed',
+    description: 'واجهة خفيفة وعمليات سريعة بدون تعقيد.',
+    specs: ['Low-latency', 'Optimized UI', 'Stable'],
+    details: ['UI سريع', 'تحديثات سلسة', 'تقليل إعادة الرندر'],
+  },
+];
 
-  const [activeFeature, setActiveFeature] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef(null);
+const DEFAULT_TOGGLES = [
+  { id: 'auto', icon: '🤖', text: 'Auto Mode', color: '#22d3ee' },
+  { id: 'hedge', icon: '🧩', text: 'Hedge', color: '#4ade80' },
+  { id: 'alerts', icon: '🔔', text: 'Alerts', color: '#60a5fa' },
+];
 
-  const features = [
-    {
-      icon: '⚡',
-      title: t('features.speed.title', 'سرعة تنفيذ استثنائية'),
-      description: t(
-        'features.speed.description',
-        'تنفيذ الأوامر في أقل من 2 مللي ثانية مع بنية تحتية عالمية.',
-      ),
-      specs: ['0.002s تنفيذ', '99.7% دقة', '24/7 تشغيل'],
-      details: [
-        'تنفيذ الأوامر في أقل من 2 مللي ثانية',
-        'أسرع من المنافسين بـ 10x',
-        'خوادم عالمية موزعة',
-        'اتصال مباشر بمنصات التداول',
-      ],
-      color: '#00a3ff',
-    },
-    {
-      icon: '🎯',
-      title: t('features.accuracy.title', 'دقة تنبؤ عالية'),
-      description: t(
-        'features.accuracy.description',
-        'شبكات عصبية متعددة الطبقات تحلل عشرات المؤشرات الفنية.',
-      ),
-      specs: ['Deep Learning', 'Neural Networks', 'Real-time Analysis'],
-      details: [
-        'شبكات عصبية متعددة الطبقات',
-        'تحليل 100+ مؤشر فني',
-        'مراقبة الأخبار في الوقت الحقيقي',
-        'تحديث النماذج كل 15 دقيقة',
-      ],
-      color: '#00ff88',
-    },
-    {
-      icon: '🔐',
-      title: t('features.security.title', 'أمان من مستوى المؤسسات'),
-      description: t(
-        'features.security.description',
-        'تشفير قوي للبروتوكولات ومفاتيح الـ API مع مراقبة مستمرة.',
-      ),
-      specs: ['AES-256 تشفير', 'SSL Secure', 'Protected'],
-      details: [
-        'تشفير AES-256 لمفاتيح API',
-        'اتصالات SSL مشفرة',
-        'نسخ احتياطية يومية',
-        'مراقبة أمنية مستمرة',
-      ],
-      color: '#a855f7',
-    },
-    {
-      icon: '🤖',
-      title: t('features.automation.title', 'أتمتة كاملة بدون توقف'),
-      description: t(
-        'features.automation.description',
-        'تشغيل مستمر على مدار الساعة مع إدارة ذكية للمخاطر.',
-      ),
-      specs: ['تداول آلي', 'تشغيل 24/7', 'لا حاجة للتدخل'],
-      details: [
-        'تشغيل مستمر بدون توقف',
-        'إدارة تلقائية للمخاطر',
-        'تكيف مع ظروف السوق',
-        'تنفيذ أوامر متعددة',
-      ],
-      color: '#ff6b35',
-    },
-    {
-      icon: '📈',
-      title: t('features.analytics.title', 'تحليلات متقدمة للأداء'),
-      description: t(
-        'features.analytics.description',
-        'لوحات تحكم ورسوم بيانية تفاعلية مع بيانات في الوقت الفعلي.',
-      ),
-      specs: ['بيانات حية', 'رسوم بيانية متقدمة', 'رؤى السوق'],
-      details: [
-        'تحليلات في الوقت الفعلي',
-        'رسوم بيانية تفاعلية',
-        'تقارير أداء مفصلة',
-        'تنبؤات ذكية',
-      ],
-      color: '#00d4ff',
-    },
-    {
-      icon: '🌍',
-      title: t('features.global.title', 'جاهزية عالمية متعددة المنصات'),
-      description: t(
-        'features.global.description',
-        'دعم منصات متعددة وأجهزة مختلفة مع تغطية عالمية.',
-      ),
-      specs: ['منصات متعددة', 'عبر الأجهزة', 'عالمي'],
-      details: [
-        'دعم 10+ منصات تداول',
-        'متوافق مع جميع الأجهزة',
-        'تغطية عالمية',
-        'دعم لغات متعددة',
-      ],
-      color: '#ffd700',
-    },
-  ];
+export default function FeaturesSection() {
+  const navigate = useNavigate();
+  const [activeId, setActiveId] = React.useState(FEATURES[0].id);
+  const [toggles, setToggles] = React.useState(() => new Set(['alerts']));
+  const [visible, setVisible] = React.useState(false);
 
-  const stats = [
-    { value: '50K+', label: 'مستخدم نشط', icon: '👤' },
-    { value: '$2B+', label: 'حجم تداول', icon: '💰' },
-    { value: '99.7%', label: 'دقة التنبؤ', icon: '🎯' },
-    { value: '24/7', label: 'تشغيل مستمر', icon: '⚡' },
-    { value: '0.002s', label: 'سرعة تنفيذ', icon: '⚙️' },
-    { value: '10+', label: 'منصات مدعومة', icon: '🌐' },
-  ];
+  const rootRef = React.useRef(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
+  React.useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const any = entries.some((e) => e.isIntersecting);
+        if (any) setVisible(true);
       },
-      { threshold: 0.3 },
+      { threshold: 0.18 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(
-      () =>
-        setActiveFeature(prev => (prev + 1) % features.length),
-      4000,
-    );
-    return () => clearInterval(interval);
-  }, [features.length]);
+  React.useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveId((prev) => {
+        const idx = FEATURES.findIndex((f) => f.id === prev);
+        const next = FEATURES[(idx + 1) % FEATURES.length];
+        return next.id;
+      });
+    }, 5200);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const activeFeature = React.useMemo(
+    () => FEATURES.find((f) => f.id === activeId) || FEATURES[0],
+    [activeId]
+  );
+
+  const toggle = (id) => {
+    setToggles((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const stats = React.useMemo(() => {
+    const baseSignals = toggles.has('auto') ? 42 : 28;
+    const riskScore = toggles.has('hedge') ? 'LOW' : 'MED';
+    const alerts = toggles.has('alerts') ? 'ON' : 'OFF';
+    return [
+      { icon: '📈', value: `${baseSignals}/min`, label: 'Signal Rate' },
+      { icon: '🧯', value: riskScore, label: 'Risk' },
+      { icon: '🔔', value: alerts, label: 'Alerts' },
+    ];
+  }, [toggles]);
 
   return (
     <section
-      id="features"
-      ref={sectionRef}
-      className={`features-section ${
-        isVisible ? 'features-visible' : ''
-      }`}
+      ref={rootRef}
+      className={`features-section ${visible ? 'features-visible' : ''}`}
+      style={{ '--feature-color': activeFeature.color }}
     >
-      {/* خلفية خفيفة */}
       <div className="features-bg" />
 
-      {/* العنوان والوصف */}
       <header className="features-header">
-        <span className="features-eyebrow">
-          ✨ {t('features.overline', 'نظام QUANTUM AI TRADER')}
-        </span>
-        <h2 className="features-title">
-          {t('features.title', 'الميزات المتقدمة')}
-        </h2>
+        <div className="features-eyebrow">
+          <span>⚛️</span>
+          <span>Quantum Modules</span>
+        </div>
+        <h3 className="features-title">FEATURES</h3>
         <p className="features-description">
-          {t(
-            'features.description',
-            'اكتشف قوة نظام التداول الآلي الأكثر تطوراً في العالم، المصمم خصيصاً لتحقيق أقصى استفادة من تقنية QUANTUM AI TRADING PLATFORM.',
-          )}
+          مكوّنات متناسقة مع الثيم، توازن بين الجمال والوظيفة، وتبقى ثابتة بدون كراش.
         </p>
       </header>
 
-      {/* الشبكة الرئيسية للميزات */}
       <div className="features-grid">
-        {features.map((feature, index) => {
-          const isActive = index === activeFeature;
+        {FEATURES.map((f) => {
+          const isActive = f.id === activeId;
           return (
-            <article
-              key={feature.title + index}
-              className={
-                isActive
-                  ? 'feature-card feature-card-active'
-                  : 'feature-card'
-              }
-              style={{ '--feature-color': feature.color }}
-              onClick={() => setActiveFeature(index)}
+            <button
+              key={f.id}
+              type="button"
+              className={`feature-card ${isActive ? 'feature-card-active' : ''}`}
+              onClick={() => setActiveId(f.id)}
+              style={{ '--feature-color': f.color }}
             >
-              {/* رأس البطاقة */}
+              <div className="feature-glow" />
               <div className="feature-card-header">
-                <div className="feature-icon">
-                  {feature.icon}
-                </div>
-                {isActive && (
-                  <span className="feature-active-badge">
-                    {t(
-                      'features.active',
-                      'مفعّلة الآن',
-                    )}
-                  </span>
-                )}
+                <span className="feature-icon" aria-hidden="true">{f.icon}</span>
+                {isActive && <span className="feature-active-badge">ACTIVE</span>}
               </div>
+              <div className="feature-title">{f.title}</div>
+              <p className="feature-description">{f.description}</p>
 
-              <h3 className="feature-title">
-                {feature.title}
-              </h3>
-              <p className="feature-description">
-                {feature.description}
-              </p>
-
-              {/* المواصفات السريعة */}
               <div className="feature-specs">
-                {feature.specs.map((spec, specIndex) => (
-                  <span
-                    key={spec + specIndex}
-                    className="feature-spec-pill"
-                  >
-                    {spec}
-                  </span>
+                {f.specs.map((s) => (
+                  <span className="feature-spec-pill" key={s}>{s}</span>
                 ))}
               </div>
 
-              {/* التفاصيل */}
               <ul className="feature-details">
-                {feature.details.map(
-                  (detail, detailIndex) => (
-                    <li key={detail + detailIndex}>
-                      {detail}
-                    </li>
-                  ),
-                )}
+                {f.details.map((d) => (
+                  <li key={d}>{d}</li>
+                ))}
               </ul>
-
-              <div className="feature-glow" />
-            </article>
+            </button>
           );
         })}
       </div>
 
-      {/* لوحة التحكم التفاعلية للفلاتر */}
-      <section className="features-control-panel">
-        <h3 className="features-control-title">
-          ️{t(
-            'features.controlTitle',
-            'التحكم التفاعلي في الميزات',
-          )}
-        </h3>
+      <div className="features-control-panel">
+        <h4 className="features-control-title">Control Panel</h4>
         <p className="features-control-description">
-          {t(
-            'features.controlDescription',
-            'اختر الميزة لمشاهدة التفاصيل الكاملة والإحصائيات الحية.',
-          )}
+          فعّل/عطّل بعض الخصائص (واجهات فقط — بدون كسر أي اتصال أو روت).
         </p>
 
         <div className="features-toggle-row">
-          {features.map((feature, index) => {
-            const isActive = index === activeFeature;
+          {DEFAULT_TOGGLES.map((t) => {
+            const on = toggles.has(t.id);
             return (
               <button
-                key={feature.title + index}
+                key={t.id}
                 type="button"
-                onClick={() => setActiveFeature(index)}
-                className={
-                  isActive
-                    ? 'feature-toggle feature-toggle-active'
-                    : 'feature-toggle'
-                }
-                style={{ '--feature-color': feature.color }}
+                className={`feature-toggle ${on ? 'feature-toggle-active' : ''}`}
+                onClick={() => toggle(t.id)}
+                style={{ '--feature-color': t.color }}
               >
-                <span className="feature-toggle-icon">
-                  {feature.icon}
-                </span>
-                <span className="feature-toggle-text">
-                  {feature.title}
-                </span>
+                <span className="feature-toggle-icon">{t.icon}</span>
+                <span className="feature-toggle-text">{t.text}</span>
               </button>
             );
           })}
         </div>
-      </section>
+      </div>
 
-      {/* قسم الإحصائيات */}
-      <section className="features-stats">
-        <h3 className="features-stats-title">
-          {t('features.statsTitle', 'أرقام لا تكذب')}
-        </h3>
-        <p className="features-stats-description">
-          {t(
-            'features.statsDescription',
-            'إحصائيات حية تثبت تفوق نظام QUANTUM AI TRADING PLATFORM.',
-          )}
-        </p>
+      <div className="features-stats">
+        <h4 className="features-stats-title">Live Stats</h4>
+        <p className="features-stats-description">إحصائيات عرض (UI) متزامنة مع الـ toggles.</p>
 
         <div className="features-stats-grid">
-          {stats.map((stat, index) => (
-            <div
-              key={stat.label + index}
-              className="features-stat-card"
-            >
-              <span className="features-stat-icon">
-                {stat.icon}
-              </span>
-              <span className="features-stat-value">
-                {stat.value}
-              </span>
-              <span className="features-stat-label">
-                {stat.label}
-              </span>
+          {stats.map((s) => (
+            <div className="features-stat-card" key={s.label}>
+              <div className="features-stat-icon">{s.icon}</div>
+              <div className="features-stat-value">{s.value}</div>
+              <div className="features-stat-label">{s.label}</div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* كيف يعمل النظام؟ */}
-      <section className="features-how">
-        <h3 className="features-how-title">
-          {t('features.howTitle', 'كيف يعمل النظام؟')}
-        </h3>
-        <p className="features-how-description">
-          {t(
-            'features.howDescription',
-            'تقنية QUANTUM AI TRADING PLATFORM المدعومة بالذكاء الاصطناعي المتقدم تعمل عبر أربع مراحل رئيسية:',
-          )}
-        </p>
+      <div className="features-how">
+        <h4 className="features-how-title">How it works</h4>
+        <p className="features-how-description">خطوات مبسطة بدون تعقيد.</p>
 
         <ol className="features-how-steps">
           <li>
-            <h4>1. {t('features.how.collect', 'جمع البيانات')}</h4>
-            <p>
-              {t(
-                'features.how.collectDesc',
-                'جمع وتحليل البيانات من 10+ منصات تداول في الوقت الفعلي.',
-              )}
-            </p>
+            <h4>Connect</h4>
+            <p>تشغيل الواجهة والاتصال (إن وجد) بشكل آمن.</p>
           </li>
           <li>
-            <h4>2. {t('features.how.analyze', 'التحليل الفني')}</h4>
-            <p>
-              {t(
-                'features.how.analyzeDesc',
-                'تحليل 100+ مؤشر باستخدام نماذج ذكاء اصطناعي متعددة الطبقات.',
-              )}
-            </p>
+            <h4>Observe</h4>
+            <p>متابعة إشارات السوق، دفتر الأوامر، والصفقات.</p>
           </li>
           <li>
-            <h4>3. {t('features.how.decide', 'اتخاذ القرار')}</h4>
-            <p>
-              {t(
-                'features.how.decideDesc',
-                'تحديد فرص التداول بدقة تصل إلى 99.7% مع مراعاة المخاطر.',
-              )}
-            </p>
-          </li>
-          <li>
-            <h4>4. {t('features.how.execute', 'التنفيذ الآلي')}</h4>
-            <p>
-              {t(
-                'features.how.executeDesc',
-                'تنفيذ الصفقات في أقل من 0.002 ثانية مع مراقبة مستمرة.',
-              )}
-            </p>
+            <h4>Act</h4>
+            <p>تنفيذ قرار سريع عبر التداول الحي.</p>
           </li>
         </ol>
-      </section>
+      </div>
 
-      {/* دعوة للعمل */}
-      <section className="features-cta">
-        <h3 className="features-cta-title">
-          {t('features.ctaTitle', 'جاهز للانطلاق؟')}
-        </h3>
-        <p className="features-cta-description">
-          {t(
-            'features.ctaDescription',
-            'انضم إلى آلاف المتداولين الناجحين وابدأ رحلتك مع أقوى نظام تداول آلي.',
-          )}
-        </p>
+      <div className="features-cta">
+        <h4 className="features-cta-title">Ready to launch?</h4>
+        <p className="features-cta-description">انتقل مباشرة للتداول الحي أو ارجع للأعلى.</p>
+
         <div className="features-cta-actions">
           <button
             type="button"
             className="features-cta-btn features-cta-primary"
+            onClick={() => navigate('/trading')}
           >
-            {t('features.cta.primary', 'ابدأ التداول الآن')}
+            Go Trading
           </button>
           <button
             type="button"
             className="features-cta-btn features-cta-secondary"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            {t(
-              'features.cta.secondary',
-              'شاهد الأداء الحي',
-            )}
+            Back Top
           </button>
         </div>
-      </section>
+      </div>
     </section>
   );
-};
-
-export default FeaturesSection;
+}

@@ -1,114 +1,100 @@
 // frontend/src/components/trading/PriceTicker.jsx
-
 import React from 'react';
 import { useSelector } from 'react-redux';
 import './PriceTicker.css';
 
-const PriceTicker = () => {
-  const ticker = useSelector((state) => state.trading.ticker);
-  const isLoading = useSelector(
-    (state) => state.trading.isLoadingTicker
-  );
-  const error = useSelector(
-    (state) => state.trading.tickerError
-  );
+const toNumber = (v, fallback = 0) => {
+  const n =
+    typeof v === 'string' ? Number(v.replace(/,/g, '').trim()) : Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
 
-  // حالات الخطأ / التحميل / لا توجد بيانات
+const fmt = (v, digits) => toNumber(v, 0).toFixed(digits);
+
+const PriceTicker = () => {
+  const ticker = useSelector((state) => state?.trading?.ticker ?? null);
+  const isLoading = useSelector((state) => !!state?.trading?.isLoadingTicker);
+  const error = useSelector((state) => state?.trading?.tickerError ?? null);
+
   if (error) {
     return (
-      <div className="ticker-container ticker-error">
-        Failed to load ticker: {String(error)}
+      <div className="ticker-root">
+        <div className="ticker-state ticker-error">
+          Failed to load ticker: <span>{String(error)}</span>
+        </div>
       </div>
     );
   }
 
   if (isLoading && !ticker) {
     return (
-      <div className="ticker-container ticker-loading">
-        Loading ticker…
+      <div className="ticker-root">
+        <div className="ticker-state ticker-loading">Loading ticker…</div>
       </div>
     );
   }
 
   if (!ticker) {
     return (
-      <div className="ticker-container ticker-empty">
-        No ticker data yet.
+      <div className="ticker-root">
+        <div className="ticker-state ticker-empty">No ticker data yet.</div>
       </div>
     );
   }
 
-  const {
-    symbol,
-    lastPrice,
-    highPrice,
-    lowPrice,
-    volume,
-    priceChange,
-    priceChangePercent,
-  } = ticker;
+  const symbol = ticker?.symbol ?? 'SYMBOL';
+  const lastPrice = ticker?.lastPrice ?? 0;
+  const highPrice = ticker?.highPrice ?? 0;
+  const lowPrice = ticker?.lowPrice ?? 0;
+  const volume = ticker?.volume ?? 0;
+  const priceChange = toNumber(ticker?.priceChange ?? 0, 0);
+  const priceChangePercent = toNumber(ticker?.priceChangePercent ?? 0, 0);
 
   const isUp = priceChange > 0;
   const isDown = priceChange < 0;
 
-  const changeClass = [
-    'ticker-change',
-    isUp ? 'ticker-up' : '',
-    isDown ? 'ticker-down' : '',
-  ]
+  const changeClass = ['ticker-change', isUp ? 'ticker-up' : '', isDown ? 'ticker-down' : '']
     .filter(Boolean)
     .join(' ');
 
-  const lastPriceClass = [
-    'ticker-last-price',
-    isUp ? 'ticker-up' : '',
-    isDown ? 'ticker-down' : '',
-  ]
+  const lastPriceClass = ['ticker-last-price', isUp ? 'ticker-up' : '', isDown ? 'ticker-down' : '']
     .filter(Boolean)
     .join(' ');
 
   return (
-    <div className="ticker-container">
-      {/* الرمز */}
-      <div className="ticker-symbol">
-        <span>{symbol || 'SYMBOL'}</span>
-      </div>
-
-      {/* السعر + التغيير */}
+    <div className="ticker-root" role="region" aria-label="Price ticker">
       <div className="ticker-main">
-        <div className={lastPriceClass}>
-          {Number(lastPrice ?? 0).toFixed(4)}
-        </div>
+        <div className="ticker-symbol">{symbol}</div>
 
-        <div className={changeClass}>
-          {isUp ? '+' : ''}
-          {Number(priceChange ?? 0).toFixed(4)} (
-          {isUp ? '+' : ''}
-          {Number(priceChangePercent ?? 0).toFixed(2)}%)
+        <div className="ticker-price-row">
+          <div className={lastPriceClass}>{fmt(lastPrice, 4)}</div>
+
+          <div className={changeClass} aria-label="Price change">
+            <span>
+              {isUp ? '+' : ''}
+              {fmt(priceChange, 4)}
+            </span>
+            <span style={{ opacity: 0.9 }}>
+              (
+              {isUp ? '+' : ''}
+              {fmt(priceChangePercent, 2)}%)
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* high / low / volume */}
-      <div className="ticker-extra">
-        <div className="ticker-extra-item">
-          <span className="ticker-label">High</span>
-          <span className="ticker-value">
-            {Number(highPrice ?? 0).toFixed(4)}
-          </span>
+      <div className="ticker-stats" aria-label="Ticker stats">
+        <div className="ticker-stat">
+          <span className="ticker-stat-label">High</span>
+          <span className="ticker-stat-value">{fmt(highPrice, 4)}</span>
         </div>
-
-        <div className="ticker-extra-item">
-          <span className="ticker-label">Low</span>
-          <span className="ticker-value">
-            {Number(lowPrice ?? 0).toFixed(4)}
-          </span>
+        <div className="ticker-stat">
+          <span className="ticker-stat-label">Low</span>
+          <span className="ticker-stat-value">{fmt(lowPrice, 4)}</span>
         </div>
-
-        <div className="ticker-extra-item">
-          <span className="ticker-label">Volume</span>
-          <span className="ticker-value">
-            {Number(volume ?? 0).toFixed(3)}
-          </span>
+        <div className="ticker-stat">
+          <span className="ticker-stat-label">Volume</span>
+          <span className="ticker-stat-value">{fmt(volume, 3)}</span>
         </div>
       </div>
     </div>

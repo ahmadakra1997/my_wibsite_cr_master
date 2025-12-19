@@ -1,175 +1,47 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
 import './LivePerformance.css';
 
-const LivePerformance = () => {
-  const { t } = useTranslation();
+const TIMEFRAMES = [
+  { id: '1H', label: '1H' },
+  { id: '6H', label: '6H' },
+  { id: '1D', label: '1D' },
+  { id: '1W', label: '1W' },
+];
 
-  const [performanceData, setPerformanceData] = useState({});
-  const [liveAlerts, setLiveAlerts] = useState([]);
-  const [activeTimeframe, setActiveTimeframe] = useState('24h');
-  const [isChartVisible, setIsChartVisible] = useState(false);
-  const [tradingPairs, setTradingPairs] = useState([]);
+function makeSeries(n) {
+  // سلسلة ثابتة (بدون عشوائية) لتجنّب اختلاف SSR/CSR
+  const arr = [];
+  for (let i = 0; i < n; i += 1) {
+    const v = 40 + Math.round(28 * Math.sin(i / 3) + 12 * Math.cos(i / 2));
+    arr.push(Math.max(6, Math.min(92, v)));
+  }
+  return arr;
+}
 
-  const sectionRef = useRef(null);
+export default function LivePerformance() {
+  const [tf, setTf] = React.useState('1D');
+  const [alerts, setAlerts] = React.useState([
+    { id: 'a1', type: 'success', icon: '✅', msg: 'Order filled', pair: 'BTC/USDT', profit: '+12.4', time: '2m' },
+    { id: 'a2', type: 'info', icon: 'ℹ️', msg: 'Signal detected', pair: 'ETH/USDT', profit: '+3.1', time: '7m' },
+    { id: 'a3', type: 'warning', icon: '⚠️', msg: 'High volatility', pair: 'SOL/USDT', profit: '—', time: '11m' },
+  ]);
 
-  const timeframes = [
-    { value: '1h', label: '1 ساعة' },
-    { value: '24h', label: '24 ساعة' },
-    { value: '7d', label: '7 أيام' },
-    { value: '30d', label: '30 يوم' },
-  ];
+  const series = React.useMemo(() => makeSeries(tf === '1H' ? 10 : tf === '6H' ? 14 : tf === '1D' ? 18 : 24), [tf]);
 
-  // إظهار المخطط عند دخول القسم في الشاشة
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsChartVisible(true);
-        }
-      },
-      { threshold: 0.3 }
-    );
+  const pairs = React.useMemo(
+    () => [
+      { sym: 'BTC/USDT', price: '103,420', chg: '+1.2%', vol: '1.4B', pos: true },
+      { sym: 'ETH/USDT', price: '4,780', chg: '+0.6%', vol: '820M', pos: true },
+      { sym: 'SOL/USDT', price: '224.2', chg: '-0.4%', vol: '310M', pos: false },
+      { sym: 'XRP/USDT', price: '2.14', chg: '+0.2%', vol: '460M', pos: true },
+    ],
+    []
+  );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  // محاكاة بيانات الأداء الحية (نفس المنطق الموجود في الكود الأصلي تقريبًا) :contentReference[oaicite:4]{index=4}
-  useEffect(() => {
-    const simulateLiveData = () => {
-      const performance = {
-        activeTrades: Math.floor(Math.random() * 50) + 20,
-        dailyProfit: `+${(Math.random() * 5).toFixed(2)}%`,
-        successRate: `${(95 + Math.random() * 4).toFixed(1)}%`,
-        volume: `$${(Math.random() * 5 + 1).toFixed(1)}M`,
-        winRate: `${(85 + Math.random() * 12).toFixed(1)}%`,
-        sharpeRatio: (Math.random() * 3 + 1.5).toFixed(2),
-        maxDrawdown: `-${(Math.random() * 2).toFixed(1)}%`,
-        totalTrades: Math.floor(Math.random() * 1000) + 500,
-        avgTradeSize: `$${(Math.random() * 5000 + 1000).toLocaleString()}`,
-        marketExposure: `${(Math.random() * 100).toFixed(1)}%`,
-      };
-
-      const alerts = [
-        {
-          id: Date.now(),
-          type: 'success',
-          message: `صفقة ناجحة: BTC/USD +${(Math.random() * 3).toFixed(2)}%`,
-          time: new Date().toLocaleTimeString(),
-          pair: 'BTC/USD',
-          profit: `+${(Math.random() * 500).toFixed(2)}`,
-        },
-        {
-          id: Date.now() + 1,
-          type: 'info',
-          message: 'إشارة جديدة: ETH/USD شراء',
-          time: new Date().toLocaleTimeString(),
-          pair: 'ETH/USD',
-          profit: 'قيد التنفيذ',
-        },
-        {
-          id: Date.now() + 2,
-          type: 'success',
-          message: `صفقة ناجحة: XRP/USD +${(Math.random() * 4).toFixed(2)}%`,
-          time: new Date().toLocaleTimeString(),
-          pair: 'XRP/USD',
-          profit: `+${(Math.random() * 300).toFixed(2)}`,
-        },
-      ];
-
-      const pairs = [
-        {
-          symbol: 'BTC/USD',
-          price: `$${(45000 + Math.random() * 5000).toLocaleString()}`,
-          change: `+${(Math.random() * 3).toFixed(2)}%`,
-          volume: '$2.4B',
-        },
-        {
-          symbol: 'ETH/USD',
-          price: `$${(2500 + Math.random() * 500).toLocaleString()}`,
-          change: `+${(Math.random() * 2).toFixed(2)}%`,
-          volume: '$1.2B',
-        },
-        {
-          symbol: 'XRP/USD',
-          price: `$${(0.5 + Math.random() * 0.3).toFixed(3)}`,
-          change: `+${(Math.random() * 5).toFixed(2)}%`,
-          volume: '$800M',
-        },
-        {
-          symbol: 'ADA/USD',
-          price: `$${(0.4 + Math.random() * 0.2).toFixed(3)}`,
-          change: `+${(Math.random() * 4).toFixed(2)}%`,
-          volume: '$600M',
-        },
-      ];
-
-      setPerformanceData(performance);
-      setLiveAlerts((prev) => [alerts[0], ...prev.slice(0, 9)]);
-      setTradingPairs(pairs);
-    };
-
-    simulateLiveData();
-    const interval = setInterval(simulateLiveData, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleClearAlerts = () => setLiveAlerts([]);
-
-  const generateChartData = () =>
-    Array.from({ length: 20 }, (_, i) => ({
-      x: i,
-      y: Math.sin(i * 0.5) * 50 + 50 + Math.random() * 20,
-    }));
-
-  const chartData = generateChartData();
-
-  const maxGain = chartData.length
-    ? Math.max(...chartData.map((p) => p.y))
-    : 0;
-
-  const avgGain = chartData.length
-    ? chartData.reduce((sum, p) => sum + p.y, 0) / chartData.length
-    : 0;
-
-  const getAlertIcon = (type) => {
-    switch (type) {
-      case 'success':
-        return '✅';
-      case 'info':
-        return 'ℹ️';
-      case 'warning':
-        return '⚠️';
-      case 'error':
-        return '❌';
-      default:
-        return '📡';
-    }
-  };
-
-  const getAlertClassName = (type) => {
-    switch (type) {
-      case 'success':
-        return 'alert-item alert-success';
-      case 'info':
-        return 'alert-item alert-info';
-      case 'warning':
-        return 'alert-item alert-warning';
-      case 'error':
-        return 'alert-item alert-error';
-      default:
-        return 'alert-item alert-default';
-    }
-  };
+  const clearAlerts = () => setAlerts([]);
 
   return (
-    <section ref={sectionRef} className="performance-section">
-      {/* خلفية متحركة */}
+    <section className="performance-section">
       <div className="performance-background">
         <div className="quantum-particles-performance" />
         <div className="neon-grid-performance" />
@@ -177,510 +49,251 @@ const LivePerformance = () => {
       </div>
 
       <div className="performance-container">
-        {/* العنوان الرئيسي */}
-        <header className="performance-header">
+        <div className="performance-header">
           <div className="header-badge">
-            <span className="badge-icon">📡</span>
-            <span>
-              {t(
-                'livePerformance.badge',
-                'أداء حي لنظام QUANTUM AI TRADING PLATFORM'
-              )}
-            </span>
+            <span className="badge-icon">📈</span>
+            <span style={{ color: 'rgba(226,232,240,0.92)', fontWeight: 700 }}>Live Performance</span>
           </div>
 
-          <h2 className="performance-title">
-            {t('livePerformance.title.main', 'أداء حي مباشر')}{' '}
-            <span className="title-highlight">
-              {t('livePerformance.title.highlight', 'في الوقت الحقيقي')}
-            </span>
-          </h2>
-
+          <div className="performance-title">
+            Quantum <span className="title-highlight">Insights</span>
+          </div>
           <p className="performance-subtitle">
-            {t(
-              'livePerformance.subtitle',
-              'تتبع أداء نظام التداول الآلي مع تحديثات فورية وإحصائيات حية مباشرة من الأسواق العالمية.'
-            )}
+            لوحة أداء مرئية — جاهزة للربط ببيانات حقيقية لاحقاً، بدون كراش وبدون تغيير الثيم.
           </p>
-        </header>
+        </div>
 
-        {/* عناصر التحكم بالوقت */}
-        <section className="timeframe-controls">
+        <div className="timeframe-controls">
           <div className="controls-header">
-            <h3 className="controls-title">
-              ⏰{' '}
-              {t('livePerformance.timeframe.title', 'الفترة الزمنية')}
-            </h3>
+            <h3 className="controls-title">Timeframe</h3>
             <div className="live-indicator">
               <span className="live-dot" />
-              <span>
-                {t('livePerformance.timeframe.live', 'مباشر')}
-              </span>
+              LIVE
             </div>
           </div>
 
           <div className="timeframe-buttons">
-            {timeframes.map((timeframe) => (
+            {TIMEFRAMES.map((t) => (
               <button
-                key={timeframe.value}
+                key={t.id}
                 type="button"
-                onClick={() => setActiveTimeframe(timeframe.value)}
-                className={`timeframe-btn ${
-                  activeTimeframe === timeframe.value
-                    ? 'timeframe-active'
-                    : ''
-                }`}
+                className={`timeframe-btn ${tf === t.id ? 'timeframe-active' : ''}`}
+                onClick={() => setTf(t.id)}
               >
-                {timeframe.label}
+                {t.label}
               </button>
             ))}
           </div>
-        </section>
+        </div>
 
-        {/* الشبكة الرئيسية */}
         <div className="performance-grid">
-          {/* بطاقة المخطط */}
-          <article className="performance-card chart-card">
+          {/* Chart */}
+          <div className="performance-card chart-card">
             <div className="card-header">
               <h3 className="card-title">
-                <span className="card-icon">📈</span>
-                {t(
-                  'livePerformance.chart.title',
-                  'مخطط الأداء المباشر'
-                )}
+                <span className="card-icon">🧭</span>
+                Profit / Volume
               </h3>
-
               <div className="chart-legend">
                 <div className="legend-item">
                   <span className="legend-color profit-color" />
-                  <span>
-                    {t(
-                      'livePerformance.chart.legend.profit',
-                      'الأرباح'
-                    )}
-                  </span>
+                  Profit
                 </div>
                 <div className="legend-item">
                   <span className="legend-color volume-color" />
-                  <span>
-                    {t(
-                      'livePerformance.chart.legend.volume',
-                      'الحجم'
-                    )}
-                  </span>
+                  Volume
                 </div>
               </div>
             </div>
 
             <div className="chart-container">
-              {isChartVisible && (
-                <div className="live-chart">
-                  <div className="chart-area">
-                    {chartData.map((point, index) => {
-                      const left =
-                        chartData.length > 1
-                          ? (index / (chartData.length - 1)) * 100
-                          : 50;
-                      const normalized = Math.max(
-                        5,
-                        Math.min(95, point.y)
-                      );
+              <div className="live-chart">
+                <div className="chart-area">
+                  {series.map((v, i) => {
+                    const left = (i / Math.max(1, series.length - 1)) * 100;
+                    const bottom = v;
+                    return (
+                      <div
+                        key={`${i}-${v}`}
+                        className="chart-point"
+                        style={{ left: `${left}%`, bottom: `${bottom}%` }}
+                      >
+                        <div className="point-tooltip">{`P: ${Math.round(v)} • V: ${Math.round(60 + v)}`}</div>
+                      </div>
+                    );
+                  })}
+                  <div className="chart-line" />
+                </div>
 
-                      return (
-                        <div
-                          key={index}
-                          className="chart-point"
-                          style={{
-                            left: `${left}%`,
-                            bottom: `${normalized}%`,
-                          }}
-                        >
-                          <div className="point-tooltip">
-                            +{point.y.toFixed(1)}%
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="chart-line" />
+                <div className="chart-labels">
+                  <span>Start</span>
+                  <span>Now</span>
+                </div>
+
+                <div className="chart-stats">
+                  <div className="chart-stat">
+                    <span className="stat-label">Today PnL</span>
+                    <span className="stat-value">+124.8</span>
                   </div>
-
-                  <div className="chart-labels">
-                    <span>
-                      {t(
-                        'livePerformance.chart.start',
-                        'بداية الفترة'
-                      )}
-                    </span>
-                    <span>
-                      {t('livePerformance.chart.end', 'نهاية الفترة')}
-                    </span>
-                  </div>
-
-                  <div className="chart-stats">
-                    <div className="chart-stat">
-                      <span className="stat-label">
-                        {t(
-                          'livePerformance.chart.max',
-                          'أعلى ربح'
-                        )}
-                      </span>
-                      <span className="stat-value">
-                        {maxGain
-                          ? `+${maxGain.toFixed(2)}%`
-                          : '+0.00%'}
-                      </span>
-                    </div>
-                    <div className="chart-stat">
-                      <span className="stat-label">
-                        {t(
-                          'livePerformance.chart.avg',
-                          'متوسط الربح'
-                        )}
-                      </span>
-                      <span className="stat-value">
-                        {avgGain
-                          ? `+${avgGain.toFixed(2)}%`
-                          : '+0.00%'}
-                      </span>
-                    </div>
+                  <div className="chart-stat">
+                    <span className="stat-label">Volume</span>
+                    <span className="stat-value">3.1B</span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </article>
+          </div>
 
-          {/* بطاقة الإحصائيات الفورية */}
-          <article className="performance-card stats-card">
+          {/* Stats */}
+          <div className="performance-card stats-card">
             <div className="card-header">
               <h3 className="card-title">
-                <span className="card-icon">⚡</span>
-                {t(
-                  'livePerformance.stats.title',
-                  'إحصائيات فورية'
-                )}
+                <span className="card-icon">📊</span>
+                Snapshot
               </h3>
-              <span className="stats-update">
-                {t(
-                  'livePerformance.stats.updated',
-                  'آخر تحديث: الآن'
-                )}
-              </span>
+              <div className="stats-update">updated: just now</div>
             </div>
 
             <div className="stats-grid">
               <div className="stat-item primary">
-                <div className="stat-icon">📈</div>
+                <div className="stat-icon">💰</div>
                 <div className="stat-content">
-                  <div className="stat-value">
-                    {performanceData.dailyProfit || '+0.00%'}
-                  </div>
-                  <div className="stat-label">
-                    {t(
-                      'livePerformance.stats.dailyProfit',
-                      'ربح اليوم'
-                    )}
-                  </div>
+                  <div className="stat-value">+12.4%</div>
+                  <div className="stat-label">Weekly ROI</div>
                 </div>
-                <div className="stat-trend positive">↑</div>
-                <div className="stat-badge excellent">
-                  {t(
-                    'livePerformance.stats.mood',
-                    'أداء ممتاز'
-                  )}
-                </div>
+                <div className="stat-trend positive">↗</div>
               </div>
 
               <div className="stat-item">
                 <div className="stat-icon">🎯</div>
                 <div className="stat-content">
-                  <div className="stat-value">
-                    {performanceData.successRate || '0%'}
-                  </div>
-                  <div className="stat-label">
-                    {t(
-                      'livePerformance.stats.successRate',
-                      'معدل النجاح'
-                    )}
-                  </div>
+                  <div className="stat-value">78%</div>
+                  <div className="stat-label">Win rate</div>
                 </div>
-                <div className="stat-trend stable">→</div>
-                <div className="stat-badge good">
-                  {t(
-                    'livePerformance.stats.quality',
-                    'جودة الإشارات'
-                  )}
-                </div>
+                <div className="stat-badge excellent">EXCELLENT</div>
               </div>
 
               <div className="stat-item">
-                <div className="stat-icon">📊</div>
+                <div className="stat-icon">🧠</div>
                 <div className="stat-content">
-                  <div className="stat-value">
-                    {performanceData.activeTrades || 0}
-                  </div>
-                  <div className="stat-label">
-                    {t(
-                      'livePerformance.stats.activeTrades',
-                      'صفقات نشطة الآن'
-                    )}
-                  </div>
+                  <div className="stat-value">0.82</div>
+                  <div className="stat-label">AI Confidence</div>
                 </div>
-                <div className="stat-trend positive">↑</div>
-                <div className="stat-badge good">
-                  {performanceData.volume || '$0M'}
-                </div>
+                <div className="stat-badge good">GOOD</div>
               </div>
             </div>
-          </article>
+          </div>
 
-          {/* بطاقة أزواج التداول */}
-          <article className="performance-card pairs-card">
+          {/* Pairs */}
+          <div className="performance-card pairs-card">
             <div className="card-header">
               <h3 className="card-title">
-                <span className="card-icon">🧬</span>
-                {t(
-                  'livePerformance.pairs.title',
-                  'أزواج التداول النشطة'
-                )}
+                <span className="card-icon">🪙</span>
+                Pairs
               </h3>
               <div className="pairs-count">
-                <span className="count-badge">
-                  {tradingPairs.length}
-                </span>
+                <span className="count-badge">{pairs.length}</span>
               </div>
             </div>
 
             <div className="pairs-list">
-              {tradingPairs.map((pair, index) => {
-                const positive = !`${pair.change || ''}`
-                  .trim()
-                  .startsWith('-');
-
-                return (
-                  <div
-                    key={`${pair.symbol}-${index}`}
-                    className="pair-item"
-                  >
-                    <div className="pair-symbol">{pair.symbol}</div>
-                    <div className="pair-price">{pair.price}</div>
-                    <div
-                      className={`pair-change ${
-                        positive ? 'positive' : 'negative'
-                      }`}
-                    >
-                      {pair.change}
-                    </div>
-                    <div className="pair-volume">{pair.volume}</div>
-                  </div>
-                );
-              })}
+              {pairs.map((p) => (
+                <div className="pair-item" key={p.sym}>
+                  <div className="pair-symbol">{p.sym}</div>
+                  <div className="pair-price">{p.price}</div>
+                  <div className={`pair-change ${p.pos ? 'positive' : 'negative'}`}>{p.chg}</div>
+                  <div className="pair-volume">{p.vol}</div>
+                </div>
+              ))}
             </div>
-          </article>
+          </div>
 
-          {/* بطاقة الإشعارات الحية */}
-          <article className="performance-card alerts-card">
+          {/* Alerts */}
+          <div className="performance-card alerts-card">
             <div className="card-header">
               <h3 className="card-title">
-                <span className="card-icon">🔔</span>
-                {t(
-                  'livePerformance.alerts.title',
-                  'الإشعارات الحية'
-                )}
-                <span className="alerts-badge">
-                  {liveAlerts.length}
-                </span>
+                <span className="card-icon">🚨</span>
+                Alerts
+                {alerts.length > 0 && <span className="alerts-badge">{alerts.length}</span>}
               </h3>
 
-            <button
-              type="button"
-              className="alerts-clear"
-              onClick={handleClearAlerts}
-            >
-              {t(
-                'livePerformance.alerts.clear',
-                'مسح الكل'
-              )}
-            </button>
+              <button type="button" className="alerts-clear" onClick={clearAlerts}>
+                Clear
+              </button>
             </div>
 
             <div className="alerts-container">
-              {liveAlerts.length > 0 ? (
-                liveAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className={getAlertClassName(alert.type)}
-                  >
-                    <div className="alert-icon">
-                      {getAlertIcon(alert.type)}
-                    </div>
+              {alerts.length === 0 ? (
+                <div className="no-alerts">
+                  <div className="no-alerts-icon">🫧</div>
+                  No alerts right now
+                </div>
+              ) : (
+                alerts.map((a) => (
+                  <div key={a.id} className={`alert-item alert-${a.type || 'default'}`}>
+                    <div className="alert-icon">{a.icon}</div>
                     <div className="alert-content">
-                      <div className="alert-message">
-                        {alert.message}
-                      </div>
+                      <div className="alert-message">{a.msg}</div>
                       <div className="alert-details">
-                        <span className="alert-pair">
-                          {alert.pair}
-                        </span>
-                        <span className="alert-profit">
-                          {alert.profit}
-                        </span>
-                        <span className="alert-time">
-                          {alert.time}
-                        </span>
+                        <span className="alert-pair">{a.pair}</span>
+                        <span className="alert-profit">{a.profit}</span>
+                        <span className="alert-time">{a.time}</span>
                       </div>
                     </div>
                     <div className="alert-actions">
-                      <button
-                        type="button"
-                        className="action-btn"
-                        onClick={() =>
-                          setLiveAlerts((prev) =>
-                            prev.filter((a) => a.id !== alert.id)
-                          )
-                        }
-                      >
-                        ✕
+                      <button type="button" className="action-btn" aria-label="Acknowledge">
+                        ✓
                       </button>
                     </div>
                   </div>
                 ))
-              ) : (
-                <div className="no-alerts">
-                  <div className="no-alerts-icon">🔕</div>
-                  <div>
-                    {t(
-                      'livePerformance.alerts.empty',
-                      'لا توجد إشعارات حالياً'
-                    )}
-                  </div>
-                </div>
               )}
             </div>
-          </article>
+          </div>
         </div>
 
-        {/* التحليلات المتقدمة */}
-        <section className="advanced-analytics">
+        {/* Advanced analytics */}
+        <div className="advanced-analytics">
           <div className="analytics-header">
-            <h3 className="analytics-title">
-              {t(
-                'livePerformance.analytics.title',
-                'تحليلات أداء متقدمة'
-              )}
-            </h3>
-            <p className="analytics-subtitle">
-              {t(
-                'livePerformance.analytics.subtitle',
-                'تحليلات شاملة لأداء نظام QUANTUM AI TRADING PLATFORM عبر مختلف المؤشرات.'
-              )}
-            </p>
+            <div className="analytics-title">Advanced Analytics</div>
+            <div className="analytics-subtitle">مقاييس UI جاهزة — تتغذى من API لاحقاً.</div>
           </div>
 
           <div className="analytics-grid">
             <div className="analytics-card">
-              <div className="analytics-icon">🎯</div>
+              <div className="analytics-icon">🧪</div>
               <div className="analytics-content">
-                <h4>{t('livePerformance.analytics.accuracy', 'دقة التنبؤ')}</h4>
-                <div className="analytics-value">94.7%</div>
-                <div className="analytics-trend positive">
-                  +1.3% {t('livePerformance.analytics.vsLastMonth', 'عن الشهر الماضي')}
-                </div>
-                <p className="analytics-description">
-                  {t(
-                    'livePerformance.analytics.accuracyDesc',
-                    'دقة عالية في قراءة إشارات السوق المتقدمة.'
-                  )}
-                </p>
+                <h4>Strategy Health</h4>
+                <div className="analytics-value">92%</div>
                 <div className="analytics-progress">
                   <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: '94.7%' }}
-                    />
+                    <div className="progress-fill" style={{ width: '92%' }} />
                   </div>
                 </div>
+                <div className="analytics-trend positive">+4.1% this week</div>
               </div>
             </div>
 
             <div className="analytics-card">
-              <div className="analytics-icon">⚡</div>
+              <div className="analytics-icon">⏱️</div>
               <div className="analytics-content">
-                <h4>{t('livePerformance.analytics.speed', 'سرعة التنفيذ')}</h4>
-                <div className="analytics-value">0.002s</div>
-                <div className="analytics-trend positive">
-                  +15% {t('livePerformance.analytics.vsLastMonth', 'عن الشهر الماضي')}
-                </div>
-                <p className="analytics-description">
-                  {t(
-                    'livePerformance.analytics.speedDesc',
-                    'تنفيذ شبه فوري للأوامر على منصات التداول المدعومة.'
-                  )}
-                </p>
-                <div className="analytics-progress">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: '88%' }}
-                    />
-                  </div>
-                </div>
+                <h4>Latency</h4>
+                <div className="analytics-value">38ms</div>
+                <div className="analytics-description">Execution-to-confirm</div>
               </div>
             </div>
 
             <div className="analytics-card">
-              <div className="analytics-icon">⚖️</div>
+              <div className="analytics-icon">🟢</div>
               <div className="analytics-content">
-                <h4>
-                  {t(
-                    'livePerformance.analytics.risk',
-                    'كفاءة إدارة المخاطر'
-                  )}
-                </h4>
-                <div className="analytics-value">1 : 3.2</div>
-                <p className="analytics-description">
-                  {t(
-                    'livePerformance.analytics.riskDesc',
-                    'نسبة مخاطرة إلى عائد محسّنة وفق أفضل ممارسات إدارة رأس المال.'
-                  )}
-                </p>
-                <p className="analytics-uptime">
-                  {t(
-                    'livePerformance.analytics.riskNote',
-                    'تحكم دقيق في حجم الصفقة والتعرض الكلي للمحفظة.'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="analytics-card">
-              <div className="analytics-icon">🛡️</div>
-              <div className="analytics-content">
-                <h4>
-                  {t(
-                    'livePerformance.analytics.uptime',
-                    'استقرار النظام'
-                  )}
-                </h4>
-                <div className="analytics-value">99.9%</div>
-                <p className="analytics-description">
-                  {t(
-                    'livePerformance.analytics.uptimeDesc',
-                    'وقت تشغيل شبه كامل مع مراقبة مستمرة للخدمات الحيوية.'
-                  )}
-                </p>
-                <p className="analytics-uptime">
-                  {t(
-                    'livePerformance.analytics.uptimeSla',
-                    'مهيّأ للوصول إلى مستوى شركات التداول الاحترافية.'
-                  )}
-                </p>
+                <h4>Uptime</h4>
+                <div className="analytics-value">99.98%</div>
+                <div className="analytics-uptime">stable</div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </section>
   );
-};
-
-export default LivePerformance;
+}

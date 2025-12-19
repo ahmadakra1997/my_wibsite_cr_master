@@ -385,12 +385,12 @@
   gap: 0.25rem;
 }
 
-.stat-label {
+.chart-stats .stat-label {
   font-size: 0.8rem;
   color: #94a3b8;
 }
 
-.stat-value {
+.chart-stats .stat-value {
   font-size: 1.1rem;
   font-weight: 700;
   color: #00ff88;
@@ -445,7 +445,7 @@
   flex: 1;
 }
 
-.stat-value {
+.stat-item .stat-value {
   font-size: 1.5rem;
   font-weight: 800;
   color: #00ff88;
@@ -453,7 +453,7 @@
   margin-bottom: 0.25rem;
 }
 
-.stat-label {
+.stat-item .stat-label {
   font-size: 0.8rem;
   color: #94a3b8;
   font-weight: 500;
@@ -930,10 +930,36 @@
 }
 
 .alerts-container::-webkit-scrollbar-thumb {
-  background: linea r-gradient(135deg, #00a3ff 0%, #00ff88 100%);
+  background: linear-gradient(135deg, #00a3ff 0%, #00ff88 100%);
   border-radius: 3px;
 }
 
 .alerts-container::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #0088cc 0%, #00cc77 100%);
+}
+
+/* =========================================
+   Reduced motion support
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .quantum-particles-performance,
+  .live-dot,
+  .badge-icon,
+  .chart-line,
+  .performance-card::before {
+    animation: none !important;
+  }
+
+  .performance-card,
+  .timeframe-btn,
+  .stat-item,
+  .pair-item,
+  .alert-item,
+  .analytics-card,
+  .chart-point,
+  .point-tooltip,
+  .progress-fill {
+    transition: none !important;
+  }
 }
