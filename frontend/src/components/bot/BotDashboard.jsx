@@ -1,7 +1,6 @@
 // frontend/src/components/bot/BotDashboard.jsx
 import React, { useMemo, useState } from 'react';
 import './BotDashboard.css';
-
 import useBotData from '../../hooks/useBotData';
 import { useToast } from '../common/ToastProvider';
 
@@ -32,7 +31,6 @@ const fmtTime = (v) => {
 
 function getStatusMeta(status) {
   const s = String(status || 'unknown').toLowerCase();
-
   if (s === 'active' || s === 'running' || s === 'started') {
     return { label: 'RUNNING', cls: 'is-running', hint: 'البوت يعمل حالياً' };
   }
@@ -72,8 +70,24 @@ export default function BotDashboard() {
   } catch {
     toastApi = null;
   }
+
+  // نُبقي نفس الاستدعاءات notify(type, message) لكن نحولها لتوقيع addToast({..})
   const notify = (type, message) => {
-    if (toastApi?.addToast) toastApi.addToast(type, message);
+    if (!toastApi?.addToast) return;
+
+    const titleByType = {
+      success: 'نجاح',
+      info: 'معلومة',
+      warning: 'تنبيه',
+      error: 'خطأ',
+    };
+
+    toastApi.addToast({
+      type: type || 'info',
+      title: titleByType[type] || 'تنبيه',
+      description: String(message || ''),
+      duration: 4000,
+    });
   };
 
   const [localRiskMode, setLocalRiskMode] = useState('medium');
@@ -82,10 +96,7 @@ export default function BotDashboard() {
   const pnl = metrics?.pnl || { daily: 0, weekly: 0, monthly: 0 };
   const trades = safeArr(metrics?.recentTrades);
 
-  const statusMeta = useMemo(
-    () => getStatusMeta(engineStatus?.status),
-    [engineStatus?.status]
-  );
+  const statusMeta = useMemo(() => getStatusMeta(engineStatus?.status), [engineStatus?.status]);
 
   const activePairsCount = safeArr(engineStatus?.activePairs).length;
 
@@ -96,6 +107,7 @@ export default function BotDashboard() {
 
   const onSetRisk = async (mode) => {
     setLocalRiskMode(mode);
+
     // نحاول نحفظها بالباك-إند بأمان (إذا schema عندك مختلف، سنعدّلها عندما نراجع BotSettings.js)
     try {
       if (typeof updateSettings === 'function') {
@@ -143,193 +155,354 @@ export default function BotDashboard() {
     }
   };
 
-  return (
-    <div className="bot-dashboard">
-      {/* Header */}
-      <div className="bot-dashboard__header">
-        <div>
-          <h1 className="bot-dashboard__title">Quantum AI Trading Bot</h1>
-          <p className="bot-dashboard__subtitle">
-            لوحة تحكم احترافية لإدارة البوت ومراقبة الأداء — بنفس هوية التركوازي/الأزرق/الأخضر.
-          </p>
-        </div>
+  const selectedId = selectedBotId ?? (safeArr(bots)[0]?.id ?? '');
 
-        <div className={`bot-statusBadge ${statusMeta.cls}`}>
-          <div className="bot-statusBadge__label">{statusMeta.label}</div>
-          <div className="bot-statusBadge__meta">
-            {statusMeta.hint} • آخر تحديث: {fmtTime(engineStatus?.lastUpdate)}
+  const pendingLabel = (action, fallback) => {
+    return pendingAction === action ? fallback : action.toUpperCase();
+  };
+
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 14 }}>
+      {/* Header */}
+      <header
+        style={{
+          borderRadius: 22,
+          padding: 16,
+          border: '1px solid rgba(56,189,248,0.18)',
+          background: 'linear-gradient(135deg, rgba(2,6,23,0.95), rgba(8,47,73,0.70))',
+          boxShadow: '0 20px 60px rgba(2,6,23,0.72)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ color: 'rgba(226,232,240,0.98)', fontWeight: 950, fontSize: 20 }}>Quantum AI Trading Bot</div>
+          <div style={{ marginTop: 6, color: 'rgba(148,163,184,0.95)', lineHeight: 1.7 }}>
+            لوحة تحكم احترافية لإدارة البوت ومراقبة الأداء — بنفس هوية التركوازي/الأزرق/الأخضر.
+          </div>
+          <div style={{ marginTop: 8, color: 'rgba(148,163,184,0.95)' }}>
+            {statusMeta.hint} • آخر تحديث: <strong style={{ color: 'rgba(226,232,240,0.95)' }}>{fmtTime(engineStatus?.lastUpdate)}</strong>
           </div>
         </div>
-      </div>
+
+        <div
+          className={statusMeta.cls}
+          style={{
+            borderRadius: 999,
+            padding: '6px 10px',
+            border: '1px solid rgba(0,255,136,0.25)',
+            background: 'rgba(0,255,136,0.08)',
+            color: 'rgba(226,232,240,0.95)',
+            fontWeight: 950,
+            letterSpacing: '0.08em',
+            fontSize: 12,
+          }}
+          title={String(engineStatus?.status || 'unknown')}
+        >
+          {statusMeta.label}
+        </div>
+      </header>
 
       {/* Toolbar */}
-      <div className="bot-dashboard__toolbar">
-        <div className="bot-select">
-          <div className="bot-select__label">Bot Selection</div>
+      <section
+        style={{
+          marginTop: 12,
+          borderRadius: 22,
+          padding: 16,
+          border: '1px solid rgba(148,163,184,0.14)',
+          background: 'rgba(15,23,42,0.55)',
+          boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          display: 'grid',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>Bot Selection</div>
           <select
-            className="bot-select__control"
-            value={selectedBotId}
-            onChange={(e) => setSelectedBotId(e.target.value)}
-            disabled={loadingBots}
+            value={selectedId}
+            onChange={(e) => setSelectedBotId?.(e.target.value)}
+            disabled={!!loadingBots}
+            style={{
+              borderRadius: 14,
+              padding: '10px 12px',
+              border: '1px solid rgba(148,163,184,0.18)',
+              background: 'rgba(2,6,23,0.25)',
+              color: 'rgba(226,232,240,0.95)',
+              outline: 'none',
+              maxWidth: 420,
+            }}
           >
             {safeArr(bots).map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name || b.id}
+              <option key={b?.id ?? b?.name} value={b?.id ?? ''}>
+                {b?.name || b?.id || 'Bot'}
               </option>
             ))}
           </select>
-          <div className="bot-select__hint">
-            اختر البوت الذي تريد التحكم به (حالياً عادة بوت واحد).
-          </div>
+          <div style={{ color: 'rgba(148,163,184,0.95)' }}>اختر البوت الذي تريد التحكم به (حالياً عادة بوت واحد).</div>
         </div>
 
-        <div className="bot-actions">
-          <div className="bot-actions__label">Bot Actions</div>
-          <div className="bot-actions__buttons">
-            <button className="btn btn--primary" onClick={onStart} disabled={!canAct}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>Bot Actions</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={onStart}
+              disabled={!canAct}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(0,255,136,0.35)',
+                background: 'rgba(0,255,136,0.10)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: !canAct ? 'not-allowed' : 'pointer',
+              }}
+            >
               {pendingAction === 'start' ? 'Starting…' : 'Start'}
             </button>
-            <button className="btn" onClick={onPause} disabled={!canAct}>
+
+            <button
+              type="button"
+              onClick={onPause}
+              disabled={!canAct}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(56,189,248,0.30)',
+                background: 'rgba(56,189,248,0.10)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: !canAct ? 'not-allowed' : 'pointer',
+              }}
+            >
               {pendingAction === 'pause' ? 'Pausing…' : 'Pause'}
             </button>
-            <button className="btn" onClick={onStop} disabled={!canAct}>
+
+            <button
+              type="button"
+              onClick={onStop}
+              disabled={!canAct}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(148,163,184,0.22)',
+                background: 'rgba(2,6,23,0.25)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: !canAct ? 'not-allowed' : 'pointer',
+              }}
+            >
               {pendingAction === 'stop' ? 'Stopping…' : 'Stop'}
             </button>
-            <button className="btn btn--danger" onClick={onEmergency} disabled={!canAct}>
+
+            <button
+              type="button"
+              onClick={onEmergency}
+              disabled={!canAct}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(255,59,92,0.35)',
+                background: 'rgba(255,59,92,0.10)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: !canAct ? 'not-allowed' : 'pointer',
+              }}
+            >
               {pendingAction === 'emergency' ? 'Emergency…' : 'Emergency Stop'}
             </button>
           </div>
         </div>
 
-        <div className="bot-risk">
-          <div className="bot-risk__label">Risk Mode</div>
-          <div className="segmented" role="tablist" aria-label="Risk mode">
-            <button
-              type="button"
-              className={`segmented__btn ${localRiskMode === 'low' ? 'is-active' : ''}`}
-              onClick={() => onSetRisk('low')}
-              disabled={!canAct}
-            >
-              Low
-            </button>
-            <button
-              type="button"
-              className={`segmented__btn ${localRiskMode === 'medium' ? 'is-active' : ''}`}
-              onClick={() => onSetRisk('medium')}
-              disabled={!canAct}
-            >
-              Medium
-            </button>
-            <button
-              type="button"
-              className={`segmented__btn ${localRiskMode === 'high' ? 'is-active' : ''}`}
-              onClick={() => onSetRisk('high')}
-              disabled={!canAct}
-            >
-              High
-            </button>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>Risk Mode</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {['low', 'medium', 'high'].map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => onSetRisk(m)}
+                disabled={!canAct}
+                style={{
+                  borderRadius: 999,
+                  padding: '8px 10px',
+                  border:
+                    localRiskMode === m ? '1px solid rgba(0,255,136,0.35)' : '1px solid rgba(148,163,184,0.18)',
+                  background: localRiskMode === m ? 'rgba(0,255,136,0.10)' : 'rgba(2,6,23,0.25)',
+                  color: 'rgba(226,232,240,0.95)',
+                  fontWeight: 950,
+                  cursor: !canAct ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {m === 'low' ? 'Low' : m === 'medium' ? 'Medium' : 'High'}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Error */}
-      {!!error && (
-        <div className="bot-alert" role="alert">
-          <div className="bot-alert__title">تنبيه</div>
-          <div className="bot-alert__desc">{String(error)}</div>
+      {!!error ? (
+        <div
+          style={{
+            marginTop: 12,
+            borderRadius: 18,
+            padding: 14,
+            border: '1px solid rgba(255,59,92,0.30)',
+            background: 'rgba(255,59,92,0.08)',
+            color: 'rgba(226,232,240,0.95)',
+          }}
+        >
+          <div style={{ fontWeight: 950, marginBottom: 6 }}>تنبيه</div>
+          <div style={{ color: 'rgba(226,232,240,0.92)' }}>{String(error)}</div>
         </div>
-      )}
+      ) : null}
 
       {/* Metrics */}
-      <div className="bot-cards">
-        <div className="metric">
-          <div className="metric__title">Balance</div>
-          <div className="metric__value">{fmtMoney(engineStatus?.balance)}</div>
-          <div className="metric__hint">الرصيد الحالي</div>
-        </div>
-
-        <div className={`metric ${pnlTrendCls}`}>
-          <div className="metric__title">Daily PnL</div>
-          <div className="metric__value">{fmtMoney(pnl?.daily)}</div>
-          <div className="metric__hint">أداء آخر 24 ساعة</div>
-        </div>
-
-        <div className="metric metric--up">
-          <div className="metric__title">Weekly PnL</div>
-          <div className="metric__value">{fmtMoney(pnl?.weekly)}</div>
-          <div className="metric__hint">أداء أسبوعي</div>
-        </div>
-
-        <div className="metric">
-          <div className="metric__title">Active Pairs</div>
-          <div className="metric__value">{activePairsCount}</div>
-          <div className="metric__hint">عدد الأزواج الفعّالة</div>
-        </div>
-      </div>
+      <section
+        style={{
+          marginTop: 12,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 12,
+        }}
+      >
+        {[
+          { title: 'Balance', value: fmtMoney(engineStatus?.balance), desc: 'الرصيد الحالي' },
+          { title: 'Daily PnL', value: fmtMoney(pnl?.daily), desc: 'أداء آخر 24 ساعة', cls: pnlTrendCls },
+          { title: 'Weekly PnL', value: fmtMoney(pnl?.weekly), desc: 'أداء أسبوعي' },
+          { title: 'Monthly PnL', value: fmtMoney(pnl?.monthly), desc: 'أداء شهري' },
+          { title: 'Active Pairs', value: String(activePairsCount), desc: 'عدد الأزواج الفعّالة' },
+        ].map((m) => (
+          <div
+            key={m.title}
+            className={m.cls || ''}
+            style={{
+              borderRadius: 22,
+              padding: 16,
+              border: '1px solid rgba(148,163,184,0.14)',
+              background: 'rgba(15,23,42,0.55)',
+              boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+            }}
+          >
+            <div style={{ color: 'rgba(148,163,184,0.95)', fontWeight: 900 }}>{m.title}</div>
+            <div style={{ marginTop: 8, color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 20 }}>
+              {m.value}
+            </div>
+            <div style={{ marginTop: 6, color: 'rgba(148,163,184,0.95)' }}>{m.desc}</div>
+          </div>
+        ))}
+      </section>
 
       {/* Trades Panel */}
-      <div className="bot-panel">
-        <div className="bot-panel__head">
+      <section
+        style={{
+          marginTop: 12,
+          borderRadius: 22,
+          padding: 16,
+          border: '1px solid rgba(56,189,248,0.14)',
+          background: 'rgba(15,23,42,0.55)',
+          boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
           <div>
-            <div className="bot-panel__title">Recent Trades</div>
-            <div className="bot-panel__sub">آخر عمليات التداول الواردة من الباك-إند</div>
+            <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>Recent Trades</div>
+            <div style={{ marginTop: 6, color: 'rgba(148,163,184,0.95)' }}>آخر عمليات التداول الواردة من الباك-إند</div>
           </div>
-          <div className="muted">
+          <div style={{ color: 'rgba(148,163,184,0.95)', fontWeight: 900 }}>
             {loadingMetrics ? 'Loading…' : `${trades.length} trades`}
           </div>
         </div>
 
         {trades.length === 0 ? (
-          <div className="bot-panel__empty">لا توجد صفقات حالياً.</div>
+          <div style={{ marginTop: 12, color: 'rgba(148,163,184,0.95)' }}>لا توجد صفقات حالياً.</div>
         ) : (
-          <>
-            <div className="bot-table__head">
-              <div>Pair</div>
-              <div>Side</div>
-              <div>Price</div>
-              <div>Volume</div>
-              <div>PnL</div>
-              <div>Time</div>
-            </div>
+          <div style={{ marginTop: 12, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
+              <thead>
+                <tr style={{ textAlign: 'left' }}>
+                  {['Pair', 'Side', 'Price', 'Volume', 'PnL', 'Time'].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: '10px 8px',
+                        borderBottom: '1px solid rgba(148,163,184,0.14)',
+                        color: 'rgba(148,163,184,0.95)',
+                        fontWeight: 900,
+                        fontSize: 12,
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {trades.map((t, idx) => {
+                  const side = String(t?.side || t?.type || '').toLowerCase();
+                  const isBuy = side === 'buy' || side === 'long';
+                  const pnlVal = Number(t?.pnl ?? t?.profit ?? t?.pl ?? 0);
 
-            <div className="bot-table__body">
-              {trades.map((t, idx) => {
-                const side = String(t?.side || t?.type || '').toLowerCase();
-                const isBuy = side === 'buy' || side === 'long';
-                const pnlVal = Number(t?.pnl ?? t?.profit ?? t?.pl ?? 0);
+                  return (
+                    <tr key={t?.id ?? `${idx}`}>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)' }}>
+                        <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                          {t?.pair || t?.symbol || t?.market || '—'}
+                        </div>
+                        <div style={{ color: 'rgba(148,163,184,0.95)', fontSize: 12 }}>
+                          {t?.strategy ? `Strategy: ${t.strategy}` : ''}
+                        </div>
+                      </td>
 
-                return (
-                  <div className="bot-table__row" key={t?.id || t?._id || idx}>
-                    <div>
-                      <div style={{ fontWeight: 900 }}>
-                        {t?.pair || t?.symbol || t?.market || '—'}
-                      </div>
-                      <div className="muted mono">
-                        {t?.strategy ? `Strategy: ${t.strategy}` : ''}
-                      </div>
-                    </div>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)' }}>
+                        <span
+                          style={{
+                            borderRadius: 999,
+                            padding: '4px 8px',
+                            border: `1px solid ${isBuy ? 'rgba(0,255,136,0.35)' : 'rgba(255,59,92,0.35)'}`,
+                            background: isBuy ? 'rgba(0,255,136,0.10)' : 'rgba(255,59,92,0.10)',
+                            color: 'rgba(226,232,240,0.95)',
+                            fontWeight: 950,
+                            fontSize: 12,
+                          }}
+                        >
+                          {isBuy ? 'BUY' : 'SELL'}
+                        </span>
+                      </td>
 
-                    <div>
-                      <span className={`pill ${isBuy ? 'is-buy' : 'is-sell'}`}>
-                        {isBuy ? 'BUY' : 'SELL'}
-                      </span>
-                    </div>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)', color: 'rgba(226,232,240,0.95)', fontWeight: 900 }}>
+                        {fmtMoney(t?.price)}
+                      </td>
 
-                    <div className="mono">{fmtMoney(t?.price)}</div>
-                    <div className="mono">{fmtMoney(t?.volume ?? t?.qty ?? t?.amount)}</div>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)', color: 'rgba(226,232,240,0.95)', fontWeight: 900 }}>
+                        {fmtMoney(t?.volume ?? t?.qty ?? t?.amount)}
+                      </td>
 
-                    <div className={`mono ${pnlVal >= 0 ? 'is-up' : 'is-down'}`}>
-                      {fmtMoney(pnlVal)}
-                    </div>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)' }}>
+                        <span
+                          className={`pnl ${pnlVal >= 0 ? 'is-up' : 'is-down'}`}
+                          style={{ color: pnlVal >= 0 ? 'rgba(0,255,136,0.95)' : 'rgba(255,59,92,0.95)', fontWeight: 950 }}
+                        >
+                          {fmtMoney(pnlVal)}
+                        </span>
+                      </td>
 
-                    <div className="muted">{fmtTime(t?.time || t?.timestamp || t?.createdAt)}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+                      <td style={{ padding: '10px 8px', borderBottom: '1px solid rgba(148,163,184,0.10)', color: 'rgba(148,163,184,0.95)' }}>
+                        {fmtTime(t?.time || t?.timestamp || t?.createdAt)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

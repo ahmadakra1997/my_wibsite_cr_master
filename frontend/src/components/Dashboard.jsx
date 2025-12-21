@@ -1,9 +1,11 @@
+// frontend/src/components/Dashboard.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
   const { t } = useTranslation();
+
   const [botStatus, setBotStatus] = useState('inactive');
   const [performance, setPerformance] = useState({});
   const [liveSignals, setLiveSignals] = useState([]);
@@ -12,7 +14,7 @@ const Dashboard = ({ user }) => {
   const [activeTabs, setActiveTabs] = useState({
     signals: true,
     performance: true,
-    analytics: false
+    analytics: false,
   });
 
   // محاكاة بيانات أداء حية
@@ -27,56 +29,57 @@ const Dashboard = ({ user }) => {
       riskScore: Math.floor(Math.random() * 30 + 70),
       winRate: `${(85 + Math.random() * 12).toFixed(1)}%`,
       sharpeRatio: (Math.random() * 3 + 1.5).toFixed(2),
-      maxDrawdown: `-${(Math.random() * 2).toFixed(1)}%`
+      maxDrawdown: `-${(Math.random() * 2).toFixed(1)}%`,
     };
 
     const signals = [
-      { 
-        id: 1, 
-        symbol: 'BTC/USDT', 
-        action: 'buy', 
-        confidence: '92%', 
+      {
+        id: 1,
+        symbol: 'BTC/USDT',
+        action: 'buy',
+        confidence: '92%',
         time: new Date().toLocaleTimeString(),
         price: '$45,230',
         change: '+2.4%',
-        exchange: 'Binance'
+        exchange: 'Binance',
       },
-      { 
-        id: 2, 
-        symbol: 'ETH/USDT', 
-        action: 'sell', 
-        confidence: '87%', 
+      {
+        id: 2,
+        symbol: 'ETH/USDT',
+        action: 'sell',
+        confidence: '87%',
         time: new Date().toLocaleTimeString(),
         price: '$2,450',
         change: '-1.2%',
-        exchange: 'MEXC'
+        exchange: 'MEXC',
       },
-      { 
-        id: 3, 
-        symbol: 'XRP/USDT', 
-        action: 'buy', 
-        confidence: '95%', 
+      {
+        id: 3,
+        symbol: 'XRP/USDT',
+        action: 'buy',
+        confidence: '95%',
         time: new Date().toLocaleTimeString(),
         price: '$0.75',
         change: '+5.7%',
-        exchange: 'Both'
+        exchange: 'Both',
       },
-      { 
-        id: 4, 
-        symbol: 'ADA/USDT', 
-        action: 'buy', 
-        confidence: '88%', 
+      {
+        id: 4,
+        symbol: 'ADA/USDT',
+        action: 'buy',
+        confidence: '88%',
         time: new Date().toLocaleTimeString(),
         price: '$0.52',
         change: '+3.1%',
-        exchange: 'Binance'
-      }
+        exchange: 'Binance',
+      },
     ];
 
     setPerformance(performanceData);
-    setLiveSignals(prev => {
+
+    setLiveSignals((prev) => {
       const newSignals = signals.slice(0, Math.floor(Math.random() * 2) + 2);
-      return [...newSignals, ...prev.slice(0, 3)];
+      return [...newSignals, ...(Array.isArray(prev) ? prev.slice(0, 3) : [])];
     });
   }, []);
 
@@ -89,7 +92,7 @@ const Dashboard = ({ user }) => {
   const startBot = async () => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setBotStatus('active');
     } catch (error) {
       console.error('Failed to start bot:', error);
@@ -101,7 +104,7 @@ const Dashboard = ({ user }) => {
   const stopBot = async () => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       setBotStatus('inactive');
     } catch (error) {
       console.error('Failed to stop bot:', error);
@@ -111,10 +114,7 @@ const Dashboard = ({ user }) => {
   };
 
   const toggleTab = (tab) => {
-    setActiveTabs(prev => ({
-      ...prev,
-      [tab]: !prev[tab]
-    }));
+    setActiveTabs((prev) => ({ ...(prev || {}), [tab]: !prev?.[tab] }));
   };
 
   const getStatusColor = () => {
@@ -122,353 +122,466 @@ const Dashboard = ({ user }) => {
   };
 
   const getStatusGlow = () => {
-    return botStatus === 'active' ? '0 0 20px rgba(0, 255, 136, 0.5)' : '0 0 20px rgba(255, 59, 92, 0.3)';
+    return botStatus === 'active'
+      ? '0 0 20px rgba(0, 255, 136, 0.5)'
+      : '0 0 20px rgba(255, 59, 92, 0.3)';
   };
 
+  const title = typeof t === 'function' ? t('dashboard.title') : 'Dashboard';
+  const subtitle = typeof t === 'function' ? t('dashboard.subtitle') : 'Live overview';
+  const botStatusLabel = typeof t === 'function' ? t('dashboard.botStatus') : 'Bot Status';
+  const statusActive = typeof t === 'function' ? t('dashboard.statusActive') : 'Active';
+  const statusInactive = typeof t === 'function' ? t('dashboard.statusInactive') : 'Inactive';
+
+  const planLabel = user?.plan === 'pro' ? '⚡ Pro' : 'Basic';
+
   return (
-    <section id="dashboard" className="dashboard-section">
-      <div className="dashboard-background">
-        <div className="quantum-particles"></div>
-        <div className="neon-grid-dashboard"></div>
-      </div>
-
-      <div className="dashboard-container">
-        {/* رأس اللوحة */}
-        <div className="dashboard-header">
-          <div className="dashboard-title-section">
-            <h1 className="dashboard-title">
-              📊 {t('dashboard.title')}
-            </h1>
-            <p className="dashboard-subtitle">
-              {t('dashboard.subtitle')} - <strong>QUANTUM AI TRADER</strong>
-            </p>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '14px' }}>
+      {/* رأس اللوحة */}
+      <header
+        style={{
+          borderRadius: 22,
+          padding: 16,
+          border: '1px solid rgba(56,189,248,0.18)',
+          background: 'linear-gradient(135deg, rgba(2,6,23,0.95), rgba(8,47,73,0.70))',
+          boxShadow: '0 20px 60px rgba(2,6,23,0.72)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <div style={{ color: 'rgba(226,232,240,0.98)', fontWeight: 950, fontSize: 20 }}>{title}</div>
+          <div style={{ marginTop: 6, color: 'rgba(148,163,184,0.95)' }}>
+            {subtitle} - <span style={{ fontWeight: 950 }}>QUANTUM AI TRADER</span>
           </div>
-          <div className="dashboard-actions">
-            <div className="user-welcome">
-              <span className="welcome-text">مرحباً، {user?.email || 'المتداول'}! 👋</span>
-              <div className="plan-badge">
-                {user?.plan === 'pro' ? '⚡ Pro' : '🔰 Basic'}
+          <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.92)' }}>
+            مرحباً، <span style={{ fontWeight: 950 }}>{user?.email || 'المتداول'}</span>!
+          </div>
+        </div>
+
+        <div
+          style={{
+            borderRadius: 999,
+            padding: '6px 10px',
+            border: '1px solid rgba(0,255,136,0.25)',
+            background: 'rgba(0,255,136,0.08)',
+            color: 'rgba(226,232,240,0.95)',
+            fontWeight: 950,
+          }}
+        >
+          {planLabel}
+        </div>
+      </header>
+
+      {/* شبكة لوحة التحكم الرئيسية */}
+      <section
+        style={{
+          marginTop: 12,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: 12,
+        }}
+      >
+        {/* بطاقة حالة البوت */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(148,163,184,0.14)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>{botStatusLabel}</div>
+
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: getStatusColor(),
+                boxShadow: getStatusGlow(),
+                display: 'inline-block',
+              }}
+              aria-hidden="true"
+            />
+            <span style={{ color: 'rgba(226,232,240,0.95)', fontWeight: 950 }}>
+              {botStatus === 'active' ? statusActive : statusInactive}
+            </span>
+          </div>
+
+          <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={startBot}
+              disabled={isLoading || botStatus === 'active'}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(0,255,136,0.35)',
+                background: 'rgba(0,255,136,0.10)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isLoading && botStatus !== 'active' ? '...' : 'ابدأ التداول الآلي'}
+            </button>
+
+            <button
+              type="button"
+              onClick={stopBot}
+              disabled={isLoading || botStatus !== 'active'}
+              style={{
+                borderRadius: 14,
+                padding: '10px 12px',
+                border: '1px solid rgba(56,189,248,0.30)',
+                background: 'rgba(56,189,248,0.10)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isLoading && botStatus === 'active' ? '...' : 'إيقاف البوت'}
+            </button>
+          </div>
+
+          <div style={{ marginTop: 12, color: 'rgba(148,163,184,0.95)', lineHeight: 1.7 }}>
+            <div>وقت التشغيل 24/7</div>
+            <div>السيرفر نشط</div>
+            <div>الإصدار v2.4.1</div>
+          </div>
+        </div>
+
+        {/* بطاقة الأداء الرئيسية */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(56,189,248,0.14)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>أداء التداول</div>
+
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {['1h', '24h', '7d', '30d'].map((timeframe) => (
+              <button
+                key={timeframe}
+                type="button"
+                onClick={() => setSelectedTimeframe(timeframe)}
+                className={`timeframe-btn ${selectedTimeframe === timeframe ? 'active' : ''}`}
+                style={{
+                  borderRadius: 999,
+                  padding: '6px 10px',
+                  border:
+                    selectedTimeframe === timeframe
+                      ? '1px solid rgba(0,255,136,0.35)'
+                      : '1px solid rgba(148,163,184,0.18)',
+                  background:
+                    selectedTimeframe === timeframe ? 'rgba(0,255,136,0.10)' : 'rgba(15,23,42,0.55)',
+                  color: 'rgba(226,232,240,0.95)',
+                  fontWeight: 950,
+                  cursor: 'pointer',
+                }}
+              >
+                {timeframe}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+            <div>
+              <div style={{ color: 'rgba(148,163,184,0.95)' }}>إجمالي الأرباح</div>
+              <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 18 }}>
+                {performance.dailyGain || '+$0'}
               </div>
+              <div style={{ marginTop: 4, color: 'rgba(0,255,136,0.95)', fontWeight: 950 }}>
+                {performance.profit || '+0.0%'}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ color: 'rgba(148,163,184,0.95)' }}>معدل النجاح</div>
+              <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 18 }}>
+                {performance.successRate || '0%'}
+              </div>
+              <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.95)' }}>دقة عالية ⚡</div>
+            </div>
+
+            <div>
+              <div style={{ color: 'rgba(148,163,184,0.95)' }}>الصفقات النشطة</div>
+              <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 18 }}>
+                {performance.activeTrades || '0'}
+              </div>
+              <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.95)' }}>في الوقت الحقيقي</div>
+            </div>
+
+            <div>
+              <div style={{ color: 'rgba(148,163,184,0.95)' }}>رصيد المحفظة</div>
+              <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 18 }}>
+                {performance.totalBalance || '$0'}
+              </div>
+              <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.95)' }}>إجمالي الأصول</div>
             </div>
           </div>
         </div>
 
-        {/* شبكة لوحة التحكم الرئيسية */}
-        <div className="dashboard-grid">
-          {/* بطاقة حالة البوت */}
-          <div className="dashboard-card bot-status-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon">🤖</span>
-                {t('dashboard.botStatus')}
-              </h3>
-              <div className="status-indicators">
-                <div 
-                  className="status-dot"
-                  style={{
-                    backgroundColor: getStatusColor(),
-                    boxShadow: getStatusGlow()
-                  }}
-                ></div>
-                <span className="status-text">
-                  {botStatus === 'active' ? t('dashboard.statusActive') : t('dashboard.statusInactive')}
-                </span>
-              </div>
+        {/* بطاقة الإشعارات الحية */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(45,212,191,0.16)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+            <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>
+              الإشعارات الحية <span style={{ opacity: 0.85 }}>({Array.isArray(liveSignals) ? liveSignals.length : 0})</span>
             </div>
-
-            <div className="card-content">
-              <div className="bot-controls">
-                <button 
-                  onClick={startBot}
-                  disabled={botStatus === 'active' || isLoading}
-                  className={`control-btn start-btn ${isLoading ? 'loading' : ''}`}
-                >
-                  {isLoading ? (
-                    <div className="btn-loading-spinner"></div>
-                  ) : (
-                    ' ابدأ التداول الآلي'
-                  )}
-                </button>
-                <button 
-                  onClick={stopBot}
-                  disabled={botStatus === 'inactive' || isLoading}
-                  className="control-btn stop-btn"
-                >
-                   إيقاف البوت
-                </button>
-              </div>
-
-              <div className="bot-stats">
-                <div className="bot-stat">
-                  <span className="stat-label">وقت التشغيل</span>
-                  <span className="stat-value">24/7</span>
-                </div>
-                <div className="bot-stat">
-                  <span className="stat-label">السيرفر</span>
-                  <span className="stat-value online">🟢 نشط</span>
-                </div>
-                <div className="bot-stat">
-                  <span className="stat-label">الإصدار</span>
-                  <span className="stat-value">v2.4.1</span>
-                </div>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleTab('signals')}
+              style={{
+                borderRadius: 12,
+                padding: '8px 10px',
+                border: '1px solid rgba(148,163,184,0.18)',
+                background: 'rgba(15,23,42,0.55)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: 'pointer',
+              }}
+            >
+              {activeTabs.signals ? '−' : '+'}
+            </button>
           </div>
 
-          {/* بطاقة الأداء الرئيسية */}
-          <div className="dashboard-card performance-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon">📈</span>
-                أداء التداول
-              </h3>
-              <div className="timeframe-selector">
-                {['1h', '24h', '7d', '30d'].map(timeframe => (
-                  <button
-                    key={timeframe}
-                    onClick={() => setSelectedTimeframe(timeframe)}
-                    className={`timeframe-btn ${selectedTimeframe === timeframe ? 'active' : ''}`}
+          {activeTabs.signals ? (
+            <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+              {Array.isArray(liveSignals) && liveSignals.length > 0 ? (
+                liveSignals.map((signal) => (
+                  <div
+                    key={signal?.id ?? `${signal?.symbol}-${signal?.time}`}
+                    style={{
+                      borderRadius: 16,
+                      padding: 12,
+                      border: '1px solid rgba(148,163,184,0.14)',
+                      background: 'rgba(2,6,23,0.25)',
+                    }}
                   >
-                    {timeframe}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="performance-grid">
-              <div className="performance-metric main-metric">
-                <div className="metric-icon">💰</div>
-                <div className="metric-content">
-                  <div className="metric-label">إجمالي الأرباح</div>
-                  <div className="metric-value profit">{performance.dailyGain || '+$0'}</div>
-                  <div className="metric-change positive">{performance.profit || '+0.0%'}</div>
-                </div>
-              </div>
-
-              <div className="performance-metric">
-                <div className="metric-icon">🎯</div>
-                <div className="metric-content">
-                  <div className="metric-label">معدل النجاح</div>
-                  <div className="metric-value">{performance.successRate || '0%'}</div>
-                  <div className="metric-subtext">دقة عالية</div>
-                </div>
-              </div>
-
-              <div className="performance-metric">
-                <div className="metric-icon">⚡</div>
-                <div className="metric-content">
-                  <div className="metric-label">الصفقات النشطة</div>
-                  <div className="metric-value">{performance.activeTrades || '0'}</div>
-                  <div className="metric-subtext">في الوقت الحقيقي</div>
-                </div>
-              </div>
-
-              <div className="performance-metric">
-                <div className="metric-icon">🏦</div>
-                <div className="metric-content">
-                  <div className="metric-label">رصيد المحفظة</div>
-                  <div className="metric-value">{performance.totalBalance || '$0'}</div>
-                  <div className="metric-subtext">إجمالي الأصول</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* بطاقة الإشعارات الحية */}
-          <div className="dashboard-card alerts-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon"></span>
-                الإشعارات الحية
-                <span className="alerts-badge">{liveSignals.length}</span>
-              </h3>
-              <button 
-                className="tab-toggle"
-                onClick={() => toggleTab('signals')}
-              >
-                {activeTabs.signals ? '−' : '+'}
-              </button>
-            </div>
-
-            {activeTabs.signals && (
-              <div className="alerts-container">
-                {liveSignals.length > 0 ? (
-                  liveSignals.map((signal) => (
-                    <div key={signal.id} className="alert-item">
-                      <div className="alert-main">
-                        <div className="alert-symbol">{signal.symbol}</div>
-                        <div className={`alert-action ${signal.action}`}>
-                          {signal.action === 'buy' ? '🟢 شراء' : '🔴 بيع'}
-                        </div>
-                        <div className="alert-confidence">{signal.confidence}</div>
-                      </div>
-                      <div className="alert-details">
-                        <span className="alert-price">{signal.price}</span>
-                        <span className={`alert-change ${signal.change.includes('+') ? 'positive' : 'negative'}`}>
-                          {signal.change}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                        {signal?.symbol || '—'}{' '}
+                        <span style={{ opacity: 0.85 }}>
+                          {signal?.action === 'buy' ? 'شراء' : signal?.action === 'sell' ? 'بيع' : '—'}
                         </span>
-                        <span className="alert-exchange">{signal.exchange}</span>
-                        <span className="alert-time">{signal.time}</span>
                       </div>
+                      <div style={{ color: 'rgba(148,163,184,0.95)', fontWeight: 900 }}>{signal?.time || '—'}</div>
                     </div>
-                  ))
-                ) : (
-                  <div className="no-alerts">
-                    <div className="no-alerts-icon">📊</div>
-                    <p>لا توجد إشعارات حالياً</p>
+
+                    <div style={{ marginTop: 8, display: 'flex', gap: 10, flexWrap: 'wrap', color: 'rgba(148,163,184,0.95)' }}>
+                      <span>Confidence: <strong style={{ color: 'rgba(226,232,240,0.95)' }}>{signal?.confidence || '—'}</strong></span>
+                      <span>Price: <strong style={{ color: 'rgba(226,232,240,0.95)' }}>{signal?.price || '—'}</strong></span>
+                      <span>Change: <strong style={{ color: 'rgba(226,232,240,0.95)' }}>{signal?.change || '—'}</strong></span>
+                      <span>Exchange: <strong style={{ color: 'rgba(226,232,240,0.95)' }}>{signal?.exchange || '—'}</strong></span>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
+                ))
+              ) : (
+                <div style={{ color: 'rgba(148,163,184,0.95)' }}>لا توجد إشعارات حالياً</div>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        {/* بطاقة التحليلات المتقدمة */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(0,255,136,0.14)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+            <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>التحليلات المتقدمة</div>
+            <button
+              type="button"
+              onClick={() => toggleTab('analytics')}
+              style={{
+                borderRadius: 12,
+                padding: '8px 10px',
+                border: '1px solid rgba(148,163,184,0.18)',
+                background: 'rgba(15,23,42,0.55)',
+                color: 'rgba(226,232,240,0.95)',
+                fontWeight: 950,
+                cursor: 'pointer',
+              }}
+            >
+              {activeTabs.analytics ? '−' : '+'}
+            </button>
           </div>
 
-          {/* بطاقة التحليلات المتقدمة */}
-          <div className="dashboard-card analytics-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon">📊</span>
-                التحليلات المتقدمة
-              </h3>
-              <button 
-                className="tab-toggle"
-                onClick={() => toggleTab('analytics')}
-              >
-                {activeTabs.analytics ? '−' : '+'}
-              </button>
-            </div>
-
-            {activeTabs.analytics && (
-              <div className="analytics-grid">
-                <div className="analytics-metric">
-                  <div className="analytics-label">معدل الربحية</div>
-                  <div className="analytics-value">{performance.winRate || '0%'}</div>
-                  <div className="analytics-progress">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: performance.winRate || '0%' }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="analytics-metric">
-                  <div className="analytics-label">نسبة شارب</div>
-                  <div className="analytics-value">{performance.sharpeRatio || '0.00'}</div>
-                  <div className="analytics-trend positive">↑ ممتاز</div>
-                </div>
-
-                <div className="analytics-metric">
-                  <div className="analytics-label">أقصى انخفاض</div>
-                  <div className="analytics-value negative">{performance.maxDrawdown || '0%'}</div>
-                  <div className="analytics-trend">منخفض</div>
-                </div>
-
-                <div className="analytics-metric">
-                  <div className="analytics-label">مستوى المخاطرة</div>
-                  <div className="analytics-value">{performance.riskScore || '0'}/100</div>
-                  <div className="analytics-progress risk">
-                    <div 
-                      className="progress-fill risk-fill" 
-                      style={{ width: `${performance.riskScore || 0}%` }}
-                    ></div>
-                  </div>
+          {activeTabs.analytics ? (
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+              <div>
+                <div style={{ color: 'rgba(148,163,184,0.95)' }}>معدل الربحية</div>
+                <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                  {performance.winRate || '0%'}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* بطاقة الأخبار السريعة */}
-          <div className="dashboard-card news-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon">📰</span>
-                أخبار السوق
-              </h3>
-            </div>
-            <div className="news-container">
-              <div className="news-item">
-                <div className="news-badge bitcoin">BTC</div>
-                <div className="news-content">
-                  <strong>Bitcoin</strong> يتخطى مستوى المقاومة عند $45,000
+              <div>
+                <div style={{ color: 'rgba(148,163,184,0.95)' }}>نسبة شارب</div>
+                <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                  {performance.sharpeRatio || '0.00'} <span style={{ opacity: 0.85 }}>↑ ممتاز</span>
                 </div>
-                <div className="news-time">منذ 2 دقيقة</div>
               </div>
-              <div className="news-item">
-                <div className="news-badge ethereum">ETH</div>
-                <div className="news-content">
-                  <strong>Ethereum</strong> ترقية الشبكة المقررة الأسبوع القادم
-                </div>
-                <div className="news-time">منذ 15 دقيقة</div>
-              </div>
-              <div className="news-item">
-                <div className="news-badge update">NEW</div>
-                <div className="news-content">
-                  أزواج تداول جديدة مضافة إلى المنصة
-                </div>
-                <div className="news-time">منذ ساعة</div>
-              </div>
-            </div>
-          </div>
 
-          {/* بطاقة الأداء الشهري */}
-          <div className="dashboard-card monthly-card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <span className="card-icon">📅</span>
-                الأداء الشهري
-              </h3>
-            </div>
-            <div className="monthly-performance">
-              <div className="monthly-stats">
-                <div className="monthly-stat">
-                  <div className="monthly-value positive">+24.7%</div>
-                  <div className="monthly-label">هذا الشهر</div>
-                </div>
-                <div className="monthly-stat">
-                  <div className="monthly-value positive">+156.3%</div>
-                  <div className="monthly-label">هذه السنة</div>
+              <div>
+                <div style={{ color: 'rgba(148,163,184,0.95)' }}>أقصى انخفاض</div>
+                <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                  {performance.maxDrawdown || '0%'} <span style={{ opacity: 0.85 }}>منخفض</span>
                 </div>
               </div>
-              <div className="performance-chart-placeholder">
-                <div className="chart-bars">
-                  {[65, 80, 45, 90, 75, 85, 70].map((height, index) => (
-                    <div 
-                      key={index}
-                      className="chart-bar"
-                      style={{ height: `${height}%` }}
-                    ></div>
-                  ))}
-                </div>
-                <div className="chart-labels">
-                  {['أ', 'ب', 'ج', 'د', 'ه', 'و', 'ي'].map((label, index) => (
-                    <span key={index} className="chart-label">{label}</span>
-                  ))}
+
+              <div>
+                <div style={{ color: 'rgba(148,163,184,0.95)' }}>مستوى المخاطرة</div>
+                <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>
+                  {performance.riskScore || '0'}/100
                 </div>
               </div>
             </div>
+          ) : null}
+        </div>
+
+        {/* بطاقة الأخبار السريعة */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(148,163,184,0.14)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>أخبار السوق</div>
+
+          <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>BTC</span>
+              <span style={{ color: 'rgba(148,163,184,0.95)' }}>منذ 2 دقيقة</span>
+            </div>
+            <div style={{ color: 'rgba(148,163,184,0.95)' }}>Bitcoin يتخطى مستوى المقاومة عند $45,000</div>
+
+            <div style={{ height: 1, background: 'rgba(148,163,184,0.12)' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>ETH</span>
+              <span style={{ color: 'rgba(148,163,184,0.95)' }}>منذ 15 دقيقة</span>
+            </div>
+            <div style={{ color: 'rgba(148,163,184,0.95)' }}>Ethereum ترقية الشبكة المقررة الأسبوع القادم</div>
+
+            <div style={{ height: 1, background: 'rgba(148,163,184,0.12)' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950 }}>NEW</span>
+              <span style={{ color: 'rgba(148,163,184,0.95)' }}>منذ ساعة</span>
+            </div>
+            <div style={{ color: 'rgba(148,163,184,0.95)' }}>أزواج تداول جديدة مضافة إلى المنصة</div>
           </div>
         </div>
 
-        {/* قسم الإجراءات السريعة */}
-        <div className="quick-actions">
-          <button className="quick-action-btn">
-            <span className="action-icon">⏱️</span>
-            التداول الآلي
-          </button>
-          <button className="quick-action-btn">
-            <span className="action-icon">📋</span>
-            تقرير الأداء
-          </button>
-          <button className="quick-action-btn">
-            <span className="action-icon">⚙️</span>
-            الإعدادات
-          </button>
-          <button className="quick-action-btn">
-            <span className="action-icon">🆘</span>
-            الدعم الفني
-          </button>
+        {/* بطاقة الأداء الشهري */}
+        <div
+          style={{
+            borderRadius: 22,
+            padding: 16,
+            border: '1px solid rgba(56,189,248,0.14)',
+            background: 'rgba(15,23,42,0.55)',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          }}
+        >
+          <div style={{ color: 'rgba(226,232,240,0.96)', fontWeight: 950, fontSize: 16 }}>الأداء الشهري</div>
+
+          <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ color: 'rgba(0,255,136,0.95)', fontWeight: 950, fontSize: 18 }}>+24.7%</div>
+            <div style={{ color: 'rgba(148,163,184,0.95)' }}>هذا الشهر</div>
+            <div style={{ marginInlineStart: 10, color: 'rgba(56,189,248,0.95)', fontWeight: 950, fontSize: 18 }}>
+              +156.3%
+            </div>
+            <div style={{ color: 'rgba(148,163,184,0.95)' }}>هذه السنة</div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 90 }}>
+              {[65, 80, 45, 90, 75, 85, 70].map((height, index) => (
+                <div
+                  key={index}
+                  style={{
+                    width: 14,
+                    height,
+                    borderRadius: 10,
+                    border: '1px solid rgba(56,189,248,0.22)',
+                    background: 'linear-gradient(180deg, rgba(56,189,248,0.28), rgba(0,255,136,0.10))',
+                  }}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+
+            <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+              {['أ', 'ب', 'ج', 'د', 'ه', 'و', 'ي'].map((label, index) => (
+                <div key={index} style={{ width: 14, textAlign: 'center', color: 'rgba(148,163,184,0.95)' }}>
+                  {label}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* قسم الإجراءات السريعة */}
+      <section
+        style={{
+          marginTop: 12,
+          borderRadius: 22,
+          padding: 16,
+          border: '1px solid rgba(45,212,191,0.16)',
+          background: 'rgba(15,23,42,0.55)',
+          boxShadow: '0 18px 46px rgba(2,6,23,0.45)',
+          display: 'flex',
+          gap: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        {['⏱️ التداول الآلي', '📊 تقرير الأداء', '⚙️ الإعدادات', '💬 الدعم الفني'].map((label) => (
+          <button
+            key={label}
+            type="button"
+            style={{
+              borderRadius: 14,
+              padding: '10px 12px',
+              border: '1px solid rgba(148,163,184,0.18)',
+              background: 'rgba(2,6,23,0.25)',
+              color: 'rgba(226,232,240,0.95)',
+              fontWeight: 950,
+              cursor: 'pointer',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </section>
+    </div>
   );
 };
 
