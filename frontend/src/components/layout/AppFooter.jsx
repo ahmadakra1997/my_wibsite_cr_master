@@ -24,6 +24,12 @@ const AppFooter = () => {
     t('app.tagline', '⚡ Quantum AI Trading Engine — Bot Orchestration System') ||
     '⚡ Quantum AI Trading Engine — Bot Orchestration System';
 
+  const disclaimer =
+    t(
+      'app.disclaimerShort',
+      'هذه المنصّة لأغراض تحليلية وتعليمية، وليست نصيحة استثمارية.',
+    ) || 'هذه المنصّة لأغراض تحليلية وتعليمية، وليست نصيحة استثمارية.';
+
   const footerStyle = {
     marginTop: 10,
     borderRadius: 18,
@@ -40,30 +46,13 @@ const AppFooter = () => {
     flexWrap: 'wrap',
   };
 
-  const leftStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-    minWidth: 0,
-  };
+  const leftStyle = { display: 'flex', flexDirection: 'column', gap: 2 };
+  const rightStyle = { textAlign: 'end', display: 'flex', flexDirection: 'column', gap: 2 };
 
-  const rightStyle = {
-    textAlign: 'end',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-    minWidth: 0,
-  };
-
-  const nameVersionStyle = {
-    color: '#e5e7eb',
-    fontSize: 11,
-    fontWeight: 700,
-    letterSpacing: '0.06em',
-  };
+  const nameVersionStyle = { color: '#e5e7eb', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' };
 
   return (
-    <footer style={footerStyle} role="contentinfo" aria-label="App footer">
+    <footer style={footerStyle} aria-label="App Footer">
       <div style={leftStyle}>
         <div style={nameVersionStyle}>
           {appName} • {appVersion}
@@ -72,10 +61,8 @@ const AppFooter = () => {
       </div>
 
       <div style={rightStyle}>
-        <div style={{ color: '#e5e7eb' }}>{tagline}</div>
-        <div style={{ color: 'var(--qa-text-muted, #7b8ca8)' }}>
-          {t('app.disclaimerShort', 'هذه المنصّة لأغراض تحليلية وتعليمية، وليست نصيحة استثمارية.')}
-        </div>
+        <div style={{ color: 'rgba(226,232,240,0.9)' }}>{tagline}</div>
+        <div>{disclaimer}</div>
       </div>
     </footer>
   );
