@@ -11,7 +11,8 @@ import './RiskMonitor.css';
  * - Drawdown تقديري مبني على تغير السعر
  */
 const RiskMonitor = () => {
-  const trades = useSelector((state) => state?.trading?.trades ?? []);
+  // ✅ FIX: trades في slice موجودة داخل tradeHistory.trades :contentReference[oaicite:23]{index=23}
+  const trades = useSelector((state) => state?.trading?.tradeHistory?.trades ?? state?.trading?.trades ?? []);
   const ticker = useSelector((state) => state?.trading?.ticker ?? null);
 
   const { exposure, leverage, drawdown, riskLevel } = useMemo(() => {
@@ -24,8 +25,9 @@ const RiskMonitor = () => {
 
     trades.forEach((t) => {
       const side = String(t?.side || '').toLowerCase();
-      const qty = Number(t?.quantity ?? 0);
-      const price = Number(t?.price ?? ticker?.lastPrice ?? 0);
+      const qty = Number(t?.quantity ?? t?.amount ?? 0);
+      const price = Number(t?.price ?? ticker?.lastPrice ?? ticker?.price ?? 0);
+
       if (!qty || !price) return;
 
       const signedQty = side === 'sell' ? -qty : qty;
@@ -33,7 +35,7 @@ const RiskMonitor = () => {
       notional += qty * price;
     });
 
-    const lastPrice = Number(ticker?.lastPrice ?? 0) || 0;
+    const lastPrice = Number(ticker?.lastPrice ?? ticker?.price ?? 0) || 0;
     const exposure = lastPrice ? netPosition * lastPrice : 0;
 
     // Leverage تقديري
@@ -51,112 +53,56 @@ const RiskMonitor = () => {
     return { exposure, leverage, drawdown, riskLevel };
   }, [trades, ticker]);
 
-  const riskLabel =
-    riskLevel === 'danger'
-      ? 'High Risk'
-      : riskLevel === 'warning'
-      ? 'Elevated Risk'
-      : 'Healthy';
+  const riskLabel = riskLevel === 'danger' ? 'High Risk' : riskLevel === 'warning' ? 'Elevated Risk' : 'Healthy';
+  const riskClass = riskLevel === 'danger' ? 'risk-danger' : riskLevel === 'warning' ? 'risk-warning' : 'risk-ok';
 
-  const riskClass =
-    riskLevel === 'danger'
-      ? 'risk-danger'
-      : riskLevel === 'warning'
-      ? 'risk-warning'
-      : 'risk-ok';
-
-  const meterScale =
-    riskLevel === 'danger' ? 0.95 : riskLevel === 'warning' ? 0.65 : 0.35;
-
+  const meterScale = riskLevel === 'danger' ? 0.95 : riskLevel === 'warning' ? 0.65 : 0.35;
   const exposureClass = exposure >= 0 ? 'text-up' : 'text-down';
   const drawdownClass = drawdown > 0 ? 'text-down' : '';
 
   return (
-    <div className={`risk-root ${riskClass}`} role="region" aria-label="Risk monitor">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-        <div style={{ fontWeight: 800, color: '#e5f4ff' }}>Risk Monitor</div>
-        <div
-          style={{
-            borderRadius: 999,
-            padding: '4px 10px',
-            border:
-              riskLevel === 'danger'
-                ? '1px solid rgba(251,59,127,0.35)'
-                : riskLevel === 'warning'
-                ? '1px solid rgba(250,204,21,0.35)'
-                : '1px solid rgba(0,245,155,0.30)',
-            background:
-              riskLevel === 'danger'
-                ? 'rgba(251,59,127,0.08)'
-                : riskLevel === 'warning'
-                ? 'rgba(250,204,21,0.07)'
-                : 'rgba(0,245,155,0.06)',
-            fontSize: 11,
-            color: '#e5f4ff',
-            whiteSpace: 'nowrap',
-          }}
-        >
+    <div className={`risk-monitor ${riskClass}`} style={{ display: 'grid', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ fontWeight: 900, color: 'rgba(226,232,240,0.95)' }}>Risk Monitor</div>
+          <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.92)', fontSize: 12 }}>
+            Live snapshot of exposure, leverage and drawdown.
+          </div>
+        </div>
+
+        <div style={{ padding: '6px 10px', borderRadius: 999, border: '1px solid rgba(148,163,184,0.18)', background: 'rgba(148,163,184,0.08)', color: 'rgba(226,232,240,0.92)', fontWeight: 900, fontSize: 12 }}>
           {riskLabel}
         </div>
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--qa-text-muted, #7b8ca8)', marginTop: 4 }}>
-        Live snapshot of exposure, leverage and drawdown.
-      </div>
-
       {/* Meter */}
-      <div
-        style={{
-          marginTop: 10,
-          height: 10,
-          borderRadius: 999,
-          border: '1px solid rgba(255,255,255,0.08)',
-          background: 'rgba(255,255,255,0.03)',
-          overflow: 'hidden',
-        }}
-        aria-hidden="true"
-      >
-        <div
-          style={{
-            height: '100%',
-            width: '100%',
-            transformOrigin: 'left center',
-            transform: `scaleX(${meterScale})`,
-            background:
-              'linear-gradient(90deg, rgba(0,229,255,0.55), rgba(0,245,155,0.55), rgba(251,59,127,0.55))',
-          }}
-        />
+      <div style={{ height: 10, borderRadius: 999, background: 'rgba(148,163,184,0.14)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${Math.round(meterScale * 100)}%`, background: 'linear-gradient(90deg, rgba(56,189,248,0.55), rgba(0,255,136,0.55), rgba(255,59,92,0.45))' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 10 }}>
-        <div style={{ borderRadius: 12, padding: 10, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-soft, #93a4be)' }}>Net Exposure</div>
-          <div className={exposureClass} style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', marginTop: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
+        <div style={{ padding: 10, borderRadius: 14, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(15,23,42,0.55)' }}>
+          <div style={{ color: 'rgba(148,163,184,0.9)', fontSize: 12 }}>Net Exposure</div>
+          <div className={exposureClass} style={{ fontWeight: 900, color: 'rgba(226,232,240,0.95)' }}>
             {exposure ? exposure.toFixed(2) : '0.00'}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-muted, #7b8ca8)', marginTop: 4 }}>
-            Estimated notional exposure.
-          </div>
+          <div style={{ color: 'rgba(148,163,184,0.86)', fontSize: 12, marginTop: 4 }}>Estimated notional exposure.</div>
         </div>
 
-        <div style={{ borderRadius: 12, padding: 10, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-soft, #93a4be)' }}>Leverage (approx.)</div>
-          <div style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', marginTop: 4, color: '#e5f4ff' }}>
+        <div style={{ padding: 10, borderRadius: 14, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(15,23,42,0.55)' }}>
+          <div style={{ color: 'rgba(148,163,184,0.9)', fontSize: 12 }}>Leverage (approx.)</div>
+          <div style={{ fontWeight: 900, color: 'rgba(226,232,240,0.95)' }}>
             {Number.isFinite(leverage) ? leverage.toFixed(2) : '0.00'}×
           </div>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-muted, #7b8ca8)', marginTop: 4 }}>
-            Above 3× starts raising flags.
-          </div>
+          <div style={{ color: 'rgba(148,163,184,0.86)', fontSize: 12, marginTop: 4 }}>Above 3× starts raising flags.</div>
         </div>
 
-        <div style={{ borderRadius: 12, padding: 10, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-soft, #93a4be)' }}>Drawdown (est.)</div>
-          <div className={drawdownClass} style={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums', marginTop: 4, color: '#e5f4ff' }}>
+        <div style={{ padding: 10, borderRadius: 14, border: '1px solid rgba(148,163,184,0.16)', background: 'rgba(15,23,42,0.55)' }}>
+          <div style={{ color: 'rgba(148,163,184,0.9)', fontSize: 12 }}>Drawdown (est.)</div>
+          <div className={drawdownClass} style={{ fontWeight: 900, color: 'rgba(226,232,240,0.95)' }}>
             {drawdown ? `${drawdown.toFixed(2)}%` : '0.00%'}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--qa-text-muted, #7b8ca8)', marginTop: 4 }}>
-            Based on recent price move.
-          </div>
+          <div style={{ color: 'rgba(148,163,184,0.86)', fontSize: 12, marginTop: 4 }}>Based on recent price move.</div>
         </div>
       </div>
     </div>
