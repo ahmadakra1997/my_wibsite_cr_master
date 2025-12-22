@@ -1,12 +1,14 @@
 /* === Price Ticker Bar === */
 
-.ticker-container {
+/* Alias class for compatibility (no breaking changes) */
+.ticker-container,
+.price-ticker {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 10px 14px;
-  border-radius: var(--qa-radius-lg);
+  border-radius: var(--qa-radius-lg, 16px);
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: linear-gradient(
     120deg,
@@ -18,16 +20,14 @@
 }
 
 /* حالات خاصة */
-
 .ticker-error,
 .ticker-loading,
 .ticker-empty {
   justify-content: center;
-  color: var(--qa-text-muted);
+  color: var(--qa-text-muted, rgba(148, 163, 184, 0.92));
 }
 
 /* الرمز */
-
 .ticker-symbol span {
   font-size: 13px;
   font-weight: 600;
@@ -37,7 +37,6 @@
 }
 
 /* السعر الرئيسي */
-
 .ticker-main {
   display: flex;
   flex-direction: column;
@@ -54,21 +53,19 @@
 .ticker-change {
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  color: var(--qa-text-muted);
+  color: var(--qa-text-muted, rgba(148, 163, 184, 0.92));
 }
 
 /* ألوان الاتجاه */
-
 .ticker-up {
-  color: var(--qa-success);
+  color: var(--qa-success, #00f59b);
 }
 
 .ticker-down {
-  color: var(--qa-danger);
+  color: var(--qa-danger, #fb3b7f);
 }
 
 /* معلومات إضافية */
-
 .ticker-extra {
   display: flex;
   align-items: center;
@@ -88,24 +85,46 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--qa-text-soft);
+  color: var(--qa-text-soft, rgba(148, 163, 184, 0.78));
 }
 
 .ticker-value {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  color: var(--qa-text-main);
+  color: var(--qa-text-main, rgba(226, 232, 240, 0.92));
+}
+
+/* Extra compatibility (in case JSX uses other naming) */
+.ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticker-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ticker-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 70px;
 }
 
 /* Responsive */
-
 @media (max-width: 768px) {
-  .ticker-container {
+  .ticker-container,
+  .price-ticker {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .ticker-extra {
+  .ticker-extra,
+  .ticker-stats {
     width: 100%;
     justify-content: space-between;
   }

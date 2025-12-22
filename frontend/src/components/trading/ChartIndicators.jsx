@@ -1,5 +1,4 @@
 // frontend/src/components/trading/ChartIndicators.jsx
-
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +22,7 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
     rsi: false,
     macd: false,
     bollinger: false,
-    ...indicators,
+    ...(indicators || {}),
   };
 
   const latestValues = useMemo(() => {
@@ -31,37 +30,22 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
 
     const getLastFromArray = (arr) => {
       if (!Array.isArray(arr) || arr.length === 0) return null;
-
       for (let i = arr.length - 1; i >= 0; i -= 1) {
         const v = arr[i];
         if (v == null) continue;
         if (typeof v === 'number') return v;
-        if (
-          typeof v === 'object' &&
-          v !== null &&
-          typeof v.value === 'number'
-        ) {
-          return v.value;
-        }
+        if (typeof v === 'object' && v !== null && typeof v.value === 'number') return v.value;
       }
-
       return null;
     };
 
     const result = {};
-
-    if (indicatorData.sma) {
-      result.sma = getLastFromArray(indicatorData.sma);
-    }
-    if (indicatorData.ema) {
-      result.ema = getLastFromArray(indicatorData.ema);
-    }
-    if (indicatorData.rsi) {
-      result.rsi = getLastFromArray(indicatorData.rsi);
-    }
+    if (indicatorData.sma) result.sma = getLastFromArray(indicatorData.sma);
+    if (indicatorData.ema) result.ema = getLastFromArray(indicatorData.ema);
+    if (indicatorData.rsi) result.rsi = getLastFromArray(indicatorData.rsi);
 
     if (indicatorData.macd) {
-      const { macdLine, signalLine, histogram } = indicatorData.macd;
+      const { macdLine, signalLine, histogram } = indicatorData.macd || {};
       result.macd = {
         macd: getLastFromArray(macdLine),
         signal: getLastFromArray(signalLine),
@@ -70,7 +54,7 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
     }
 
     if (indicatorData.bollinger) {
-      const { upperBand, middleBand, lowerBand } = indicatorData.bollinger;
+      const { upperBand, middleBand, lowerBand } = indicatorData.bollinger || {};
       result.bollinger = {
         upper: getLastFromArray(upperBand),
         middle: getLastFromArray(middleBand),
@@ -83,10 +67,7 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
 
   const handleToggle = (key) => {
     if (!onIndicatorsChange) return;
-    const next = {
-      ...mergedIndicators,
-      [key]: !mergedIndicators[key],
-    };
+    const next = { ...mergedIndicators, [key]: !mergedIndicators[key] };
     onIndicatorsChange(next);
   };
 
@@ -105,72 +86,29 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
       case 'rsi':
         return t('charts.indicators.rsi', 'RSI (مؤشر القوة النسبية)');
       case 'macd':
-        return t(
-          'charts.indicators.macd',
-          'MACD (تقارب/تباعد المتوسطات)',
-        );
+        return t('charts.indicators.macd', 'MACD (تقارب/تباعد المتوسطات)');
       case 'bollinger':
-        return t(
-          'charts.indicators.bollinger',
-          'Bollinger Bands',
-        );
+        return t('charts.indicators.bollinger', 'Bollinger Bands');
       default:
-        return key.toUpperCase();
+        return String(key || '').toUpperCase();
     }
   };
 
   return (
-    <section
-      className="chart-indicators"
-      style={{
-        borderRadius: 16,
-        border: '1px solid rgba(30,64,175,0.55)',
-        background:
-          'linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,1))',
-        padding: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-    >
-      <div
-        className="chart-indicators-header"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <h4
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: '#e5e7eb',
-          }}
-        >
+    <div style={{ display: 'grid', gap: 10 }}>
+      <div>
+        <div style={{ fontWeight: 900, color: '#e5e7eb', letterSpacing: '0.04em' }}>
           {t('charts.indicators.title', 'المؤشرات الفنية')}
-        </h4>
-        <p
-          style={{
-            fontSize: 11,
-            color: 'rgba(148,163,184,0.9)',
-          }}
-        >
+        </div>
+        <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.92)', fontSize: 12, lineHeight: 1.45 }}>
           {t(
             'charts.indicators.subtitle',
             'قم بتفعيل أو إلغاء تفعيل المؤشرات لعرض المزيد من التفاصيل على المخطط.',
           )}
-        </p>
+        </div>
       </div>
 
-      <div
-        className="chart-indicators-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: 8,
-        }}
-      >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
         {INDICATOR_KEYS.map((key) => {
           const enabled = !!mergedIndicators[key];
           const value = latestValues[key];
@@ -182,152 +120,59 @@ const ChartIndicators = ({ indicators = {}, onIndicatorsChange, indicatorData })
               onClick={() => handleToggle(key)}
               style={{
                 textAlign: 'right',
-                padding: '0.45rem 0.6rem',
-                borderRadius: 10,
-                border: enabled
-                  ? '1px solid rgba(59,130,246,0.9)'
-                  : '1px solid rgba(30,64,175,0.7)',
+                padding: '10px 12px',
+                borderRadius: 14,
+                border: enabled ? '1px solid rgba(56,189,248,0.9)' : '1px solid rgba(148,163,184,0.18)',
                 background: enabled
-                  ? 'linear-gradient(135deg, rgba(30,64,175,0.95), rgba(37,99,235,0.95))'
-                  : 'rgba(15,23,42,0.98)',
+                  ? 'linear-gradient(135deg, rgba(56,189,248,0.16), rgba(0,255,136,0.12))'
+                  : 'rgba(2,6,23,0.45)',
                 cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: '0.25rem',
+                display: 'grid',
+                gap: 6,
                 color: '#e5e7eb',
-                fontSize: 11,
               }}
+              aria-label={`Toggle ${key}`}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 11,
-                    opacity: enabled ? 1 : 0.5,
-                  }}
-                >
-                  {getLabel(key)}
-                </span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    opacity: enabled ? 1 : 0.6,
-                  }}
-                >
-                  {enabled ? '✓' : ''}
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                <div style={{ fontWeight: 900, fontSize: 12 }}>{getLabel(key)}</div>
+                <div style={{ fontWeight: 900, fontSize: 12, opacity: enabled ? 1 : 0.7 }}>{enabled ? '✓' : ''}</div>
               </div>
 
               {/* Latest values */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  width: '100%',
-                }}
-              >
-                {key === 'macd' && value && (
-                  <>
-                    <div>
-                      <strong>MACD:</strong>{' '}
-                      {formatNumber(value.macd)}
-                    </div>
-                    <div>
-                      <strong>
-                        {t('charts.indicators.signal', 'إشارة')}:
-                      </strong>{' '}
-                      {formatNumber(value.signal)}
-                    </div>
-                    <div>
-                      <strong>
-                        {t(
-                          'charts.indicators.histogram',
-                          'هيستوغرام',
-                        )}
-                        :
-                      </strong>{' '}
-                      {formatNumber(value.histogram)}
-                    </div>
-                  </>
-                )}
-
-                {key === 'bollinger' && value && (
-                  <>
-                    <div>
-                      <strong>
-                        {t(
-                          'charts.indicators.upper',
-                          'الحد العلوي',
-                        )}
-                        :
-                      </strong>{' '}
-                      {formatNumber(value.upper)}
-                    </div>
-                    <div>
-                      <strong>
-                        {t(
-                          'charts.indicators.middle',
-                          'الخط الأوسط',
-                        )}
-                        :
-                      </strong>{' '}
-                      {formatNumber(value.middle)}
-                    </div>
-                    <div>
-                      <strong>
-                        {t(
-                          'charts.indicators.lower',
-                          'الحد السفلي',
-                        )}
-                        :
-                      </strong>{' '}
-                      {formatNumber(value.lower)}
-                    </div>
-                  </>
-                )}
-
-                {key !== 'macd' &&
-                  key !== 'bollinger' &&
-                  value != null && (
-                    <div>
-                      <strong>
-                        {t(
-                          'charts.indicators.lastValue',
-                          'آخر قيمة',
-                        )}
-                        :
-                      </strong>{' '}
-                      {formatNumber(value)}
-                    </div>
-                  )}
-
-                {value == null && (
-                  <div
-                    style={{
-                      opacity: 0.7,
-                    }}
-                  >
-                    {t(
-                      'charts.indicators.waiting',
-                      'جارٍ انتظار بيانات كافية لحساب هذا المؤشر...',
-                    )}
+              <div style={{ color: 'rgba(148,163,184,0.92)', fontSize: 12, lineHeight: 1.4 }}>
+                {key === 'macd' && value ? (
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    <div>MACD: {formatNumber(value.macd)}</div>
+                    <div>{t('charts.indicators.signal', 'إشارة')}: {formatNumber(value.signal)}</div>
+                    <div>{t('charts.indicators.histogram', 'هيستوغرام')}: {formatNumber(value.histogram)}</div>
                   </div>
-                )}
+                ) : null}
+
+                {key === 'bollinger' && value ? (
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    <div>{t('charts.indicators.upper', 'الحد العلوي')}: {formatNumber(value.upper)}</div>
+                    <div>{t('charts.indicators.middle', 'الخط الأوسط')}: {formatNumber(value.middle)}</div>
+                    <div>{t('charts.indicators.lower', 'الحد السفلي')}: {formatNumber(value.lower)}</div>
+                  </div>
+                ) : null}
+
+                {key !== 'macd' && key !== 'bollinger' && value != null ? (
+                  <div>
+                    {t('charts.indicators.lastValue', 'آخر قيمة')}: {formatNumber(value)}
+                  </div>
+                ) : null}
+
+                {value == null ? (
+                  <div style={{ opacity: 0.9 }}>
+                    {t('charts.indicators.waiting', 'جارٍ انتظار بيانات كافية لحساب هذا المؤشر...')}
+                  </div>
+                ) : null}
               </div>
             </button>
           );
         })}
       </div>
-    </section>
+    </div>
   );
 };
 

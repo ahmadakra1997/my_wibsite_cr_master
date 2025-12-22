@@ -1,10 +1,20 @@
 // frontend/src/context/BotContext.js
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { botAPI } from '../services/api';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-const BotContext = createContext(null);
+import {
+  getBotStatus,
+  getBotSettings,
+  getPerformanceMetrics,
+  updateBotSettings,
+  activateTradingBot,
+  deactivateTradingBot,
+  controlBot,
+} from '../services/api';
 
-export const BotProvider = ({ children }) => {
+// ✅ تصدير الـ Context لتوافق أي imports قديمة مستقبلًا
+export const BotContext = createContext(null);
+
+export function BotProvider({ children }) {
   const [botStatus, setBotStatus] = useState(null);
   const [botSettings, setBotSettings] = useState(null);
   const [performance, setPerformance] = useState(null);
@@ -15,120 +25,107 @@ export const BotProvider = ({ children }) => {
   const loadBotData = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const hasApi =
-        botAPI &&
-        (typeof botAPI.getStatus === 'function' ||
-          typeof botAPI.getSettings === 'function' ||
-          typeof botAPI.getPerformance === 'function');
-
-      if (!hasApi) {
-        // لا نكسر الواجهة: فقط نعرض خطأ مفهوم
-        throw new Error('Bot API is not available (botAPI methods missing).');
-      }
-
-      const [statusResponse, settingsResponse, performanceResponse] = await Promise.all([
-        typeof botAPI.getStatus === 'function' ? botAPI.getStatus() : Promise.resolve(null),
-        typeof botAPI.getSettings === 'function' ? botAPI.getSettings() : Promise.resolve(null),
-        typeof botAPI.getPerformance === 'function' ? botAPI.getPerformance() : Promise.resolve(null),
+      const [status, settings, perf] = await Promise.all([
+        typeof getBotStatus === 'function' ? getBotStatus() : Promise.resolve(null),
+        typeof getBotSettings === 'function' ? getBotSettings() : Promise.resolve(null),
+        typeof getPerformanceMetrics === 'function' ? getPerformanceMetrics() : Promise.resolve(null),
       ]);
 
-      setBotStatus(statusResponse?.data ?? statusResponse ?? null);
-      setBotSettings(settingsResponse?.data ?? settingsResponse ?? null);
-      setPerformance(performanceResponse?.data ?? performanceResponse ?? null);
+      setBotStatus(status ?? null);
+      setBotSettings(settings ?? null);
+      setPerformance(perf ?? null);
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to load bot data';
-      setError(msg);
+      const msg = err?.message || 'Failed to load bot data';
+      setError(String(msg));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // تحميل أولي بدون كسر
     loadBotData();
   }, [loadBotData]);
 
-  const updateSettings = useCallback(async (newSettings) => {
+  const updateSettings = useCallback(async (newSettings = {}) => {
     setLoading(true);
     setError(null);
-
     try {
-      if (!botAPI || typeof botAPI.updateSettings !== 'function') {
-        throw new Error('botAPI.updateSettings is not available.');
+      if (typeof updateBotSettings !== 'function') {
+        throw new Error('updateBotSettings is not available in services/api.js');
       }
-
-      const response = await botAPI.updateSettings(newSettings);
-      setBotSettings(response?.data ?? response ?? newSettings);
-
-      return response?.data ?? response;
+      const updated = await updateBotSettings(newSettings);
+      setBotSettings(updated ?? newSettings);
+      return updated;
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to update settings';
-      setError(msg);
+      const msg = err?.message || 'Failed to update settings';
+      setError(String(msg));
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const toggleBot = useCallback(async (action) => {
+  /**
+   * ✅ نحافظ على فكرة action بدون فرض شكل جديد:
+   * - start/activate -> activateTradingBot
+   * - stop/deactivate -> deactivateTradingBot
+   * - غير ذلك -> controlBot(action)
+   */
+  const toggleBot = useCallback(async (action, payload = {}) => {
     setLoading(true);
     setError(null);
-
     try {
-      if (!botAPI) throw new Error('Bot API is not available.');
+      const a = String(action || '').toLowerCase().trim();
 
-      // نحافظ على نفس فكرة action بدون فرض شكل جديد
-      // إن كان عندك start/stop أو toggleBot في api، ندعمها كلها:
-      const normalized = String(action || '').toLowerCase();
-
-      let response = null;
-
-      if (normalized === 'start' && typeof botAPI.start === 'function') {
-        response = await botAPI.start();
-      } else if (normalized === 'stop' && typeof botAPI.stop === 'function') {
-        response = await botAPI.stop();
-      } else if (typeof botAPI.toggleBot === 'function') {
-        response = await botAPI.toggleBot(action);
-      } else if (typeof botAPI.setStatus === 'function') {
-        response = await botAPI.setStatus(action);
+      let res = null;
+      if ((a === 'start' || a === 'activate' || a === 'on') && typeof activateTradingBot === 'function') {
+        res = await activateTradingBot(payload);
+      } else if ((a === 'stop' || a === 'deactivate' || a === 'off') && typeof deactivateTradingBot === 'function') {
+        res = await deactivateTradingBot(payload);
+      } else if (typeof controlBot === 'function') {
+        res = await controlBot(action, payload);
       } else {
-        throw new Error('No suitable bot control method found in botAPI.');
+        throw new Error('No bot control method available in services/api.js');
       }
 
-      setBotStatus(response?.data ?? response ?? null);
-      return response?.data ?? response;
+      setBotStatus(res ?? null);
+      return res;
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to control bot';
-      setError(msg);
+      const msg = err?.message || 'Failed to control bot';
+      setError(String(msg));
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const value = {
-    botStatus,
-    botSettings,
-    performance,
-    loading,
-    error,
-    loadBotData,
-    updateSettings,
-    toggleBot,
-    setBotStatus,
-    setBotSettings,
-    setPerformance,
-  };
+  const value = useMemo(
+    () => ({
+      botStatus,
+      botSettings,
+      performance,
+      loading,
+      error,
+      loadBotData,
+      updateSettings,
+      toggleBot,
+
+      // ✅ نحافظ على setters كإمكانيات مستقبلية
+      setBotStatus,
+      setBotSettings,
+      setPerformance,
+    }),
+    [botStatus, botSettings, performance, loading, error, loadBotData, updateSettings, toggleBot],
+  );
 
   return <BotContext.Provider value={value}>{children}</BotContext.Provider>;
-};
+}
 
 export const useBot = () => {
   const context = useContext(BotContext);
-  if (!context) {
-    throw new Error('useBot must be used within BotProvider');
-  }
+  if (!context) throw new Error('useBot must be used within BotProvider');
   return context;
 };
 

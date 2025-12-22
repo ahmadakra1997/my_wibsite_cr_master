@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import './LanguageSwitcher.css';
 
 const DEFAULT_LANGS = [
-  { code: 'ar', name: 'العربية', dir: 'rtl', flag: '🇸🇦' },
-  { code: 'en', name: 'English', dir: 'ltr', flag: '🇺🇸' },
-  { code: 'tr', name: 'Türkçe', dir: 'ltr', flag: '🇹🇷' },
-  { code: 'ru', name: 'Русский', dir: 'ltr', flag: '🇷🇺' },
-  { code: 'zh', name: '中文', dir: 'ltr', flag: '🇨🇳' },
+  { code: 'ar', name: 'العربية', dir: 'rtl', flag: '' },
+  { code: 'en', name: 'English', dir: 'ltr', flag: '' },
+  { code: 'tr', name: 'Türkçe', dir: 'ltr', flag: '' },
+  { code: 'ru', name: 'Русский', dir: 'ltr', flag: '' },
+  { code: 'zh', name: '中文', dir: 'ltr', flag: '' },
 ];
 
 function safeDoc() {
@@ -26,7 +26,6 @@ function normalize(code) {
 function setHtmlLangDir(code, dir) {
   const d = safeDoc();
   if (!d) return;
-
   const html = d.documentElement;
   html.setAttribute('lang', code);
   html.setAttribute('dir', dir);
@@ -36,7 +35,6 @@ function setHtmlLangDir(code, dir) {
 function updateTitleForLang(code) {
   const d = safeDoc();
   if (!d) return;
-
   const titles = {
     ar: 'QA TRADER — منصة التداول الكمي',
     en: 'QA TRADER — Quantum Trading Platform',
@@ -44,16 +42,13 @@ function updateTitleForLang(code) {
     ru: 'QA TRADER — Квантовая торговая платформа',
     zh: 'QA TRADER — 量化交易平台',
   };
-
   d.title = titles[code] || d.title || 'QA TRADER';
 }
 
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
-
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-
   const rootRef = React.useRef(null);
 
   const langs = React.useMemo(() => DEFAULT_LANGS, []);
@@ -73,22 +68,19 @@ export default function LanguageSwitcher() {
         close();
         return;
       }
-
       if (nextCode === currentCode) {
         close();
         return;
       }
 
-      const target = langs.find((l) => l.code === nextCode) || { code: nextCode, dir: 'ltr' };
+      const target = langs.find((l) => l.code === nextCode) || { code: nextCode, dir: 'ltr', name: nextCode };
 
       try {
         setLoading(true);
-
         const d = safeDoc();
         if (d) d.documentElement.classList.add('language-loading');
 
         await i18n.changeLanguage(target.code);
-
         setHtmlLangDir(target.code, target.dir);
         updateTitleForLang(target.code);
 
@@ -102,12 +94,11 @@ export default function LanguageSwitcher() {
       } finally {
         const d = safeDoc();
         if (d) d.documentElement.classList.remove('language-loading');
-
         setLoading(false);
         close();
       }
     },
-    [i18n, langs, currentCode, close]
+    [i18n, langs, currentCode, close],
   );
 
   // Apply stored language (once) + align html lang/dir حتى لو ما في saved
@@ -152,7 +143,6 @@ export default function LanguageSwitcher() {
 
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('keydown', onKeyDown);
-
     return () => {
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('keydown', onKeyDown);
@@ -160,99 +150,122 @@ export default function LanguageSwitcher() {
   }, [open, close]);
 
   return (
-    <>
-      <div className="language-switcher" ref={rootRef}>
-        <button
-          type="button"
-          className={`language-trigger ${open ? 'language-open' : ''}`}
-          onClick={toggle}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-label={t?.('language.switch') || 'Switch language'}
-          disabled={loading}
+    <div ref={rootRef} className="language-switcher" style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={loading}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="lang-trigger"
+        style={{
+          borderRadius: 12,
+          padding: '8px 10px',
+          border: '1px solid rgba(148,163,184,0.26)',
+          background: 'rgba(15,23,42,0.55)',
+          color: 'rgba(226,232,240,0.92)',
+          fontWeight: 900,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          display: 'inline-flex',
+          gap: 8,
+          alignItems: 'center',
+          minWidth: 92,
+          justifyContent: 'space-between',
+        }}
+      >
+        <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+          <span aria-hidden="true">{currentLang?.flag || ''}</span>
+          <span>{String(currentLang?.code || 'en').toUpperCase()}</span>
+        </span>
+        <span aria-hidden="true" style={{ opacity: 0.8 }}>
+          ▾
+        </span>
+      </button>
+
+      {open ? (
+        <div
+          role="listbox"
+          aria-label={t?.('language.select') || 'Select Language'}
+          className="lang-menu"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            right: 0,
+            zIndex: 50,
+            width: 260,
+            borderRadius: 16,
+            border: '1px solid rgba(56,189,248,0.20)',
+            background: 'linear-gradient(135deg, rgba(2,6,23,0.96), rgba(8,47,73,0.75))',
+            boxShadow: '0 18px 46px rgba(2,6,23,0.72)',
+            padding: 10,
+          }}
         >
-          <div className="pulse-effect" aria-hidden="true" />
-          <div className="glow-effect" aria-hidden="true" />
-
-          <div className="trigger-content">
-            <span className="trigger-flag" aria-hidden="true">
-              {currentLang?.flag || '🌐'}
-            </span>
-            <span className="trigger-code">{String(currentLang?.code || 'en').toUpperCase()}</span>
-            <span className="trigger-chevron" aria-hidden="true">
-              <svg className="chevron-icon" viewBox="0 0 20 20" focusable="false" aria-hidden="true">
-                <path d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4z" />
-              </svg>
-            </span>
+          <div style={{ color: 'rgba(226,232,240,0.95)', fontWeight: 950, marginBottom: 8 }}>
+            {t?.('language.select') || 'Select Language'}
           </div>
-        </button>
 
-        <div className={`language-dropdown ${open ? 'dropdown-open' : ''}`}>
-          {open && <div className="dropdown-backdrop" onClick={close} aria-hidden="true" />}
-
-          <div className="dropdown-content" role="listbox" aria-label={t?.('language.select') || 'Select language'}>
-            <div className="dropdown-header">
-              <p className="dropdown-title">
-                <span className="title-icon" aria-hidden="true">
-                  🌐
-                </span>
-                {t?.('language.select') || 'Select Language'}
-              </p>
-              <div className="dropdown-divider" aria-hidden="true" />
-            </div>
-
-            <div className="language-list">
-              {langs.map((lang) => {
-                const isActive = lang.code === currentLang?.code;
-                return (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    className={`language-option ${isActive ? 'language-active' : ''}`}
-                    onClick={() => applyLanguage(lang.code)}
-                    disabled={loading}
-                    aria-selected={isActive}
-                  >
-                    <span className="option-hover-effect" aria-hidden="true" />
-                    <div className="option-content">
-                      <span className="option-flag" aria-hidden="true">
-                        {lang.flag || '🌐'}
-                      </span>
-                      <span className="option-text">
-                        <span className="option-name">{lang.name}</span>
-                        <span className="option-code">{lang.code.toUpperCase()}</span>
-                      </span>
-
-                      {isActive && (
-                        <span className="option-indicator">
-                          <span className="indicator-dot" aria-hidden="true" />
-                          <span className="indicator-text">{t?.('language.active') || 'Active'}</span>
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="dropdown-footer">
-              <div className="footer-content">
-                <span className="footer-icon" aria-hidden="true">
-                  ⚙️
-                </span>
-                <span className="footer-text">{t?.('language.tip') || 'Tip: You can change anytime'}</span>
-              </div>
-            </div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            {langs.map((lang) => {
+              const isActive = lang.code === currentLang?.code;
+              return (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => applyLanguage(lang.code)}
+                  disabled={loading}
+                  aria-selected={isActive}
+                  className={`lang-item ${isActive ? 'active' : ''}`}
+                  style={{
+                    borderRadius: 14,
+                    padding: '10px 10px',
+                    border: isActive ? '1px solid rgba(0,255,136,0.35)' : '1px solid rgba(148,163,184,0.16)',
+                    background: isActive ? 'rgba(0,255,136,0.10)' : 'rgba(15,23,42,0.55)',
+                    color: 'rgba(226,232,240,0.92)',
+                    textAlign: 'start',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                  }}
+                >
+                  <span style={{ display: 'inline-flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
+                    <span aria-hidden="true">{lang.flag || ''}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {lang.name}
+                    </span>
+                    <span style={{ opacity: 0.7, fontWeight: 900 }}>{lang.code.toUpperCase()}</span>
+                  </span>
+                  {isActive ? (
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: '4px 8px',
+                        border: '1px solid rgba(0,255,136,0.35)',
+                        background: 'rgba(0,255,136,0.08)',
+                        fontSize: 11,
+                        fontWeight: 950,
+                      }}
+                    >
+                      {t?.('language.active') || 'Active'}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </div>
 
-      {loading && (
-        <div className="language-loader" role="status" aria-live="polite">
-          <div className="loader-spinner" aria-hidden="true" />
-          <div className="loader-text">{t?.('language.loading') || 'Switching language…'}</div>
+          <div style={{ marginTop: 10, color: 'rgba(148,163,184,0.95)', fontSize: 12 }}>
+            <span aria-hidden="true">⚙️</span> {t?.('language.tip') || 'Tip: You can change anytime'}
+          </div>
+
+          {loading ? (
+            <div style={{ marginTop: 8, color: 'rgba(226,232,240,0.9)', fontWeight: 900, fontSize: 12 }}>
+              {t?.('language.loading') || 'Switching language…'}
+            </div>
+          ) : null}
         </div>
-      )}
-    </>
+      ) : null}
+    </div>
   );
 }

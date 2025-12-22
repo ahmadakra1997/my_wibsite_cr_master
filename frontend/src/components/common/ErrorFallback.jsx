@@ -6,14 +6,19 @@ import React from 'react';
  * يعرض رسالة خطأ ودية مع إمكانية إعادة المحاولة أو إعادة تحميل التطبيق.
  */
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
+  const canRetry = typeof resetErrorBoundary === 'function';
+
   const handleRetry = () => {
-    if (typeof resetErrorBoundary === 'function') {
+    if (!canRetry) return;
+    try {
       resetErrorBoundary();
+    } catch {
+      // ignore
     }
   };
 
   const handleReload = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location && typeof window.location.reload === 'function') {
       window.location.reload();
     }
   };
@@ -69,14 +74,16 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
         <button
           type="button"
           onClick={handleRetry}
+          disabled={!canRetry}
           style={{
+            opacity: canRetry ? 1 : 0.6,
             borderRadius: 14,
             padding: '10px 12px',
             border: '1px solid rgba(56,189,248,0.40)',
             background: 'rgba(56,189,248,0.10)',
             color: 'rgba(226,232,240,0.95)',
             fontWeight: 900,
-            cursor: 'pointer',
+            cursor: canRetry ? 'pointer' : 'not-allowed',
           }}
         >
           إعادة المحاولة

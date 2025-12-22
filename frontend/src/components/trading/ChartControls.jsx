@@ -1,5 +1,4 @@
 // frontend/src/components/trading/ChartControls.jsx
-
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -27,79 +26,43 @@ const ChartControls = ({
 
   const normalizedSymbols = useMemo(() => {
     if (!Array.isArray(symbols) || symbols.length === 0) return [];
-    return symbols.map((item) => {
-      if (typeof item === 'string') {
-        return { value: item, label: item };
-      }
-      if (item && typeof item === 'object') {
-        return {
-          value: item.value || item.symbol || item.code || '',
-          label:
-            item.label ||
-            item.name ||
-            item.symbol ||
-            item.code ||
-            item.value ||
-            '',
-        };
-      }
-      return {
-        value: String(item),
-        label: String(item),
-      };
-    });
+    return symbols
+      .map((item) => {
+        if (typeof item === 'string') return { value: item, label: item };
+        if (item && typeof item === 'object') {
+          return {
+            value: item.value || item.symbol || item.code || '',
+            label: item.label || item.name || item.symbol || item.code || item.value || '',
+          };
+        }
+        return { value: String(item), label: String(item) };
+      })
+      .filter((x) => x.value);
   }, [symbols]);
 
   const handleSymbolClick = (value) => {
-    if (!onSymbolChange || value === currentSymbol) return;
+    if (!onSymbolChange || !value || value === currentSymbol) return;
     onSymbolChange(value);
   };
 
   const handleThemeToggle = (nextTheme) => {
-    if (!onThemeChange || nextTheme === theme) return;
-    onThemeChange(nextTheme);
+    if (!onThemeChange) return;
+    const safe = nextTheme === 'light' ? 'light' : 'dark';
+    if (safe === theme) return;
+    onThemeChange(safe);
   };
 
-  return (
-    <div
-      className="chart-controls"
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 12,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-      }}
-    >
-      {/* Symbol picker */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-          minWidth: 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            opacity: 0.8,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: '#cbd5f5',
-          }}
-        >
-          {t('charts.symbol', 'الرمز')}
-        </span>
+  const isDark = theme !== 'light';
 
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 6,
-          }}
-        >
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      {/* Symbol picker */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ color: 'rgba(148,163,184,0.92)', fontSize: 12, fontWeight: 900 }}>
+          {t('charts.symbol', 'الرمز')}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {normalizedSymbols.map((sym) => {
             const active = sym.value === currentSymbol;
             return (
@@ -108,20 +71,20 @@ const ChartControls = ({
                 type="button"
                 onClick={() => handleSymbolClick(sym.value)}
                 style={{
-                  padding: '4px 10px',
+                  padding: '6px 10px',
                   borderRadius: 999,
-                  border: active
-                    ? '1px solid rgba(56,189,248,0.95)'
-                    : '1px solid rgba(30,64,175,0.7)',
+                  border: active ? '1px solid rgba(56,189,248,0.95)' : '1px solid rgba(30,64,175,0.7)',
                   background: active
                     ? 'linear-gradient(135deg, rgba(34,211,238,0.95), rgba(56,189,248,0.95))'
                     : 'rgba(15,23,42,0.98)',
                   fontSize: 11,
-                  fontWeight: 500,
-                  color: active ? '#020617' : '#e5e7eb',
+                  fontWeight: 900,
+                  color: active ? '#020617' : 'rgba(226,232,240,0.95)',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
+                  letterSpacing: '0.05em',
                 }}
+                aria-label={`Symbol ${sym.value}`}
               >
                 {sym.label}
               </button>
@@ -131,54 +94,29 @@ const ChartControls = ({
       </div>
 
       {/* Theme toggle */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 4,
-          alignItems: 'flex-end',
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            opacity: 0.8,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: '#cbd5f5',
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ color: 'rgba(148,163,184,0.92)', fontSize: 12, fontWeight: 900 }}>
           {t('charts.theme', 'سمة المخطط')}
-        </span>
+        </div>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 6,
-          }}
-        >
+        <div style={{ display: 'flex', gap: 8 }}>
           <button
             type="button"
             onClick={() => handleThemeToggle('dark')}
             style={{
-              padding: '4px 8px',
+              padding: '6px 10px',
               borderRadius: 999,
-              border:
-                theme === 'dark'
-                  ? '1px solid rgba(30,64,175,0.9)'
-                  : '1px solid rgba(30,64,175,0.7)',
-              background:
-                theme === 'dark'
-                  ? 'rgba(15,23,42,0.98)'
-                  : 'rgba(15,23,42,0.9)',
-              color:
-                theme === 'dark' ? '#e5e7eb' : 'rgba(148,163,184,0.9)',
+              border: isDark ? '1px solid rgba(30,64,175,0.9)' : '1px solid rgba(148,163,184,0.35)',
+              background: isDark ? 'rgba(15,23,42,0.98)' : 'rgba(15,23,42,0.65)',
+              color: isDark ? '#e5e7eb' : 'rgba(148,163,184,0.9)',
               fontSize: 11,
-              display: 'flex',
+              fontWeight: 900,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 4,
+              gap: 6,
               cursor: 'pointer',
             }}
+            aria-label="Theme dark"
           >
             🌙 {t('charts.themeDark', 'ليلي')}
           </button>
@@ -187,23 +125,19 @@ const ChartControls = ({
             type="button"
             onClick={() => handleThemeToggle('light')}
             style={{
-              padding: '4px 8px',
+              padding: '6px 10px',
               borderRadius: 999,
-              border:
-                theme === 'light'
-                  ? '1px solid rgba(34,197,235,0.95)'
-                  : '1px solid rgba(148,163,184,0.7)',
-              background:
-                theme === 'light'
-                  ? '#f9fafb'
-                  : 'rgba(15,23,42,0.9)',
-              color: theme === 'light' ? '#020617' : '#e5e7eb',
+              border: !isDark ? '1px solid rgba(34,197,235,0.95)' : '1px solid rgba(148,163,184,0.35)',
+              background: !isDark ? '#f9fafb' : 'rgba(15,23,42,0.65)',
+              color: !isDark ? '#020617' : '#e5e7eb',
               fontSize: 11,
-              display: 'flex',
+              fontWeight: 900,
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 4,
+              gap: 6,
               cursor: 'pointer',
             }}
+            aria-label="Theme light"
           >
             ☀️ {t('charts.themeLight', 'نهاري')}
           </button>

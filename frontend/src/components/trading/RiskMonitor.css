@@ -2,7 +2,8 @@
 
 /* === Risk Monitor === */
 
-.risk-monitor-container {
+.risk-monitor-container,
+.risk-monitor {
   background: linear-gradient(
     150deg,
     rgba(15, 23, 42, 0.98),
@@ -10,7 +11,7 @@
   );
   border-radius: 22px;
   padding: 14px 14px 12px;
-  border: 1px solid var(--qa-border-subtle);
+  border: 1px solid var(--qa-border-subtle, rgba(148, 163, 184, 0.25));
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.9);
   display: flex;
   flex-direction: column;
@@ -32,11 +33,10 @@
 
 .risk-subtitle {
   font-size: 11px;
-  color: var(--qa-text-muted);
+  color: var(--qa-text-muted, rgba(148, 163, 184, 0.92));
 }
 
 /* ثلاثة مؤشرات رئيسية */
-
 .risk-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -64,7 +64,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--qa-text-soft);
+  color: var(--qa-text-soft, rgba(148, 163, 184, 0.78));
 }
 
 .risk-value {
@@ -79,21 +79,19 @@
 }
 
 /* ألوان حالات */
-
 .risk-ok {
-  color: var(--qa-success);
+  color: var(--qa-success, #00f59b);
 }
 
 .risk-warning {
-  color: var(--qa-warning);
+  color: var(--qa-warning, #facc15);
 }
 
 .risk-danger {
-  color: var(--qa-danger);
+  color: var(--qa-danger, #fb3b7f);
 }
 
 /* شريط مستوى المخاطرة */
-
 .risk-meter {
   margin-top: 8px;
   height: 6px;
@@ -107,16 +105,16 @@
   position: absolute;
   inset: 0;
   transform-origin: left center;
+  transform: scaleX(0); /* safe default */
   background: linear-gradient(
     90deg,
-    var(--qa-success),
-    var(--qa-warning),
-    var(--qa-danger)
+    var(--qa-success, #00f59b),
+    var(--qa-warning, #facc15),
+    var(--qa-danger, #fb3b7f)
   );
 }
 
 /* استجابة */
-
 @media (max-width: 960px) {
   .risk-grid {
     grid-template-columns: 1fr 1fr;

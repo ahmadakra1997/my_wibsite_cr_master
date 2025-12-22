@@ -8,6 +8,7 @@
  * - Aliases شائعة (subscribeToChannel / sendJson / isConnected)
  * - parsing أوسع (channel/type/event/topic)
  * - backoff مع jitter
+ * - Guards إضافية لتفادي crash في بيئات لا تدعم WebSocket
  */
 
 const resolveWsUrl = () => {
@@ -69,12 +70,22 @@ class WebSocketService {
     if (nextUrl) this.url = nextUrl;
   }
 
+  getUrl() {
+    return this.url;
+  }
+
   isConnected() {
     return this.connectionStatus === 'open';
   }
 
   connect(nextUrl) {
     if (nextUrl) this.url = nextUrl;
+
+    // ✅ Guard: بيئات بدون WebSocket
+    if (typeof WebSocket === 'undefined') {
+      this._handleError(new Error('WebSocket is not available in this environment.'));
+      return;
+    }
 
     if (
       this.ws &&
@@ -132,7 +143,19 @@ class WebSocketService {
     this.close();
   }
 
+  // ✅ Alias إضافي شائع
+  destroy() {
+    this.close();
+  }
+
   send(message) {
+    // ✅ Guard: بيئات بدون WebSocket
+    if (typeof WebSocket === 'undefined') {
+      this._enqueue(message);
+      this._handleError(new Error('WebSocket is not available in this environment.'));
+      return;
+    }
+
     // ✅ بدل ما نفشل: نخزن بالـ Queue ثم نرسل عند open
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       this._enqueue(message);
@@ -151,6 +174,16 @@ class WebSocketService {
   // ✅ Alias شائع
   sendJson(obj) {
     this.send(obj);
+  }
+
+  // ✅ Alias شائع (بعض الأكواد تتوقع boolean)
+  sendMessage(message) {
+    try {
+      this.send(message);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   subscribe(channel, callback, options = {}) {
@@ -178,6 +211,20 @@ class WebSocketService {
     return this.subscribe(channel, callback, options);
   }
 
+  // ✅ Alias إضافي
+  subscribeChannel(channel, callback, options = {}) {
+    return this.subscribe(channel, callback, options);
+  }
+
+  // ✅ Unsubscribe مباشر (بدون كسر الـ unsubscribe function اللي يرجعها subscribe)
+  unsubscribe(channel, callback) {
+    if (!channel || typeof callback !== 'function') return;
+    this.subscribers[channel]?.delete(callback);
+    if (this.subscribers[channel] && this.subscribers[channel].size === 0) {
+      delete this.subscribers[channel];
+    }
+  }
+
   on(type, callback) {
     if (!this.globalListeners[type] || typeof callback !== 'function') {
       console.warn('[WebSocketService] Invalid global listener type:', type);
@@ -186,6 +233,17 @@ class WebSocketService {
 
     this.globalListeners[type].add(callback);
     return () => this.globalListeners[type].delete(callback);
+  }
+
+  // ✅ Alias إضافي
+  addListener(type, callback) {
+    return this.on(type, callback);
+  }
+
+  // ✅ Off مباشر
+  off(type, callback) {
+    if (!this.globalListeners[type] || typeof callback !== 'function') return;
+    this.globalListeners[type].delete(callback);
   }
 
   getStatus() {
@@ -286,7 +344,9 @@ class WebSocketService {
   }
 
   _flushQueue() {
+    if (typeof WebSocket === 'undefined') return;
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
     while (this._sendQueue.length) {
       const msg = this._sendQueue.shift();
       try {
